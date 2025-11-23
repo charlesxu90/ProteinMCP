@@ -1,0 +1,9 @@
+example/
+data/
+results/
+__pycache__/
+*.swp
+*.out
+*.egg-info/
+.vscode/
+*_mcp/
