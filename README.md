@@ -1,6 +1,20 @@
 # ProteinMCP: MCP Tool Universe for protein design
 
 ## Install:
+```shell
+mamba env create -f environment.yml
+mamba activate protein-mcp
+pip install -r requirements.txt
+```
+## Create a new MCP tool:
+
+### Create from github repository
+```shell
+
+```
+### Create from local code repository
+```shell
+```
 
 ## MCP tool usage:
 1. Predict protein sturcute with AlphaFold3.
