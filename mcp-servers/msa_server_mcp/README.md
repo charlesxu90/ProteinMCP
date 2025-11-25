@@ -32,26 +32,6 @@ For Gemini CLI, add the mcp using a similar command.
 fastmcp install gemini-cli  msa_server_mcp/src/msa_mcp.py
 ```
 
-## Available Tools
-
-### generate_msa
-
-Generate a multiple sequence alignment for a protein sequence.
-
-**Parameters:**
-- `sequence` (required): Protein sequence (single-letter amino acid codes)
-- `job_name` (optional): Job name for tracking (default: auto-generated timestamp)
-- `output_filename` (optional): Output filename for MSA in A3M format (default: {job_name}.a3m)
-- `max_wait_time` (optional): Maximum time to wait in seconds (default: 600)
-
-**Returns:**
-- `status`: "success" or "error"
-- `ticket_id`: Server ticket ID
-- `output_file`: Absolute path to the generated MSA file
-- `msa_depth`: Number of sequences in the MSA
-- `msa_length`: Length of the alignment
-- `message`: Status message
-
 ## **Example usage in Claude Code:**
 
 ```claude
@@ -75,6 +55,26 @@ MSA files are saved to `msa_server_mcp/tmp/outputs/` by default. You can change 
    A3M format file contains the alignment of 144 related protein sequences, which can be used for downstream
   applications like structure prediction, evolutionary analysis, or protein design.
 ```
+
+## Available Tools
+
+### generate_msa
+
+Generate a multiple sequence alignment for a protein sequence.
+
+**Parameters:**
+- `sequence` (required): Protein sequence (single-letter amino acid codes)
+- `job_name` (optional): Job name for tracking (default: auto-generated timestamp)
+- `output_filename` (optional): Output filename for MSA in A3M format (default: {job_name}.a3m)
+- `max_wait_time` (optional): Maximum time to wait in seconds (default: 600)
+
+**Returns:**
+- `status`: "success" or "error"
+- `ticket_id`: Server ticket ID
+- `output_file`: Absolute path to the generated MSA file
+- `msa_depth`: Number of sequences in the MSA
+- `msa_length`: Length of the alignment
+- `message`: Status message
 
 ## How It Works
 
