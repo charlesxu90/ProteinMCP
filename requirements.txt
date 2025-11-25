@@ -1,3 +1,5 @@
 loguru
 click
 subprocess
+fastmcp
+requests

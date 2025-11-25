@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Dict, Optional
 import json
 import click
+from loguru import logger
 
 from utils import (
     log_progress,
@@ -107,14 +108,14 @@ class MCPCreator:
         
         # Copy configs/templates if they exist and not already present
         for folder_name_item in ['claude', 'templates', 'tools']:
-            src = self.script_dir / folder_name_item
+            src = self.script_dir / 'configs' / folder_name_item
             dst = self.mcp_dir / folder_name_item if folder_name_item != 'claude' else self.mcp_dir / f'.{folder_name_item}'
             
             if not dst.exists() and src.exists():
                 shutil.copytree(src, dst)
-                click.echo(f"  Copied {folder_name_item}")
+                logger.info(f"  Copied {folder_name_item}")
             else:
-                click.echo(f"  {folder_name_item} already exists or source missing")
+                logger.info(f"  {folder_name_item} already exists or source missing")
         
         create_marker(marker)
         log_progress(1, "Setup project environment", "complete")
@@ -140,16 +141,16 @@ class MCPCreator:
             log_progress(2, "Setup repository (local)", "start")
             
             if repo_dir.exists():
-                click.echo(f"  Repository already exists: {repo_dir}")
+                logger.info(f"  Repository already exists: {repo_dir}")
             else:
                 # Verify local path exists
                 if not self.local_repo_path.exists():
                     raise FileNotFoundError(f"Local repository not found: {self.local_repo_path}")
                 
                 # Copy or symlink local repository
-                click.echo(f"  Copying local repository from {self.local_repo_path}...")
+                logger.info(f"  Copying local repository from {self.local_repo_path}...")
                 shutil.copytree(self.local_repo_path, repo_dir, symlinks=True)
-                click.echo("  Local repository copied successfully")
+                logger.info("  Local repository copied successfully")
             
             create_marker(marker)
             log_progress(2, "Setup repository (local)", "complete")
@@ -161,25 +162,25 @@ class MCPCreator:
         
         # Skip if already cloned
         if repo_dir.exists():
-            click.echo(f"  Repository already exists: {repo_dir}")
+            logger.info(f"  Repository already exists: {repo_dir}")
         else:
             # Try different cloning strategies
             try:
                 # Try with submodules first
-                click.echo(f"  Cloning {self.github_url} with submodules...")
+                logger.info(f"  Cloning {self.github_url} with submodules...")
                 run_command(["git", "clone", "--recurse-submodules", self.github_url, str(repo_dir)])
-                click.echo("  Cloned with submodules")
+                logger.info("  Cloned with submodules")
             except:
                 try:
                     # Try shallow clone
-                    click.echo("  Trying shallow clone...")
+                    logger.info("  Trying shallow clone...")
                     run_command(["git", "clone", "--depth=1", self.github_url, str(repo_dir)])
-                    click.echo("  Shallow clone successful")
+                    logger.info("  Shallow clone successful")
                 except:
                     # Try plain clone
-                    click.echo("  Trying plain clone...")
+                    logger.info("  Trying plain clone...")
                     run_command(["git", "clone", self.github_url, str(repo_dir)])
-                    click.echo("  Plain clone successful")
+                    logger.info("  Plain clone successful")
         
         create_marker(marker)
         log_progress(2, "Clone GitHub repository", "complete")
@@ -216,7 +217,7 @@ class MCPCreator:
         for folder in folders:
             folder_path = self.mcp_dir / folder
             folder_path.mkdir(parents=True, exist_ok=True)
-            click.echo(f"  Created: {folder}")
+            logger.info(f"  Created: {folder}")
         
         create_marker(marker)
         log_progress(3, "Prepare working directories", "complete")
@@ -238,13 +239,13 @@ class MCPCreator:
     def step4_add_context7_mcp(self):
         """Add context7 MCP server (optional)"""
         if self.skip_context7:
-            click.echo("  ⏭️ Skipping context7 MCP (--skip-context7 flag set)")
+            logger.info("  ⏭️ Skipping context7 MCP (--skip-context7 flag set)")
             self.step_status['context7'] = 'skipped'
             return
         
         # Check if already installed globally
         if self._is_context7_installed():
-            click.echo("  ✅ context7 MCP already installed globally")
+            logger.info("  ✅ context7 MCP already installed globally")
             self.step_status['context7'] = 'skipped'
             return
         
@@ -260,13 +261,13 @@ class MCPCreator:
         try:
             # Try to add context7 MCP
             run_command(["claude", "mcp", "add", "context7", "--", "npx", "-y", "@upstash/context7-mcp@latest"])
-            click.echo("  context7 MCP added successfully")
+            logger.info("  context7 MCP added successfully")
             create_marker(marker)
             log_progress(4, "Add context MCP server", "complete")
             self.step_status['context7'] = 'executed'
         except Exception as e:
-            click.echo(f"  ⚠️ Warning: Failed to add context7 MCP - {e}", err=True)
-            click.echo("  Continuing without context7...")
+            logger.info(f"  ⚠️ Warning: Failed to add context7 MCP - {e}", err=True)
+            logger.info("  Continuing without context7...")
             # Don't create marker on failure
             self.step_status['context7'] = 'failed'
 
@@ -285,8 +286,8 @@ class MCPCreator:
         # Read and prepare prompt
         prompt_file = self.prompts_dir / "step1_prompt.md"
         if not prompt_file.exists():
-            click.echo(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
-            click.echo("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
+            logger.info(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
+            logger.info("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
             return
         
         with open(prompt_file, 'r') as f:
@@ -319,8 +320,8 @@ class MCPCreator:
         # Read and prepare prompt
         prompt_file = self.prompts_dir / "step2_prompt.md"
         if not prompt_file.exists():
-            click.echo(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
-            click.echo("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
+            logger.info(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
+            logger.info("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
             return
         
         with open(prompt_file, 'r') as f:
@@ -352,8 +353,8 @@ class MCPCreator:
         # Read and prepare prompt
         prompt_file = self.prompts_dir / "step3_prompt.md"
         if not prompt_file.exists():
-            click.echo(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
-            click.echo("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
+            logger.info(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
+            logger.info("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
             return
         
         with open(prompt_file, 'r') as f:
@@ -385,8 +386,8 @@ class MCPCreator:
         # Read prompt (no variable substitution needed for step 4)
         prompt_file = self.prompts_dir / "step4_prompt.md"
         if not prompt_file.exists():
-            click.echo(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
-            click.echo("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
+            logger.info(f"  ⚠️ Prompt file not found: {prompt_file}", err=True)
+            logger.info("  You'll need to run this step manually or ensure prompts/ directory exists", err=True)
             return
         
         with open(prompt_file, 'r') as f:
@@ -415,8 +416,8 @@ class MCPCreator:
         python_path = self.mcp_dir / f"{self.repo_name}-env" / "bin" / "python"
         
         if tool_py.exists():
-            click.echo(f"  Found {tool_py}")
-            click.echo(f"  Installing to claude-code with Python: {python_path}")
+            logger.info(f"  Found {tool_py}")
+            logger.info(f"  Installing to claude-code with Python: {python_path}")
             
             try:
                 # Install MCP
@@ -425,26 +426,26 @@ class MCPCreator:
                     "--python", str(python_path)
                 ])
                 
-                click.echo("\n  ✅ MCP server installed!")
-                click.echo(f"\n  To launch Claude Code, run: claude")
+                logger.info("\n  ✅ MCP server installed!")
+                logger.info(f"\n  To launch Claude Code, run: claude")
                 
                 create_marker(marker)
                 log_progress(9, "Launch MCP server", "complete")
                 self.step_status['mcp'] = 'executed'
                 
             except Exception as e:
-                click.echo(f"  ❌ Error installing MCP: {e}", err=True)
+                logger.info(f"  ❌ Error installing MCP: {e}", err=True)
                 self.step_status['mcp'] = 'failed'
         else:
-            click.echo(f"  ⚠️ MCP tool file not found: {tool_py}", err=True)
-            click.echo("  Make sure Step 5.4 completed successfully", err=True)
+            logger.info(f"  ⚠️ MCP tool file not found: {tool_py}", err=True)
+            logger.info("  Make sure Step 5.4 completed successfully", err=True)
             self.step_status['mcp'] = 'failed'
 
     def print_summary(self):
         """Print final pipeline summary"""
-        click.echo("\n" + "="*50)
-        click.echo("🎉 Pipeline Execution Summary")
-        click.echo("="*50)
+        logger.info("\n" + "="*50)
+        logger.info("🎉 Pipeline Execution Summary")
+        logger.info("="*50)
         
         step_descriptions = {
             'setup': '01 Setup project',
@@ -467,46 +468,51 @@ class MCPCreator:
                 'not run': '⚪'
             }.get(status, '⚪')
             
-            click.echo(f"{emoji} {desc}: {status}")
+            logger.info(f"{emoji} {desc}: {status}")
         
-        click.echo("="*50)
+        logger.info("="*50)
         
         # Show next steps
         if self.step_status.get('mcp') == 'executed':
-            click.echo("\n📋 Next Steps:")
-            click.echo("  - Your MCP server has been installed")
-            click.echo("  - Run 'claude' in terminal to launch Claude Code")
+            logger.info("\n📋 Next Steps:")
+            logger.info("  - Your MCP server has been installed")
+            logger.info("  - Run 'claude' in terminal to launch Claude Code")
 
     def run_all(self):
         """Run the complete pipeline"""
         try:
             self.step1_setup_project()
-            click.echo(f"\n📁 MCP directory: {self.mcp_dir}\n")
+            logger.info(f"\n📁 MCP directory: {self.mcp_dir}\n")
             
             self.step2_clone_repo()
-            click.echo(f"\n📦 Repository: {self.repo_name}\n")
+            logger.info(f"\n📦 Repository: {self.repo_name}\n")
             
             self.step3_prepare_folders()
-            click.echo()
+            logger.info(f"\n🗂️  Working directories prepared\n")
             
             self.step4_add_context7_mcp()
-            click.echo()
+            logger.info(f"\n🧩 Context7 MCP added\n")
             
             self.step5_1_setup_env()
+            logger.info(f"\n⚙️  Python environment setup & tutorials scanned\n")
             
             self.step5_2_execute_tutorials()
+            logger.info(f"\n📚 Tutorials executed\n")
             
             self.step5_3_extract_tools()
+            logger.info(f"\n🔧 Tools extracted from tutorials\n") 
             
             self.step5_4_wrap_mcp()
+            logger.info(f"\n🛠️ MCP server wrapped\n")
             
             self.step6_launch_mcp()
+            logger.info(f"\n🚀 MCP server launched\n")
             
             # Print summary
             self.print_summary()
             
         except Exception as e:
-            click.echo(f"\n❌ Pipeline failed with error: {e}", err=True)
+            logger.error(f"\n❌ Pipeline failed with error: {e}", err=True)
             self.print_summary()
             raise
 
@@ -515,16 +521,7 @@ class MCPCreator:
 # CLI Command
 # ============================================================================
 
-@click.command()
-@click.option('--github-url', default='', help='GitHub repository URL to clone (e.g., https://github.com/user/repo)')
-@click.option('--local-repo-path', default='', type=click.Path(exists=True, path_type=Path),
-              help='Path to local repository (alternative to --github-url)')
-@click.option('--mcp-dir', required=True, type=click.Path(path_type=Path), 
-              help='MCP project directory to create (e.g., /path/to/my-mcp-project)')
-@click.option('--tutorial-filter', default='', help='Optional filter for tutorials (e.g., "data visualization", "ML tutorial")')
-@click.option('--api-key', default='', envvar='ANTHROPIC_API_KEY', help='API key for notebook execution and testing (or set ANTHROPIC_API_KEY env var)')
-@click.option('--skip-context7', is_flag=True, help='Skip adding context7 MCP server')
-def create_mcp(github_url: str, local_repo_path: Path, mcp_dir: Path, tutorial_filter: str, api_key: str, 
+def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path, tutorial_filter: str, api_key: str, 
                skip_context7: bool):
     """
     Create an MCP (Model Context Protocol) server from a GitHub repository or local code.
@@ -537,54 +534,47 @@ def create_mcp(github_url: str, local_repo_path: Path, mcp_dir: Path, tutorial_f
     5. Run Claude AI to process tutorials (4 sub-steps)
     6. Launch the MCP server
     
-    Examples:
-        # From GitHub repository:
-        python create_mcp.py \\
-            --github-url https://github.com/user/repo \\
-            --mcp-dir /path/to/my-mcp-project \\
-            --tutorial-filter "machine learning" \\
-            --api-key sk-ant-...
-        
-        # From local repository:
-        python create_mcp.py \\
-            --local-repo-path /path/to/local/repo \\
-            --mcp-dir /path/to/my-mcp-project \\
-            --api-key sk-ant-...
+    Examples:\n
+        # From GitHub repository:\n
+        python create_mcp.py --github-url https://github.com/user/repo  --mcp-dir /path/to/my-mcp-project  --tutorial-filter "machine learning"  --api-key sk-ant-...
+        \n
+        # From local repository:\n
+        python create_mcp.py  --local-repo-path /path/to/local/repo  --mcp-dir /path/to/my-mcp-project --api-key sk-ant-...
     """
     # Validate that either github_url or local_repo_path is provided
     if not github_url and not local_repo_path:
-        click.echo("❌ Error: Either --github-url or --local-repo-path must be provided", err=True)
+        logger.error("❌ Error: Either --github-url or --local-repo-path must be provided")
         return
     
     if github_url and local_repo_path:
-        click.echo("⚠️  Warning: Both --github-url and --local-repo-path provided. Using --local-repo-path", err=True)
+        logger.error("⚠️  Warning: Both --github-url and --local-repo-path provided. Using --local-repo-path")
     
     # Get script directory (directory containing this file)
     script_dir = Path(__file__).parent
     
     # Prompts are always in ./prompts/ subdirectory
-    prompts_dir = script_dir / "prompts"
+    prompts_dir = script_dir / "configs" / "prompts"
     
     # Validate prompts directory exists
     if not prompts_dir.exists():
-        click.echo(f"❌ Error: Prompts directory not found: {prompts_dir}", err=True)
-        click.echo(f"   Please ensure prompts are in: {prompts_dir}", err=True)
+        logger.info(f"❌ Error: Prompts directory not found: {prompts_dir}")
+        logger.info(f"   Please ensure prompts are in: {prompts_dir}")
         return
     
     # Convert to absolute path
     mcp_dir = mcp_dir.resolve()
     
     # Display configuration
-    click.echo("🚀 Starting MCP Creation Pipeline\n")
+    logger.info("🚀 Starting MCP Creation Pipeline\n")
     if local_repo_path:
-        click.echo(f"📦 Repository: {local_repo_path} (local)")
+        logger.info(f"📦 Repository: {local_repo_path} (local)")
     else:
-        click.echo(f"📦 Repository: {github_url} (GitHub)")
-    click.echo(f"📁 MCP Directory: {mcp_dir}")
-    click.echo(f"🔍 Tutorial Filter: {tutorial_filter or 'None'}")
-    click.echo(f"🔑 API Key: {'Set' if api_key else 'Not set'}")
-    click.echo(f"📂 Prompts Directory: {prompts_dir}")
-    click.echo("\n" + "-"*50 + "\n")
+        logger.info(f"📦 Repository: {github_url} (GitHub)")
+    logger.info(f"📁 MCP Directory: {mcp_dir}")
+    logger.info(f"🔍 Tutorial Filter: {tutorial_filter or 'None'}")
+    logger.info(f"🔑 API Key: {'Set' if api_key else 'Not set'}")
+    logger.info(f"📂 Prompts Directory: {prompts_dir}")
+    logger.info("\n" + "-"*50 + "\n")
     
     # Create and run MCP Creator
     creator = MCPCreator(
@@ -601,8 +591,29 @@ def create_mcp(github_url: str, local_repo_path: Path, mcp_dir: Path, tutorial_f
     try:
         creator.run_all()
     except Exception:
-        raise click.Abort()
+        raise Exception("MCP Creation Pipeline failed")
+
+
+@click.command()
+@click.option('--github-url', default='', help='GitHub repository URL to clone (e.g., https://github.com/user/repo)')
+@click.option('--local-repo-path', default=None, type=click.Path(exists=True, path_type=Path),
+              help='Path to local repository (alternative to --github-url)')
+@click.option('--mcp-dir', required=True, type=click.Path(path_type=Path), 
+              help='MCP project directory to create (e.g., /path/to/my-mcp-project)')
+@click.option('--tutorial-filter', default='', help='Optional filter for tutorials (e.g., "data visualization", "ML tutorial")')
+@click.option('--api-key', default='', envvar='ANTHROPIC_API_KEY', help='API key for notebook execution and testing (or set ANTHROPIC_API_KEY env var)')
+@click.option('--skip-context7', is_flag=True, help='Skip adding context7 MCP server')
+def cli(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path, tutorial_filter: str, api_key: str, 
+        skip_context7: bool):
+    create_mcp(
+        github_url=github_url,
+        local_repo_path=local_repo_path,
+        mcp_dir=mcp_dir,
+        tutorial_filter=tutorial_filter,
+        api_key=api_key,
+        skip_context7=skip_context7
+    )
 
 
 if __name__ == '__main__':
-    create_mcp()
+    cli()
