@@ -167,7 +167,6 @@ def download_results(ticket_id: str, output_filename: str) -> str:
     except Exception as e:
         raise RuntimeError(f"Error downloading/extracting results: {e}")
 
-
 # ============================================================================
 # MCP Tools
 # ============================================================================
