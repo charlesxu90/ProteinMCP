@@ -1,4 +1,3 @@
-example/
 data/
 results/
 __pycache__/
@@ -11,3 +10,4 @@ tmp/
 env/
 .claude/
 .gemini/
+examples/
