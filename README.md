@@ -16,11 +16,11 @@ npm install -g @google/gemini-cli
 
 ### Create from github repository
 ```shell
-python src/create_mcp/create_mcp.py  --github-url https://github.com/dauparas/ProteinMPNN  --mcp-dir mcp-servers/proteinmpnn_mcp
+python src/create_mcp/create_mcp.py  --github-url https://github.com/dauparas/ProteinMPNN  --mcp-dir tool-mcps/proteinmpnn_mcp
 ```
 ### Create from local code repository
 ```shell
-python src/create_mcp/create_mcp.py  --local-repo-path /home/xux/Desktop/AlphaVariant/alphavariant/fitness_model/ev_onehot  --mcp-dir mcp-servers/ev_onehot_mcp
+python src/create_mcp/create_mcp.py  --local-repo-path /home/xux/Desktop/AlphaVariant/alphavariant/fitness_model/ev_onehot  --mcp-dir tool-mcps/ev_onehot_mcp
 ```
 
 ## 1. MCP tool usage:
