@@ -1,4 +1,4 @@
-# ProteinMCP: MCP Tool Universe for protein design
+# ProteinMCP: a Tool Universe for Autonomous Protein Design
 
 ## Install:
 ```shell
