@@ -1,5 +1,12 @@
 # ProteinMCP: a Tool Universe for Autonomous Protein Design
 
+## TODO list
+[ ] Support easy MCP creation 
+[ ] Support easy MCP installation
+[ ] Create common MCP servers for protein design tasks
+[ ] Support Claude code, Gemini cli, Codex, Qwen code, and CodeBuddy
+[ ] Support standard workflows: 1) protein sequence analysis; 2) protein structure analysis; 3) train fitness model; 4) binder design; 5) antibody design.
+
 ## Install:
 ```shell
 mamba env create -f environment.yml
@@ -33,11 +40,13 @@ python src/create_mcp/create_mcp.py  --local-repo-path /home/xux/Desktop/AlphaVa
 
 ## Demo cases:
 
-### Train a protein language model on in-house dataset
+### Protein sequence analysis
 
-### Engineer GB1 to improve its affinity
+### Protein structural analysis
 
-### Engineer DHFR to improve its activity
+### Train a protein language model on fitness dataset
+
+### Desing a binder to bind target protein
 
 ### Design a SARS-COV-2 nanobody
 

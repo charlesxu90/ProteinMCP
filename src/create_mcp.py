@@ -46,7 +46,7 @@ class MCPCreator:
     
     def __init__(self, mcp_dir: Path, script_dir: Path, 
                  prompts_dir: Path, github_url: str = "", local_repo_path: str = "",
-                 use_case_filter: str = "", api_key: str = ""):
+                 use_case_filter: str = "", api_key: str = "", rerun_from_step: int = 0):
         """
         Initialize MCP Creator
         
@@ -58,6 +58,7 @@ class MCPCreator:
             local_repo_path: Path to local repository (alternative to github_url)
             use_case_filter: Optional filter for use cases to focus on
             api_key: API key for Claude/Gemini integration testing
+            rerun_from_step: Force rerun from this step number (1-7), 0 means no forced rerun
         """
         self.mcp_dir = mcp_dir.resolve()
         self.github_url = github_url
@@ -66,6 +67,7 @@ class MCPCreator:
         self.prompts_dir = prompts_dir
         self.use_case_filter = use_case_filter
         self.api_key = api_key
+        self.rerun_from_step = rerun_from_step
         
         # Validate that either github_url or local_repo_path is provided
         if not github_url and not local_repo_path:
@@ -83,6 +85,33 @@ class MCPCreator:
     def _get_marker(self, step: str) -> Path:
         """Get marker file path for a step"""
         return self.mcp_dir / ".pipeline" / f"{step}_done"
+    
+    def _clear_markers_from_step(self, from_step: int):
+        """Clear markers from a certain step onwards to force rerun"""
+        step_markers = {
+            1: "01_setup",
+            2: "02_clone",
+            3: "03_setup_env",
+            4: "04_execute_cases",
+            5: "05_write_scripts",
+            6: "06_wrap_mcp",
+            7: "07_test_integration"
+        }
+        
+        pipeline_dir = self.mcp_dir / ".pipeline"
+        if not pipeline_dir.exists():
+            return
+        
+        cleared = []
+        for step_num in range(from_step, 8):
+            if step_num in step_markers:
+                marker = self._get_marker(step_markers[step_num])
+                if marker.exists():
+                    marker.unlink()
+                    cleared.append(step_num)
+        
+        if cleared:
+            logger.info(f"🔄 Cleared markers for steps: {cleared} (will rerun)")
     
     # ========================================================================
     # Step 1: Setup project environment and prepare working directories
@@ -117,21 +146,16 @@ class MCPCreator:
         # Create all required directories
         folders = [
             "repo",
-            "env",
             "scripts",
             "src",
             "examples",
-            "notebooks",
-            "tests",
-            "logs",
-            "tmp",
             "claude_outputs"
         ]
         
         for folder in folders:
             folder_path = self.mcp_dir / folder
             folder_path.mkdir(parents=True, exist_ok=True)
-            logger.info(f"  Created: {folder}")
+        logger.info(f"  Created: {folders}")
         
         create_marker(marker)
         log_progress(1, "Setup project environment and prepare working directories", "complete")
@@ -235,7 +259,7 @@ class MCPCreator:
         prompt_content = prompt_content.replace('${use_case_filter}', self.use_case_filter or '')
         
         # Run Claude
-        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir):
+        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
             create_marker(marker)
             log_progress(3, "Setup conda environment & scan common use cases", "complete")
             self.step_status['step3'] = 'executed'
@@ -273,7 +297,7 @@ class MCPCreator:
         prompt_content = prompt_content.replace('${api_key}', self.api_key or '')
         
         # Run Claude
-        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir):
+        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
             create_marker(marker)
             log_progress(4, "Execute common use cases (bugfix if needed)", "complete")
             self.step_status['step4'] = 'executed'
@@ -311,7 +335,7 @@ class MCPCreator:
         prompt_content = prompt_content.replace('${api_key}', self.api_key or '')
         
         # Run Claude
-        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir):
+        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
             create_marker(marker)
             log_progress(5, "Write scripts for use case functions (test & bugfix)", "complete")
             self.step_status['step5'] = 'executed'
@@ -348,7 +372,7 @@ class MCPCreator:
         prompt_content = prompt_content.replace('${repo_name}', self.repo_name)
         
         # Run Claude
-        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir):
+        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
             create_marker(marker)
             log_progress(6, "Extract MCP tools & wrap in MCP server (test & bugfix)", "complete")
             self.step_status['step6'] = 'executed'
@@ -394,7 +418,7 @@ class MCPCreator:
         prompt_content = prompt_content.replace('${api_key}', self.api_key or '')
         
         # Run Claude
-        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir):
+        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
             create_marker(marker)
             log_progress(7, "Test Claude and Gemini integration (bugfix if needed)", "complete")
             self.step_status['step7'] = 'executed'
@@ -447,6 +471,10 @@ class MCPCreator:
     def run_all(self):
         """Run the complete pipeline"""
         try:
+            # Clear markers if rerun_from_step is set
+            if self.rerun_from_step > 0:
+                self._clear_markers_from_step(self.rerun_from_step)
+            
             # Step 1: Setup project environment and prepare working directories
             self.step1_setup_project()
             logger.info(f"\n📁 MCP directory: {self.mcp_dir}\n")
@@ -459,21 +487,21 @@ class MCPCreator:
             self.step3_setup_env_and_scan()
             logger.info(f"\n⚙️  Conda environment setup & use cases scanned\n")
             
-            # Step 4: Execute the common use cases in repository
-            self.step4_execute_use_cases()
-            logger.info(f"\n🔄 Common use cases executed\n")
+            # # Step 4: Execute the common use cases in repository
+            # self.step4_execute_use_cases()
+            # logger.info(f"\n🔄 Common use cases executed\n")
             
-            # Step 5: Write script for functions to execute common use cases
-            self.step5_write_scripts()
-            logger.info(f"\n📝 Scripts written for use case functions\n")
+            # # Step 5: Write script for functions to execute common use cases
+            # self.step5_write_scripts()
+            # logger.info(f"\n📝 Scripts written for use case functions\n")
             
-            # Step 6: Extract MCP tools from use case scripts and wrap in MCP server
-            self.step6_extract_and_wrap_mcp()
-            logger.info(f"\n🛠️  MCP tools extracted and wrapped\n")
+            # # Step 6: Extract MCP tools from use case scripts and wrap in MCP server
+            # self.step6_extract_and_wrap_mcp()
+            # logger.info(f"\n🛠️  MCP tools extracted and wrapped\n")
             
-            # Step 7: Test Claude and Gemini integration
-            self.step7_test_integration()
-            logger.info(f"\n🧪 Integration testing complete\n")
+            # # Step 7: Test Claude and Gemini integration
+            # self.step7_test_integration()
+            # logger.info(f"\n🧪 Integration testing complete\n")
             
             # Print summary
             self.print_summary()
@@ -489,7 +517,7 @@ class MCPCreator:
 # ============================================================================
 
 def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path, 
-               use_case_filter: str, api_key: str):
+               use_case_filter: str, api_key: str, rerun_from_step: int = 0):
     """
     Create an MCP (Model Context Protocol) server from a GitHub repository or local code.
     
@@ -508,6 +536,9 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
         \n
         # From local repository:\n
         python create_mcp.py --local-repo-path /path/to/local/repo --mcp-dir /path/to/my-mcp
+        \n
+        # Force rerun from step 3:\n
+        python create_mcp.py --local-repo-path /path/to/repo --mcp-dir /path/to/mcp --rerun-from-step 3
     """
     # Validate that either github_url or local_repo_path is provided
     if not github_url and not local_repo_path:
@@ -520,8 +551,8 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
     # Get script directory (directory containing this file)
     script_dir = Path(__file__).parent
     
-    # Prompts are always in ./configs/prompts/ subdirectory
-    prompts_dir = script_dir / "configs" / "prompts"
+    # Prompts are always in ./prompts/ subdirectory
+    prompts_dir = script_dir / "prompts"
     
     # Validate prompts directory exists
     if not prompts_dir.exists():
@@ -542,6 +573,8 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
     logger.info(f"🔍 Use Case Filter: {use_case_filter or 'None'}")
     logger.info(f"🔑 API Key: {'Set' if api_key else 'Not set'}")
     logger.info(f"📂 Prompts Directory: {prompts_dir}")
+    if rerun_from_step > 0:
+        logger.info(f"🔄 Rerun From Step: {rerun_from_step}")
     logger.info("\n" + "-"*50 + "\n")
     
     # Create and run MCP Creator
@@ -552,7 +585,8 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
         github_url=github_url,
         local_repo_path=str(local_repo_path) if local_repo_path else "",
         use_case_filter=use_case_filter,
-        api_key=api_key
+        api_key=api_key,
+        rerun_from_step=rerun_from_step
     )
     
     try:
@@ -570,14 +604,17 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
 @click.option('--use-case-filter', default='', help='Optional filter for use cases (e.g., "prediction", "analysis")')
 @click.option('--api-key', default='', envvar='ANTHROPIC_API_KEY', 
               help='API key for Claude/Gemini testing (or set ANTHROPIC_API_KEY env var)')
+@click.option('--rerun-from-step', default=0, type=click.IntRange(0, 7),
+              help='Force rerun from this step number (1-7). Clears markers for this step and all subsequent steps.')
 def cli(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path, 
-        use_case_filter: str, api_key: str):
+        use_case_filter: str, api_key: str, rerun_from_step: int):
     create_mcp(
         github_url=github_url,
         local_repo_path=local_repo_path,
         mcp_dir=mcp_dir,
         use_case_filter=use_case_filter,
-        api_key=api_key
+        api_key=api_key,
+        rerun_from_step=rerun_from_step
     )
 
 
