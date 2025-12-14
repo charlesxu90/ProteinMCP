@@ -354,35 +354,37 @@ def run_claude_with_streaming(prompt_content: str, output_file: Path, cwd: Path,
     """
     Run Claude AI with real-time output display and full logging
     
-    Tries to use Claude Code CLI first (if logged in), then falls back to API if needed.
+    Uses Claude Code CLI (logged-in Pro account) - no API key required.
+    This function ALWAYS uses Claude Code CLI, never the API.
     Shows Claude's thinking, analysis, and responses in real-time in terminal, saves full output to JSON file.
     
     Args:
         prompt_content: The prompt to send to Claude
         output_file: Path to save the output JSON
         cwd: Working directory for the command
-        api_key: Optional API key for Anthropic API fallback
+        api_key: IGNORED - Claude Code CLI uses logged-in account, not API key
     
     Returns:
         True if successful, False otherwise
     """
     import json
     
-    # First, try using Claude Code CLI (logged-in account)
+    # Always use Claude Code CLI (Pro account), ignore any API key
+    click.echo("  🤖 Using Claude Code CLI (logged-in Pro account)")
+    click.echo("  💡 Note: Using your Pro account subscription, NOT API credits")
+    click.echo("  " + "-" * 58)
+    
+    # Check if claude CLI is available
+    claude_path = shutil.which("claude")
+    if not claude_path:
+        click.echo("  ❌ Claude CLI not found. Please install Claude Code CLI:")
+        click.echo("     npm install -g @anthropic-ai/claude-code")
+        click.echo("     Then login with: claude login")
+        return False
+    
+    click.echo(f"  📍 Using Claude at: {claude_path}")
+    
     try:
-        click.echo("  🤖 Using Claude Code CLI (logged-in account)")
-        click.echo("  " + "-" * 58)
-        
-        # Check if claude CLI is available
-        check_cmd = subprocess.run(
-            ["which", "claude"],
-            capture_output=True,
-            text=True
-        )
-        
-        if check_cmd.returncode != 0:
-            raise FileNotFoundError("Claude CLI not found")
-        
         # Run Claude with real-time output streaming
         cmd = [
             "claude",
@@ -422,7 +424,6 @@ def run_claude_with_streaming(prompt_content: str, output_file: Path, cwd: Path,
         # Read and process output line by line - display immediately
         # Read from both stdout (JSON events) and stderr (verbose logs)
         import select
-        import io
         
         while True:
             # Check if process has ended
@@ -466,7 +467,14 @@ def run_claude_with_streaming(prompt_content: str, output_file: Path, cwd: Path,
         click.echo("  " + "-" * 58)
         
         if return_code != 0:
-            raise subprocess.CalledProcessError(return_code, cmd)
+            click.echo(f"  ❌ Claude CLI exited with code {return_code}")
+            log_data["status"] = "failed"
+            log_data["return_code"] = return_code
+            log_data["raw_output"] = ''.join(raw_output)
+            
+            with open(output_file, 'w') as f:
+                json.dump(log_data, f, indent=2)
+            return False
         
         # Save to JSON
         log_data["raw_output"] = ''.join(raw_output)
@@ -482,130 +490,6 @@ def run_claude_with_streaming(prompt_content: str, output_file: Path, cwd: Path,
         return True
         
     except Exception as e:
-        click.echo(f"  ⚠️  Claude Code CLI not available: {e}")
-        click.echo("  🔄 Switching to Anthropic API...\n")
-        
-        # Fall back to Anthropic API
-        return run_claude_api(prompt_content, output_file, cwd, api_key)
-
-
-def run_claude_api(prompt_content: str, output_file: Path, cwd: Path, api_key: Optional[str] = None) -> bool:
-    """
-    Run Claude AI using Anthropic API with real-time output display
-    
-    Args:
-        prompt_content: The prompt to send to Claude
-        output_file: Path to save the output JSON
-        cwd: Working directory for the command
-        api_key: API key for Anthropic API (or ANTHROPIC_API_KEY env var)
-    
-    Returns:
-        True if successful, False otherwise
-    """
-    import json
-    
-    try:
-        # Get API key from environment if not provided
-        if not api_key:
-            api_key = os.environ.get('ANTHROPIC_API_KEY')
-        
-        if not api_key:
-            click.echo("  ❌ No API key provided. Set ANTHROPIC_API_KEY or use --api-key", err=True)
-            return False
-        
-        # Try to import anthropic
-        try:
-            import anthropic
-        except ImportError:
-            click.echo("  ❌ anthropic package not installed. Run: pip install anthropic", err=True)
-            return False
-        
-        click.echo("  🤖 Using Anthropic API (with API key)")
-        click.echo("  " + "-" * 58)
-        
-        client = anthropic.Anthropic(api_key=api_key)
-        
-        log_data = {
-            "method": "Anthropic API",
-            "model": "claude-sonnet-4-20250514",
-            "working_directory": str(cwd),
-            "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
-            "raw_output": "",
-            "progress_events": [],
-            "status": "running"
-        }
-        
-        # Stream the response with real-time display
-        raw_output = []
-        line_buffer = []
-        
-        with client.messages.stream(
-            model="claude-sonnet-4-20250514",
-            max_tokens=8192,
-            messages=[
-                {"role": "user", "content": prompt_content}
-            ]
-        ) as stream:
-            for text in stream.text_stream:
-                raw_output.append(text)
-                line_buffer.append(text)
-                
-                # Accumulate text and display meaningful chunks
-                accumulated = ''.join(line_buffer)
-                
-                # Display on newlines or when accumulating enough content
-                if '\n' in accumulated or len(accumulated) > 150:
-                    lines = accumulated.split('\n')
-                    
-                    # Display complete lines
-                    for line in lines[:-1]:
-                        if line.strip():
-                            # Check for planning/thinking keywords
-                            planning_keywords = [
-                                'i need to', 'i\'ll', 'let me', 'i\'m thinking', 'i should', 
-                                'i will', 'i have to', 'i plan to', 'thinking about', 'analyzing',
-                                'let\'s', 'first, i', 'my plan', 'my approach', 'what i\'ll do',
-                                'considering', 'evaluating', 'determining', 'checking', 'verifying'
-                            ]
-                            
-                            line_lower = line.lower()
-                            if any(keyword in line_lower for keyword in planning_keywords):
-                                click.echo(f"  🤖 {line}")
-                            # Check for system messages or important info
-                            elif any(marker in line for marker in ['Step', 'Analysis', 'Environment', 'Python', 'Running', 'Created', 'Error', 'Success']):
-                                click.echo(f"  ✓ {line}")
-                                log_data["progress_events"].append({
-                                    "timestamp": time.strftime('%H:%M:%S'),
-                                    "message": line[:200]
-                                })
-                            elif line.startswith('#'):
-                                click.echo(f"  📝 {line}")
-                            else:
-                                click.echo(f"  {line}")
-                    
-                    # Keep incomplete line in buffer
-                    line_buffer = [lines[-1]] if lines[-1] else []
-        
-        # Display any remaining buffered content
-        if line_buffer:
-            remaining = ''.join(line_buffer).strip()
-            if remaining:
-                click.echo(f"  {remaining}")
-        
-        click.echo("  " + "-" * 58)
-        
-        # Save to JSON
-        log_data["raw_output"] = ''.join(raw_output)
-        log_data["status"] = "success"
-        
-        with open(output_file, 'w') as f:
-            json.dump(log_data, f, indent=2)
-        
-        click.echo("  ✅ Successfully completed using Anthropic API")
-        click.echo(f"  📄 Log saved to: {output_file}")
-        click.echo(f"  💡 View log: python src/view_logs.py {output_file}")
-        return True
-        
-    except Exception as e:
-        click.echo(f"  ❌ Anthropic API failed: {e}", err=True)
+        click.echo(f"  ❌ Claude Code CLI failed: {e}", err=True)
+        click.echo("  💡 Make sure you're logged in with: claude login")
         return False

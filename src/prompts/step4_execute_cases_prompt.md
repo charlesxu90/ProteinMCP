@@ -16,6 +16,16 @@ You are an expert code executor and debugger. Your mission is to execute each us
 - Read `reports/use_cases.json` to understand all use cases and their requirements
 - Check which environment each use case requires (`./env` or `./env_py{version}`)
 - Verify demo data exists in `examples/data/`
+- Check package manager availability:
+  ```bash
+  # Determine package manager (prefer mamba over conda)
+  if command -v mamba &> /dev/null; then
+      PKG_MGR="mamba"
+  else
+      PKG_MGR="conda"
+  fi
+  echo "Using package manager: $PKG_MGR"
+  ```
 
 ## Tasks
 
@@ -26,10 +36,10 @@ For each use case script in `examples/`:
 1. **Activate the Correct Environment**
    ```bash
    # Check which environment is needed from use_cases.json
-   # Use mamba if available, otherwise conda
-   mamba activate ./env  # or: conda activate ./env
+   # Use the PKG_MGR variable determined in prerequisites
+   $PKG_MGR activate ./env
    # OR for legacy:
-   mamba activate ./env_py{version}  # or: conda activate ./env_py{version}
+   $PKG_MGR activate ./env_py{version}
    ```
 
 2. **Run the Use Case Script**
@@ -182,8 +192,8 @@ These examples have been tested and verified to work:
 
 ### Example 1: <Use Case Name>
 ```bash
-# Activate environment
-mamba activate ./env
+# Activate environment (use mamba if available, otherwise conda)
+mamba activate ./env  # or: conda activate ./env
 
 # Run the example
 python examples/use_case_1_name.py --input examples/data/sample.pdb --output results/output.csv

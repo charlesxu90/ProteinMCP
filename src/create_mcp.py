@@ -12,6 +12,7 @@ Steps:
 5. Write script for functions to execute common use cases (test and bugfix if needed)
 6. Extract MCP tools from use case scripts and wrap in MCP server (test and bugfix if needed)
 7. Test Claude and Gemini integration (bugfix if needed)
+8. Create comprehensive README documentation
 """
 
 import os
@@ -95,7 +96,8 @@ class MCPCreator:
             4: "04_execute_cases",
             5: "05_write_scripts",
             6: "06_wrap_mcp",
-            7: "07_test_integration"
+            7: "07_test_integration",
+            8: "08_create_readme"
         }
         
         pipeline_dir = self.mcp_dir / ".pipeline"
@@ -103,7 +105,7 @@ class MCPCreator:
             return
         
         cleared = []
-        for step_num in range(from_step, 8):
+        for step_num in range(from_step, 9):
             if step_num in step_markers:
                 marker = self._get_marker(step_markers[step_num])
                 if marker.exists():
@@ -394,10 +396,18 @@ class MCPCreator:
         
         log_progress(7, "Test Claude and Gemini integration (bugfix if needed)", "start")
         
-        # Check if MCP server file exists
-        tool_py = self.mcp_dir / "src" / f"{self.repo_name}_mcp.py"
-        if not tool_py.exists():
-            logger.warning(f"  ⚠️ MCP tool file not found: {tool_py}")
+        # Check if MCP server file exists (try multiple possible locations)
+        server_py = self.mcp_dir / "src" / "server.py"
+        legacy_tool_py = self.mcp_dir / "src" / f"{self.repo_name}_mcp.py"
+        
+        if server_py.exists():
+            mcp_server_file = server_py
+        elif legacy_tool_py.exists():
+            mcp_server_file = legacy_tool_py
+        else:
+            logger.warning(f"  ⚠️ MCP server file not found. Checked:")
+            logger.warning(f"     - {server_py}")
+            logger.warning(f"     - {legacy_tool_py}")
             logger.warning("  Make sure Step 6 completed successfully")
             self.step_status['step7'] = 'failed'
             return
@@ -416,20 +426,59 @@ class MCPCreator:
         # Replace placeholders
         prompt_content = prompt_content.replace('${repo_name}', self.repo_name)
         prompt_content = prompt_content.replace('${api_key}', self.api_key or '')
+        prompt_content = prompt_content.replace('${server_name}', self.repo_name)
         
         # Run Claude
         if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
             create_marker(marker)
             log_progress(7, "Test Claude and Gemini integration (bugfix if needed)", "complete")
             self.step_status['step7'] = 'executed'
-            
-            # Show success message
-            logger.info("\n  ✅ MCP server created and tested!")
-            logger.info(f"  📁 MCP server location: {tool_py}")
-            logger.info(f"\n  To install the MCP server, run:")
-            logger.info(f"    fastmcp install claude-code {tool_py}")
         else:
             self.step_status['step7'] = 'failed'
+
+    # ========================================================================
+    # Step 8: Create comprehensive README documentation
+    # ========================================================================
+    def step8_create_readme(self):
+        """Step 8: Create comprehensive README documentation"""
+        marker = self._get_marker("08_create_readme")
+        output_file = self.mcp_dir / "claude_outputs" / "step8_output.json"
+        
+        if check_marker(marker):
+            log_progress(8, "Create comprehensive README documentation", "skip")
+            self.step_status['step8'] = 'skipped'
+            return
+        
+        log_progress(8, "Create comprehensive README documentation", "start")
+        
+        # Read prompt
+        prompt_file = self.prompts_dir / "step8_create_readme_prompt.md"
+        if not prompt_file.exists():
+            logger.warning(f"  ⚠️ Prompt file not found: {prompt_file}")
+            logger.warning("  You'll need to run this step manually or create the prompt file")
+            self.step_status['step8'] = 'failed'
+            return
+        
+        with open(prompt_file, 'r') as f:
+            prompt_content = f.read()
+        
+        # Replace placeholders
+        prompt_content = prompt_content.replace('${repo_name}', self.repo_name)
+        prompt_content = prompt_content.replace('${project_name}', self.repo_name)
+        prompt_content = prompt_content.replace('${mcp_directory}', str(self.mcp_dir))
+        
+        # Run Claude
+        if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
+            create_marker(marker)
+            log_progress(8, "Create comprehensive README documentation", "complete")
+            self.step_status['step8'] = 'executed'
+            
+            # Show success message
+            readme_path = self.mcp_dir / "README.md"
+            if readme_path.exists():
+                logger.info(f"\n  📄 README created: {readme_path}")
+        else:
+            self.step_status['step8'] = 'failed'
 
     def print_summary(self):
         """Print final pipeline summary"""
@@ -444,7 +493,8 @@ class MCPCreator:
             'step4': '4. Execute common use cases',
             'step5': '5. Write scripts for use case functions',
             'step6': '6. Extract MCP tools & wrap in server',
-            'step7': '7. Test Claude & Gemini integration'
+            'step7': '7. Test Claude & Gemini integration',
+            'step8': '8. Create comprehensive README'
         }
         
         for key, desc in step_descriptions.items():
@@ -461,11 +511,17 @@ class MCPCreator:
         logger.info("="*60)
         
         # Show next steps
-        if self.step_status.get('step7') == 'executed':
+        if self.step_status.get('step8') in ['executed', 'skipped']:
+            # Determine MCP server file path
+            server_py = self.mcp_dir / "src" / "server.py"
+            legacy_tool_py = self.mcp_dir / "src" / f"{self.repo_name}_mcp.py"
+            mcp_file = server_py if server_py.exists() else legacy_tool_py
+            
             logger.info("\n📋 Next Steps:")
-            logger.info("  - Your MCP server has been created and tested")
-            logger.info(f"  - MCP file: {self.mcp_dir}/src/{self.repo_name}_mcp.py")
-            logger.info("  - Install with: fastmcp install claude-code <mcp_file>")
+            logger.info("  - Your MCP server has been created and documented")
+            logger.info(f"  - README: {self.mcp_dir}/README.md")
+            logger.info(f"  - MCP file: {mcp_file}")
+            logger.info(f"  - Install with: claude mcp add {self.repo_name} -- $(pwd)/env/bin/python {mcp_file}")
             logger.info("  - Then run 'claude' in terminal to use it")
 
     def run_all(self):
@@ -487,21 +543,25 @@ class MCPCreator:
             self.step3_setup_env_and_scan()
             logger.info(f"\n⚙️  Conda environment setup & use cases scanned\n")
             
-            # # Step 4: Execute the common use cases in repository
-            # self.step4_execute_use_cases()
-            # logger.info(f"\n🔄 Common use cases executed\n")
+            # Step 4: Execute the common use cases in repository
+            self.step4_execute_use_cases()
+            logger.info(f"\n🔄 Common use cases executed\n")
             
-            # # Step 5: Write script for functions to execute common use cases
-            # self.step5_write_scripts()
-            # logger.info(f"\n📝 Scripts written for use case functions\n")
+            # Step 5: Write script for functions to execute common use cases
+            self.step5_write_scripts()
+            logger.info(f"\n📝 Scripts written for use case functions\n")
             
-            # # Step 6: Extract MCP tools from use case scripts and wrap in MCP server
-            # self.step6_extract_and_wrap_mcp()
-            # logger.info(f"\n🛠️  MCP tools extracted and wrapped\n")
+            # Step 6: Extract MCP tools from use case scripts and wrap in MCP server
+            self.step6_extract_and_wrap_mcp()
+            logger.info(f"\n🛠️  MCP tools extracted and wrapped\n")
             
-            # # Step 7: Test Claude and Gemini integration
-            # self.step7_test_integration()
-            # logger.info(f"\n🧪 Integration testing complete\n")
+            # Step 7: Test Claude and Gemini integration
+            self.step7_test_integration()
+            logger.info(f"\n🧪 Integration testing complete\n")
+            
+            # Step 8: Create comprehensive README documentation
+            self.step8_create_readme()
+            logger.info(f"\n📄 README documentation created\n")
             
             # Print summary
             self.print_summary()
@@ -529,6 +589,7 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
     5. Write script for functions to execute common use cases (test and bugfix if needed)
     6. Extract MCP tools from use case scripts and wrap in MCP server (test and bugfix if needed)
     7. Test Claude and Gemini integration (bugfix if needed)
+    8. Create comprehensive README documentation
     
     Examples:\n
         # From GitHub repository:\n
@@ -571,7 +632,7 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
         logger.info(f"📦 Repository: {github_url} (GitHub)")
     logger.info(f"📁 MCP Directory: {mcp_dir}")
     logger.info(f"🔍 Use Case Filter: {use_case_filter or 'None'}")
-    logger.info(f"🔑 API Key: {'Set' if api_key else 'Not set'}")
+    logger.info(f"🤖 Using: Claude Code CLI (logged-in account)")
     logger.info(f"📂 Prompts Directory: {prompts_dir}")
     if rerun_from_step > 0:
         logger.info(f"🔄 Rerun From Step: {rerun_from_step}")
@@ -602,18 +663,16 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
 @click.option('--mcp-dir', required=True, type=click.Path(path_type=Path), 
               help='MCP project directory to create (e.g., /path/to/my-mcp-project)')
 @click.option('--use-case-filter', default='', help='Optional filter for use cases (e.g., "prediction", "analysis")')
-@click.option('--api-key', default='', envvar='ANTHROPIC_API_KEY', 
-              help='API key for Claude/Gemini testing (or set ANTHROPIC_API_KEY env var)')
-@click.option('--rerun-from-step', default=0, type=click.IntRange(0, 7),
-              help='Force rerun from this step number (1-7). Clears markers for this step and all subsequent steps.')
+@click.option('--rerun-from-step', default=0, type=click.IntRange(0, 8),
+              help='Force rerun from this step number (1-8). Clears markers for this step and all subsequent steps.')
 def cli(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path, 
-        use_case_filter: str, api_key: str, rerun_from_step: int):
+        use_case_filter: str, rerun_from_step: int):
     create_mcp(
         github_url=github_url,
         local_repo_path=local_repo_path,
         mcp_dir=mcp_dir,
         use_case_filter=use_case_filter,
-        api_key=api_key,
+        api_key="",  # Not needed - uses Claude Code CLI with logged-in account
         rerun_from_step=rerun_from_step
     )
 
