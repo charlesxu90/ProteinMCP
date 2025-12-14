@@ -11,14 +11,14 @@ You are an expert Python developer specializing in creating clean, minimal, and 
 - `repo/`: Repository codebase directory
 - `examples/`: Verified use case scripts from Step 4
 - `examples/data/`: Demo data from Step 3
-- `reports/use_cases.json`: Use cases documentation
-- `reports/execution_results.json`: Execution results from Step 4
+- `reports/step3_use_cases.md`: Use cases documentation
+- `reports/step4_execution.md`: Execution results from Step 4
 - `env/`: Main conda environment
 - `env_py{version}/`: Legacy environment (if exists)
 
 ## Prerequisites
 - All use cases in `examples/` have been verified to work (Step 4)
-- Read `reports/execution_results.json` to understand which use cases are successful
+- Read `reports/step4_execution.md` to understand which use cases are successful
 
 ## Design Principles
 
@@ -418,57 +418,85 @@ configs/
 └── README.md                   # Config documentation
 ```
 
-### 3. Script Documentation: `reports/scripts.json`
-```json
-{
-  "extraction_date": "YYYY-MM-DD",
-  "scripts": [
-    {
-      "name": "use_case_1_predict.py",
-      "path": "scripts/use_case_1_predict.py",
-      "source_use_case": "examples/use_case_1_predict.py",
-      "description": "Predict protein structure from sequence",
-      
-      "main_function": "run_predict",
-      "function_signature": "run_predict(input_file, output_file=None, config=None, **kwargs)",
-      
-      "dependencies": {
-        "essential": ["numpy", "torch"],
-        "inlined": ["repo.utils.parsers.parse_pdb"],
-        "repo_required": ["repo.model.Predictor (lazy loaded)"]
-      },
-      
-      "config_file": "configs/use_case_1_config.json",
-      
-      "inputs": [
-        {"name": "input_file", "type": "file", "format": "pdb", "description": "Input structure"}
-      ],
-      "outputs": [
-        {"name": "result", "type": "dict", "description": "Prediction results"},
-        {"name": "output_file", "type": "file", "format": "csv", "description": "Saved results"}
-      ],
-      
-      "cli_usage": "python scripts/use_case_1_predict.py --input FILE --output FILE",
-      "example": "python scripts/use_case_1_predict.py --input examples/data/sample.pdb --output results/pred.csv",
-      
-      "tested": true,
-      "independent_of_repo": false,
-      "repo_dependencies_reason": "Requires pretrained model loading from repo.model"
-    }
-  ],
-  "shared_lib": {
-    "path": "scripts/lib/",
-    "modules": ["io.py", "utils.py"],
-    "functions_count": 12
-  },
-  "summary": {
-    "total_scripts": 5,
-    "fully_independent": 3,
-    "repo_dependent": 2,
-    "total_inlined_functions": 15,
-    "config_files_created": 5
-  }
-}
+### 3. Script Documentation: `reports/step5_scripts.md`
+```markdown
+# Step 5: Scripts Extraction Report
+
+## Extraction Information
+- **Extraction Date**: YYYY-MM-DD
+- **Total Scripts**: 5
+- **Fully Independent**: 3
+- **Repo Dependent**: 2
+- **Inlined Functions**: 15
+- **Config Files Created**: 5
+
+## Scripts Overview
+
+| Script | Description | Independent | Config |
+|--------|-------------|-------------|--------|
+| `use_case_1_predict.py` | Predict protein structure | ✅ Yes | `configs/use_case_1.json` |
+| `use_case_2_analyze.py` | Analyze results | ❌ No (model) | `configs/use_case_2.json` |
+
+---
+
+## Script Details
+
+### use_case_1_predict.py
+- **Path**: `scripts/use_case_1_predict.py`
+- **Source**: `examples/use_case_1_predict.py`
+- **Description**: Predict protein structure from sequence
+- **Main Function**: `run_predict(input_file, output_file=None, config=None, **kwargs)`
+- **Config File**: `configs/use_case_1_config.json`
+- **Tested**: ✅ Yes
+- **Independent of Repo**: ❌ No
+
+**Dependencies:**
+| Type | Packages/Functions |
+|------|-------------------|
+| Essential | numpy, torch |
+| Inlined | `repo.utils.parsers.parse_pdb` |
+| Repo Required | `repo.model.Predictor` (lazy loaded) |
+
+**Repo Dependencies Reason**: Requires pretrained model loading from repo.model
+
+**Inputs:**
+| Name | Type | Format | Description |
+|------|------|--------|-------------|
+| input_file | file | pdb | Input structure |
+
+**Outputs:**
+| Name | Type | Format | Description |
+|------|------|--------|-------------|
+| result | dict | - | Prediction results |
+| output_file | file | csv | Saved results |
+
+**CLI Usage:**
+```bash
+python scripts/use_case_1_predict.py --input FILE --output FILE
+```
+
+**Example:**
+```bash
+python scripts/use_case_1_predict.py --input examples/data/sample.pdb --output results/pred.csv
+```
+
+---
+
+### use_case_2_analyze.py
+...
+
+---
+
+## Shared Library
+
+**Path**: `scripts/lib/`
+
+| Module | Functions | Description |
+|--------|-----------|-------------|
+| `io.py` | 5 | File I/O utilities |
+| `utils.py` | 7 | General utilities |
+
+**Total Functions**: 12
 ```
 
 ### 4. Updated README.md in scripts/
@@ -531,7 +559,7 @@ def predict_structure(input_file: str, output_file: str = None):
 - [ ] Repo-specific code is inlined or isolated with lazy loading
 - [ ] Configuration is externalized to `configs/` directory
 - [ ] Scripts work with example data: `python scripts/X.py --input examples/data/Y`
-- [ ] `reports/scripts.json` documents all scripts with dependencies
+- [ ] `reports/step5_scripts.md` documents all scripts with dependencies
 - [ ] Scripts are tested and produce correct outputs
 - [ ] README.md in `scripts/` explains usage
 

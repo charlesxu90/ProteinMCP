@@ -7,13 +7,13 @@ You are an expert code executor and debugger. Your mission is to execute each us
 - `repo/`: Repository codebase directory
 - `examples/`: Use case scripts created in Step 3
 - `examples/data/`: Demo data copied in Step 3
-- `reports/use_cases.json`: Use cases documented in Step 3
+- `reports/step3_use_cases.md`: Use cases documented in Step 3
 - `env/`: Main conda environment from Step 3
 - `env_py{version}/`: Legacy environment (if created in Step 3)
 - `api_key`: ${api_key} (if needed for API calls)
 
 ## Prerequisites
-- Read `reports/use_cases.json` to understand all use cases and their requirements
+- Read `reports/step3_use_cases.md` to understand all use cases and their requirements
 - Check which environment each use case requires (`./env` or `./env_py{version}`)
 - Verify demo data exists in `examples/data/`
 - Check package manager availability:
@@ -35,7 +35,7 @@ For each use case script in `examples/`:
 
 1. **Activate the Correct Environment**
    ```bash
-   # Check which environment is needed from use_cases.json
+   # Check which environment is needed from step3_use_cases.md
    # Use the PKG_MGR variable determined in prerequisites
    $PKG_MGR activate ./env
    # OR for legacy:
@@ -119,44 +119,79 @@ For each successfully executed use case:
 
 ## Expected Outputs
 
-### 1. Execution Results: `reports/execution_results.json`
-```json
-{
-  "execution_date": "YYYY-MM-DD",
-  "results": [
-    {
-      "use_case_id": "uc_001",
-      "name": "Use Case Name",
-      "script_path": "examples/use_case_1_name.py",
-      "status": "success|failed|partial",
-      "environment_used": "./env or ./env_py{version}",
-      "execution_time_seconds": 12.5,
-      "command_executed": "python examples/use_case_1_name.py --input examples/data/sample.pdb --output results/output.csv",
-      "input_data": "examples/data/sample.pdb",
-      "output_files": ["results/output.csv"],
-      "issues_found": [
-        {
-          "type": "import_error|data_issue|code_bug|dependency_issue",
-          "description": "Description of the issue",
-          "file": "examples/use_case_1_name.py",
-          "line": 42,
-          "error_message": "Original error message",
-          "fix_applied": "Description of fix applied",
-          "fixed": true
-        }
-      ],
-      "notes": "Any additional notes about this use case"
-    }
-  ],
-  "summary": {
-    "total": 10,
-    "successful": 8,
-    "failed": 1,
-    "partial": 1,
-    "issues_fixed": 15,
-    "issues_remaining": 2
-  }
-}
+### 1. Execution Results: `reports/step4_execution.md`
+```markdown
+# Step 4: Execution Results Report
+
+## Execution Information
+- **Execution Date**: YYYY-MM-DD
+- **Total Use Cases**: 10
+- **Successful**: 8
+- **Failed**: 1
+- **Partial**: 1
+
+## Results Summary
+
+| Use Case | Status | Environment | Time | Output Files |
+|----------|--------|-------------|------|-------------|
+| UC-001: Use Case Name | ✅ Success | ./env | 12.5s | `results/output.csv` |
+| UC-002: Another Case | ❌ Failed | ./env_py3.9 | - | - |
+| UC-003: Third Case | ⚠️ Partial | ./env | 45.2s | `results/partial.json` |
+
+---
+
+## Detailed Results
+
+### UC-001: Use Case Name
+- **Status**: ✅ Success
+- **Script**: `examples/use_case_1_name.py`
+- **Environment**: `./env`
+- **Execution Time**: 12.5 seconds
+- **Command**: `python examples/use_case_1_name.py --input examples/data/sample.pdb --output results/output.csv`
+- **Input Data**: `examples/data/sample.pdb`
+- **Output Files**: `results/output.csv`
+
+**Issues Found**: None
+
+---
+
+### UC-002: Another Case
+- **Status**: ❌ Failed
+- **Script**: `examples/use_case_2_name.py`
+- **Environment**: `./env_py3.9`
+
+**Issues Found:**
+
+| Type | Description | File | Line | Fixed? |
+|------|-------------|------|------|--------|
+| import_error | Missing package xyz | `examples/use_case_2_name.py` | 42 | ✅ Yes |
+| data_issue | Wrong data format | `examples/data/input.csv` | - | ❌ No |
+
+**Error Message:**
+```
+Original error message here
+```
+
+**Fix Applied:**
+Description of fix applied
+
+---
+
+## Issues Summary
+
+| Metric | Count |
+|--------|-------|
+| Issues Fixed | 15 |
+| Issues Remaining | 2 |
+
+### Remaining Issues
+1. **UC-002**: Data format issue - needs manual data conversion
+2. **UC-005**: GPU required but not available
+
+---
+
+## Notes
+Any additional notes about this execution run
 ```
 
 ### 2. Updated Use Case Scripts in `examples/`
@@ -211,7 +246,7 @@ python examples/use_case_1_name.py --input examples/data/sample.pdb --output res
 - [ ] At least 80% of use cases run successfully
 - [ ] All fixable issues have been resolved
 - [ ] Output files are generated and valid
-- [ ] `reports/execution_results.json` documents all results
+- [ ] `reports/step4_execution.md` documents all results
 - [ ] `results/` directory contains actual outputs
 - [ ] README.md updated with verified working examples
 - [ ] Unfixable issues are documented with clear explanations

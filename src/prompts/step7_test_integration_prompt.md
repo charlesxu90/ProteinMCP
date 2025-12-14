@@ -8,7 +8,7 @@ You are an expert in MCP (Model Context Protocol) integration testing. Your miss
 - `scripts/`: Clean scripts from Step 5
 - `examples/data/`: Demo data for testing
 - `env/`: Main conda environment
-- `reports/mcp_tools.json`: Tool documentation from Step 6
+- `reports/step6_mcp_tools.md`: Tool documentation from Step 6
 
 ## Prerequisites
 
@@ -367,7 +367,7 @@ After identifying issues:
 2. **Re-validate** with pre-flight checks
 3. **Restart Claude Code/Gemini CLI** to reload server
 4. **Re-run failing tests** to confirm fix
-5. **Document the fix** in reports/integration_tests.json
+5. **Document the fix** in reports/step7_integration.md
 
 ### Task 6: Create Test Report and Documentation
 
@@ -451,7 +451,7 @@ if __name__ == "__main__":
     # Add more tests...
     
     report = runner.generate_report()
-    Path("reports/integration_tests.json").write_text(report)
+    Path("reports/step7_integration.md").write_text(report)
     print(report)
 ```
 
@@ -547,74 +547,93 @@ Before marking step complete, verify:
 
 #### Documentation
 - [ ] Test prompts documented in tests/test_prompts.md
-- [ ] Test results saved in reports/integration_tests.json
+- [ ] Test results saved in reports/step7_integration.md
 - [ ] Known issues documented with workarounds
 - [ ] README updated with installation instructions
 
 ## Expected Outputs
 
-### 1. Test Results: `reports/integration_tests.json`
-```json
-{
-  "test_date": "YYYY-MM-DD",
-  "server_name": "${server_name}",
-  "server_path": "src/server.py",
-  "environment": "./env",
-  "tests": {
-    "server_startup": {
-      "status": "passed",
-      "tools_found": 12,
-      "startup_time": "0.5s"
-    },
-    "claude_code_installation": {
-      "status": "passed",
-      "method": "claude mcp add",
-      "verification": "claude mcp list shows server"
-    },
-    "sync_tools": {
-      "status": "passed",
-      "tools_tested": ["tool1", "tool2", "tool3"],
-      "all_passed": true,
-      "notes": "All sync tools respond within 30 seconds"
-    },
-    "submit_api": {
-      "status": "passed",
-      "workflow_tested": ["submit", "status", "result", "log", "cancel"],
-      "notes": "Full workflow completes correctly"
-    },
-    "batch_processing": {
-      "status": "passed",
-      "files_tested": 3,
-      "notes": "Batch job processes all files"
-    },
-    "error_handling": {
-      "status": "passed",
-      "scenarios_tested": ["invalid_path", "invalid_params", "missing_required"],
-      "notes": "All errors return structured messages"
-    },
-    "gemini_cli": {
-      "status": "passed|skipped|failed",
-      "notes": "Optional - requires Gemini CLI setup"
-    }
-  },
-  "issues_found": [
-    {
-      "id": "issue_001",
-      "description": "Path not resolved correctly for relative inputs",
-      "severity": "medium",
-      "fix_applied": "Added Path().resolve() in tool functions",
-      "file_modified": "src/server.py",
-      "verified": true
-    }
-  ],
-  "summary": {
-    "total_tests": 7,
-    "passed": 7,
-    "failed": 0,
-    "pass_rate": "100%",
-    "ready_for_production": true
-  }
-}
+### 1. Test Results: `reports/step7_integration.md`
+```markdown
+# Step 7: Integration Test Results
+
+## Test Information
+- **Test Date**: YYYY-MM-DD
+- **Server Name**: ${server_name}
+- **Server Path**: `src/server.py`
+- **Environment**: `./env`
+
+## Test Results Summary
+
+| Test Category | Status | Notes |
+|---------------|--------|-------|
+| Server Startup | ✅ Passed | Found 12 tools, startup time 0.5s |
+| Claude Code Installation | ✅ Passed | Verified with `claude mcp list` |
+| Sync Tools | ✅ Passed | All 3 tools respond < 30s |
+| Submit API | ✅ Passed | Full workflow works |
+| Batch Processing | ✅ Passed | Processed 3 files |
+| Error Handling | ✅ Passed | All error cases handled |
+| Gemini CLI | ⏭️ Skipped | Optional |
+
+## Detailed Results
+
+### Server Startup
+- **Status**: ✅ Passed
+- **Tools Found**: 12
+- **Startup Time**: 0.5s
+
+### Claude Code Installation
+- **Status**: ✅ Passed
+- **Method**: `claude mcp add`
+- **Verification**: `claude mcp list` shows server
+
+### Sync Tools
+- **Status**: ✅ Passed
+- **Tools Tested**: tool1, tool2, tool3
+- **All Passed**: ✅ Yes
+- **Notes**: All sync tools respond within 30 seconds
+
+### Submit API
+- **Status**: ✅ Passed
+- **Workflow Tested**: submit → status → result → log → cancel
+- **Notes**: Full workflow completes correctly
+
+### Batch Processing
+- **Status**: ✅ Passed
+- **Files Tested**: 3
+- **Notes**: Batch job processes all files
+
+### Error Handling
+- **Status**: ✅ Passed
+- **Scenarios Tested**: invalid_path, invalid_params, missing_required
+- **Notes**: All errors return structured messages
+
+### Gemini CLI
+- **Status**: ⏭️ Skipped
+- **Notes**: Optional - requires Gemini CLI setup
+
+---
+
+## Issues Found & Fixed
+
+### Issue #001: Path Resolution
+- **Description**: Path not resolved correctly for relative inputs
+- **Severity**: Medium
+- **Fix Applied**: Added `Path().resolve()` in tool functions
+- **File Modified**: `src/server.py`
+- **Verified**: ✅ Yes
+
+---
+
+## Summary
+
+| Metric | Value |
+|--------|-------|
+| Total Tests | 7 |
+| Passed | 7 |
+| Failed | 0 |
+| Pass Rate | 100% |
+| Ready for Production | ✅ Yes |
 ```
 
 ### 2. Test Prompts: `tests/test_prompts.md`

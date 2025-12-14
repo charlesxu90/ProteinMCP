@@ -9,7 +9,7 @@ You are an expert technical writer and documentation specialist. Your mission is
 - `examples/data/`: Demo data for testing
 - `configs/`: Configuration files
 - `env/`: Conda environment
-- `reports/`: All reports from previous steps (use_cases.json, scripts.json, mcp_tools.json, integration_tests.json)
+- `reports/`: All reports from previous steps (step3_use_cases.md, step5_scripts.md, step6_mcp_tools.md, step7_integration.md)
 
 ## Prerequisites
 
@@ -28,10 +28,11 @@ echo "Using package manager: $PKG_MGR"
 ### Task 1: Gather Information from Previous Steps
 
 1. **Read Reports**
-   - `reports/use_cases.json` - Use case documentation
-   - `reports/scripts.json` - Script documentation
-   - `reports/mcp_tools.json` - MCP tool documentation
-   - `reports/integration_tests.json` - Test results
+   - `reports/step3_use_cases.md` - Use case documentation
+   - `reports/step3_environment.md` - Environment setup details
+   - `reports/step5_scripts.md` - Script documentation
+   - `reports/step6_mcp_tools.md` - MCP tool documentation
+   - `reports/step7_integration.md` - Test results
 
 2. **Analyze Directory Structure**
    - List all scripts in `scripts/`

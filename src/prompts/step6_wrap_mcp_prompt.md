@@ -7,7 +7,7 @@ You are an expert MCP (Model Context Protocol) developer. Your mission is to con
 - `scripts/`: Clean, self-contained scripts from Step 5
 - `scripts/lib/`: Shared library functions (if exists)
 - `configs/`: Configuration files from Step 5
-- `reports/scripts.json`: Script documentation from Step 5
+- `reports/step5_scripts.md`: Script documentation from Step 5
 - `examples/data/`: Demo data for testing
 - `env/`: Main conda environment
 
@@ -689,41 +689,100 @@ Complete MCP server with:
 ### 2. Job Manager: `src/jobs/manager.py`
 Job queue system for async operations.
 
-### 3. Tool Documentation: `reports/mcp_tools.json`
-```json
-{
-  "server_name": "${repo_name}",
-  "version": "1.0.0",
-  "created_date": "YYYY-MM-DD",
-  "tools": {
-    "job_management": [
-      {"name": "get_job_status", "description": "Check job progress"},
-      {"name": "get_job_result", "description": "Get completed job results"},
-      {"name": "get_job_log", "description": "View job execution logs"},
-      {"name": "cancel_job", "description": "Cancel running job"},
-      {"name": "list_jobs", "description": "List all jobs"}
-    ],
-    "sync_tools": [
-      {
-        "name": "<tool_name>",
-        "description": "<description>",
-        "source_script": "scripts/<script>.py",
-        "estimated_runtime": "<X seconds/minutes>",
-        "parameters": [...]
-      }
-    ],
-    "submit_tools": [
-      {
-        "name": "submit_<tool_name>",
-        "description": "<description>",
-        "source_script": "scripts/<script>.py",
-        "estimated_runtime": ">10 minutes",
-        "supports_batch": true,
-        "parameters": [...]
-      }
-    ]
-  }
-}
+### 3. Tool Documentation: `reports/step6_mcp_tools.md`
+```markdown
+# Step 6: MCP Tools Documentation
+
+## Server Information
+- **Server Name**: ${repo_name}
+- **Version**: 1.0.0
+- **Created Date**: YYYY-MM-DD
+- **Server Path**: `src/server.py`
+
+## Job Management Tools
+
+| Tool | Description |
+|------|-------------|
+| `get_job_status` | Check job progress |
+| `get_job_result` | Get completed job results |
+| `get_job_log` | View job execution logs |
+| `cancel_job` | Cancel running job |
+| `list_jobs` | List all jobs |
+
+## Sync Tools (Fast Operations < 10 min)
+
+| Tool | Description | Source Script | Est. Runtime |
+|------|-------------|---------------|--------------|
+| `<tool_name>` | <description> | `scripts/<script>.py` | ~30 sec |
+| `<tool_name_2>` | <description> | `scripts/<script2>.py` | ~2 min |
+
+### Tool Details
+
+#### <tool_name>
+- **Description**: <description>
+- **Source Script**: `scripts/<script>.py`
+- **Estimated Runtime**: ~30 seconds
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| input_file | str | Yes | - | Input file path |
+| output_file | str | No | None | Output file path |
+| param1 | int | No | 10 | Parameter description |
+
+**Example:**
+```
+Use <tool_name> with input_file "examples/data/sample.pdb"
+```
+
+---
+
+## Submit Tools (Long Operations > 10 min)
+
+| Tool | Description | Source Script | Est. Runtime | Batch Support |
+|------|-------------|---------------|--------------|---------------|
+| `submit_<tool_name>` | <description> | `scripts/<script>.py` | >10 min | ✅ Yes |
+
+### Tool Details
+
+#### submit_<tool_name>
+- **Description**: <description>
+- **Source Script**: `scripts/<script>.py`
+- **Estimated Runtime**: >10 minutes
+- **Supports Batch**: ✅ Yes
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| input_file | str | Yes | - | Input file path |
+| job_name | str | No | auto | Custom job name |
+
+**Example:**
+```
+Submit <task_name> for examples/data/large_file.fasta
+```
+
+---
+
+## Workflow Examples
+
+### Quick Analysis (Sync)
+```
+Use <sync_tool> with input_file "examples/data/sample.pdb"
+→ Returns results immediately
+```
+
+### Long-Running Task (Submit API)
+```
+1. Submit: submit_<task> with input_file "examples/data/sample.fasta"
+   → Returns: job_id "abc123"
+
+2. Check: get_job_status with job_id "abc123"
+   → Returns: status "running", progress 50%
+
+3. Result: get_job_result with job_id "abc123"
+   → Returns: full results when completed
+```
 ```
 
 ### 4. Updated README.md
@@ -847,7 +906,7 @@ For each script in `scripts/`:
 - [ ] Batch support evaluated
 - [ ] MCP tool implemented
 - [ ] Tool tested with example data
-- [ ] Documentation added to reports/mcp_tools.json
+- [ ] Documentation added to reports/step6_mcp_tools.md
 
 ## Important Notes
 

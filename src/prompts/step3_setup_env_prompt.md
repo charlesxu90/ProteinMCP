@@ -54,6 +54,9 @@ You are an expert Python environment manager and codebase analyst. Your mission 
    pip install -r repo/requirements.txt
    # or
    $PKG_MGR env update -p ./env -f repo/environment.yml
+   
+   # IMPORTANT: Always force reinstall fastmcp to ensure clean installation
+   pip install --force-reinstall --no-cache-dir fastmcp
    ```
 
    **Dual Environment (Python < 3.10):**
@@ -62,7 +65,7 @@ You are an expert Python environment manager and codebase analyst. Your mission 
    $PKG_MGR create -p ./env python=3.10 pip -y
    $PKG_MGR activate ./env
    pip install loguru click pandas numpy tqdm
-   pip install --ignore-installed fastmcp
+   pip install --force-reinstall --no-cache-dir fastmcp
    
    # Legacy environment for original dependencies (e.g., ./env_py3.9 if detected version is 3.9)
    $PKG_MGR env create -f repo/environment.yml -p ./env_py{version} -y
@@ -251,9 +254,9 @@ Key packages in `./env_py<VERSION>`:
 <Any special configuration, environment variables, or setup requirements discovered>
 ```
 
-### 2. Environment Report: `reports/environment_setup.md`
+### 2. Environment Report: `reports/step3_environment.md`
 ```markdown
-# Environment Setup Report
+# Step 3: Environment Setup Report
 
 ## Python Version Detection
 - **Detected Python Version**: X.X.X
@@ -302,51 +305,67 @@ conda activate ./env_py3.9  # or: mamba activate ./env_py3.9
 <Any special configuration, workarounds, or environment-specific requirements>
 ```
 
-### 2. Use Cases Report: `reports/use_cases.json`
-```json
-{
-  "scan_date": "YYYY-MM-DD",
-  "filter_applied": "${use_case_filter}",
-  "python_version": "X.X.X",
-  "environment_strategy": "single|dual",
-  "use_cases": [
-    {
-      "id": "uc_001",
-      "name": "Use Case Name",
-      "description": "What this use case does",
-      "script_path": "examples/use_case_1_name.py",
-      "inputs": [
-        {"name": "input_file", "type": "file", "description": "Input PDB file", "parameter": "--input or -i"}
-      ],
-      "outputs": [
-        {"name": "result", "type": "file", "description": "Output CSV file"}
-      ],
-      "complexity": "simple|medium|complex",
-      "environment": "./env or ./env_py{version}",
-      "source_file": "path/to/original/example.py",
-      "source_docs": "README.md#section",
-      "priority": "high|medium|low",
-      "example_usage": "python examples/use_case_1_name.py --input examples/data/sample.pdb --output result.csv",
-      "example_data": "examples/data/sample.pdb",
-      "cli_args": [
-        {"name": "input", "type": "str", "required": true, "description": "Input file path"},
-        {"name": "output", "type": "str", "required": true, "description": "Output file path"}
-      ]
-    }
-  ],
-  "summary": {
-    "total_found": 10,
-    "scripts_created": 10,
-    "demo_data_copied": true,
-    "high_priority": 3,
-    "medium_priority": 4,
-    "low_priority": 3
-  },
-  "demo_data_index": [
-    {"source": "repo/tests/data/sample.pdb", "destination": "examples/data/sample.pdb", "description": "Sample protein structure for testing"},
-    {"source": "repo/examples/models/pretrained.pt", "destination": "examples/models/pretrained.pt", "description": "Pre-trained model weights"}
-  ]
-}
+### 2. Use Cases Report: `reports/step3_use_cases.md`
+```markdown
+# Step 3: Use Cases Report
+
+## Scan Information
+- **Scan Date**: YYYY-MM-DD
+- **Filter Applied**: ${use_case_filter}
+- **Python Version**: X.X.X
+- **Environment Strategy**: single|dual
+
+## Use Cases
+
+### UC-001: Use Case Name
+- **Description**: What this use case does
+- **Script Path**: `examples/use_case_1_name.py`
+- **Complexity**: simple|medium|complex
+- **Priority**: high|medium|low
+- **Environment**: `./env` or `./env_py{version}`
+- **Source**: `path/to/original/example.py`, README.md#section
+
+**Inputs:**
+| Name | Type | Description | Parameter |
+|------|------|-------------|----------|
+| input_file | file | Input PDB file | --input, -i |
+
+**Outputs:**
+| Name | Type | Description |
+|------|------|-------------|
+| result | file | Output CSV file |
+
+**Example Usage:**
+```bash
+python examples/use_case_1_name.py --input examples/data/sample.pdb --output result.csv
+```
+
+**Example Data**: `examples/data/sample.pdb`
+
+---
+
+### UC-002: Another Use Case
+...
+
+---
+
+## Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Found | 10 |
+| Scripts Created | 10 |
+| High Priority | 3 |
+| Medium Priority | 4 |
+| Low Priority | 3 |
+| Demo Data Copied | ✅ |
+
+## Demo Data Index
+
+| Source | Destination | Description |
+|--------|-------------|-------------|
+| `repo/tests/data/sample.pdb` | `examples/data/sample.pdb` | Sample protein structure for testing |
+| `repo/examples/models/pretrained.pt` | `examples/models/pretrained.pt` | Pre-trained model weights |
 ```
 
 ## Success Criteria
@@ -362,7 +381,7 @@ conda activate ./env_py3.9  # or: mamba activate ./env_py3.9
 - [ ] Demo/test data copied to `examples/data/` directory with proper organization
 - [ ] Scripts use relative paths pointing to `examples/data/` for default inputs
 - [ ] Use cases documented with inputs/outputs, CLI parameters, and example data locations
-- [ ] Reports generated in `reports/` directory
+- [ ] Reports generated in `reports/` directory (`step3_environment.md`, `step3_use_cases.md`)
 - [ ] **README.md created with ACTUAL commands used during setup:**
   - [ ] Exact Python version that worked
   - [ ] Package manager used (mamba/conda)
@@ -391,8 +410,8 @@ After completion, the project should have:
 │   │   └── pretrained.pt
 │   └── README.md                # Index of examples and demo data
 ├── reports/
-│   ├── environment_setup.md
-│   └── use_cases.json
+│   ├── step3_environment.md
+│   └── step3_use_cases.md
 └── repo/                         # Original repository
 ```
 
