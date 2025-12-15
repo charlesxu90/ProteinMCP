@@ -427,22 +427,6 @@ class MCPCreator:
         prompt_content = prompt_content.replace('${repo_name}', self.repo_name)
         prompt_content = prompt_content.replace('${api_key}', self.api_key or '')
         prompt_content = prompt_content.replace('${server_name}', self.repo_name)
-            """
-            Step 7: Test Claude and Gemini integration (bugfix if needed)
-            Ensures all generated markdown reports are placed in the 'reports' directory only.
-            """
-            # ...existing code...
-            # Ensure all report markdown files are written to reports/
-            reports_dir = self.mcp_dir / "reports"
-            reports_dir.mkdir(exist_ok=True)
-            # ...existing code for generating reports...
-            # Example: write step7_integration_test_report.md to reports only
-            step7_report = reports_dir / "step7_integration_test_report.md"
-            # ...generate report content as 'report_content'...
-            # with open(step7_report, "w") as f:
-            #     f.write(report_content)
-            # ...do not write any markdown files outside reports/
-            # ...existing code...
         
         # Run Claude
         if run_claude_with_streaming(prompt_content, output_file, self.mcp_dir, self.api_key):
