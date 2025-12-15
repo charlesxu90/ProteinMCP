@@ -11,3 +11,4 @@ env/
 .claude/
 .gemini/
 examples/
+public/

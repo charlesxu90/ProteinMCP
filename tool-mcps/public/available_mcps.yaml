@@ -1,0 +1,219 @@
+# Public MCP Registry
+# This file defines installation configurations for public MCP servers.
+# 
+# Supported runtime types:
+#   - python: Python-based MCPs (use pip/conda)
+#   - node: Node.js/TypeScript MCPs (use npm)
+#   - binary: Pre-compiled binaries
+#
+# Fields:
+#   - name: Display name
+#   - url: GitHub repository URL
+#   - description: Brief description
+#   - source: Source organization
+#   - runtime: python | node | binary
+#   - setup_commands: Commands to run after cloning (in order)
+#   - server_command: Command to start the server
+#   - server_args: Arguments for the server command
+#   - env_vars: Environment variables needed
+#   - dependencies: System dependencies required
+
+mcps:
+  # =============================================================================
+  # Augmented Nature MCPs (Node.js/TypeScript)
+  # =============================================================================
+  
+  uniprot:
+    name: "UniProt MCP Server"
+    url: "https://github.com/Augmented-Nature/Augmented-Nature-UniProt-MCP-Server"
+    description: "Advanced access to UniProt protein database with 26 bioinformatics tools"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  alphafold-db:
+    name: "AlphaFold DB MCP Server"
+    url: "https://github.com/Augmented-Nature/AlphaFold-MCP-Server"
+    description: "Access to AlphaFold Protein Structure Database"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  pdb:
+    name: "PDB MCP Server"
+    url: "https://github.com/Augmented-Nature/PDB-MCP-Server"
+    description: "Access to Protein Data Bank (PDB) structures"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  string-db:
+    name: "STRING DB MCP Server"
+    url: "https://github.com/Augmented-Nature/STRING-db-MCP-Server"
+    description: "Access to STRING protein interaction database"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  protein-atlas:
+    name: "ProteinAtlas MCP Server"
+    url: "https://github.com/Augmented-Nature/ProteinAtlas-MCP-Server"
+    description: "Access to Human Protein Atlas data"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  kegg:
+    name: "KEGG MCP Server"
+    url: "https://github.com/Augmented-Nature/KEGG-MCP-Server"
+    description: "Access to KEGG database through REST API"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  open-targets:
+    name: "Open Targets MCP Server"
+    url: "https://github.com/Augmented-Nature/OpenTargets-MCP-Server"
+    description: "Gene-drug-disease associations research"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  ncbi-datasets:
+    name: "NCBI Datasets MCP Server"
+    url: "https://github.com/Augmented-Nature/NCBI-Datasets-MCP-Server"
+    description: "Access to NCBI Datasets API with 31 tools"
+    source: "Augmented Nature"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["build/index.js"]
+
+  # =============================================================================
+  # Community MCPs
+  # =============================================================================
+  
+  pymol:
+    name: "PyMOL MCP"
+    url: "https://github.com/vrtejus/pymol-mcp"
+    description: "AI agents interact with and control PyMOL"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -e ."
+    server_command: "python"
+    server_args: ["-m", "pymol_mcp"]
+    dependencies:
+      - "pymol"
+
+  blast:
+    name: "BLAST MCP"
+    url: "https://github.com/bio-mcp/bio-mcp-blast"
+    description: "NCBI BLAST sequence similarity search"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -r requirements.txt"
+    server_command: "python"
+    server_args: ["src/server.py"]
+    dependencies:
+      - "blast+"
+
+  arxiv:
+    name: "Arxiv MCP"
+    url: "https://github.com/blazickjp/arxiv-mcp-server"
+    description: "Search and access arXiv papers"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -e ."
+    server_command: "python"
+    server_args: ["-m", "arxiv_mcp_server"]
+
+  biorxiv:
+    name: "bioRxiv MCP"
+    url: "https://github.com/JackKuo666/bioRxiv-MCP-Server"
+    description: "Search and access bioRxiv papers"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -r requirements.txt"
+    server_command: "python"
+    server_args: ["src/biorxiv_mcp_server/server.py"]
+
+  pubmed:
+    name: "PubMed MCP"
+    url: "https://github.com/JackKuo666/PubMed-MCP-Server"
+    description: "Search and analyze PubMed articles"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -r requirements.txt"
+    server_command: "python"
+    server_args: ["src/pubmed_mcp_server/server.py"]
+
+  bio-mcp:
+    name: "BioMCP"
+    url: "https://github.com/acashmoney/bio-mcp"
+    description: "Protein structure analysis capabilities"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -e ."
+    server_command: "python"
+    server_args: ["-m", "bio_mcp"]
+
+  biomedical:
+    name: "Biomedical MCP"
+    url: "https://github.com/genomoncology/biomcp"
+    description: "Clinical trials, literature, genomic variants"
+    source: "Community"
+    runtime: python
+    setup_commands:
+      - "pip install -e ."
+    server_command: "biomcp"
+    server_args: ["run"]
+
+  brave-search:
+    name: "Brave Search MCP"
+    url: "https://github.com/brave/brave-search-mcp-server"
+    description: "Web, image, video, news search with AI summarization"
+    source: "Community"
+    runtime: node
+    setup_commands:
+      - "npm install"
+      - "npm run build"
+    server_command: "node"
+    server_args: ["dist/index.js"]
+    env_vars:
+      BRAVE_API_KEY: "your-api-key-here"
