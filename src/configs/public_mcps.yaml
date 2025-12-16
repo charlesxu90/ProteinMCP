@@ -102,20 +102,6 @@ mcps:
     - npm run build
     source: Augmented Nature
     url: https://github.com/Augmented-Nature/KEGG-MCP-Server
-  my-custom-mcp:
-    dependencies: []
-    description: My custom MCP for protein analysis
-    env_vars:
-      MY_API_KEY: your-key-here
-    runtime: python
-    server_args:
-    - -m
-    - my_mcp.server
-    server_command: python
-    setup_commands:
-    - pip install -r requirements.txt
-    source: Custom
-    url: https://github.com/myorg/my-mcp
   ncbi-datasets:
     dependencies: []
     description: Access to NCBI Datasets API with 31 tools

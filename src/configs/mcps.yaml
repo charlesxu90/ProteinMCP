@@ -13,6 +13,20 @@ mcps:
     - npm run build
     source: Augmented Nature
     url: https://github.com/Augmented-Nature/AlphaFold-MCP-Server
+  arxiv:
+    dependencies: []
+    description: Search and access arXiv papers
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/arxiv-mcp-server
+    runtime: python
+    server_args:
+    - -m
+    - arxiv_mcp_server
+    server_command: python
+    setup_commands:
+    - pip install -e .
+    source: Community
+    url: https://github.com/blazickjp/arxiv-mcp-server
   kegg:
     dependencies: []
     description: Access to KEGG database through REST API
