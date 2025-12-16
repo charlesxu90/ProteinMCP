@@ -30,16 +30,16 @@ python src/create_mcp.py --github-url https://github.com/jwohlwend/boltz --mcp-d
 python src/create_mcp.py --local-repo-path /opt/rosetta/rosetta.binary.ubuntu.release-371/main/ --mcp-dir tool-mcps/rosetta_mcp --use-case-filter 'Membrane protein structure prediction, Loop modeling, Enzyme design, Protein Design with non-canonical amino acids, Protein-protein docking, Ligand docking, Antibody-antigen docking (SnugDock), Symmetric docking, RNA design, RNA-protein complex prediction, CDR loop modeling, Antibody design, Relax, Structure quality analysis, Clustering, Covalent docking, Ligand design, Peptide modeling, Symmetric assembly modeling, Membrane protein design, Multi-state design, ddG calculations, NMR-guided modeling, Cryo-EM refinement, Comparative modeling'
 ```
 
-### Install a public MCP
+### Install a MCP
 ```shell
-python src/install_mcp.py list                     # List all MCPs
-python src/install_mcp.py list --local             # List local MCPs only
+python src/install_mcp.py list                     # List all MCPs (fast, uses cache)
+python src/install_mcp.py list --refresh           # Refresh status cache (slower, but accurate)
+
+python src/install_mcp.py install uniprot           # Install Uniprot MCP from Augmented Nature
+python src/install_mcp.py install proteinmpnn       # Install a MPC in ProteinMCP project
 ```
 
-### Install a MCP in ProteinMCP
-```shell
-python src/install_mcp.py install proteinmpnn      # Install with Claude Code (default)
-```
+**Performance Note:** The `list` command uses status caching to avoid repetitive CLI checks. Status is cached for 5 minutes in `tool-mcps/mcp.status`. Use `--refresh` to force update. This provides ~100-200x performance improvement for listing MCPs.
 
 ### Call MCP service
 

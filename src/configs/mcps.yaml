@@ -1,0 +1,100 @@
+mcps:
+  alphafold-db:
+    dependencies: []
+    description: Access to AlphaFold Protein Structure Database
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/AlphaFold-MCP-Server
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/AlphaFold-MCP-Server
+  kegg:
+    dependencies: []
+    description: Access to KEGG database through REST API
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/KEGG-MCP-Server
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/KEGG-MCP-Server
+  ncbi-datasets:
+    dependencies: []
+    description: Access to NCBI Datasets API with 31 tools
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/NCBI-Datasets-MCP-Server
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/NCBI-Datasets-MCP-Server
+  open-targets:
+    dependencies: []
+    description: Gene-drug-disease associations research
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/OpenTargets-MCP-Server
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/OpenTargets-MCP-Server
+  protein-atlas:
+    dependencies: []
+    description: Access to Human Protein Atlas data
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/ProteinAtlas-MCP-Server
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/ProteinAtlas-MCP-Server
+  string-db:
+    dependencies: []
+    description: Access to STRING protein interaction database
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/STRING-db-MCP-Server
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/STRING-db-MCP-Server
+  uniprot:
+    dependencies: []
+    description: Advanced access to UniProt protein database with 26 bioinformatics
+      tools
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/Augmented-Nature-UniProt-MCP-Server
+    runtime: node
+    server_args:
+    - build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Augmented Nature
+    url: https://github.com/Augmented-Nature/Augmented-Nature-UniProt-MCP-Server

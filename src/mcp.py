@@ -154,27 +154,65 @@ class MCP:
 
         return False
 
-    def get_status(self, cli: str = "claude") -> MCPStatus:
+    def get_status(self, cli: str = "claude", use_cache: bool = True) -> MCPStatus:
         """
         Get overall status of MCP.
 
         Args:
             cli: CLI tool to check registration against
+            use_cache: If True, use cached status when available (default: True)
 
         Returns:
             MCPStatus enum value
         """
+        # Try cache first if enabled
+        if use_cache:
+            from status_cache import get_cache
+            cache = get_cache()
+            cached_status = cache.get_status(f"{self.name}:{cli}")
+            if cached_status:
+                try:
+                    return MCPStatus(cached_status)
+                except ValueError:
+                    pass  # Invalid cached value, fall through to real check
+
+        # Perform real status check
         installed = self.is_installed()
         registered = self.is_registered(cli)
 
         if installed and registered:
-            return MCPStatus.BOTH
+            status = MCPStatus.BOTH
         elif registered:
-            return MCPStatus.REGISTERED
+            status = MCPStatus.REGISTERED
         elif installed:
-            return MCPStatus.INSTALLED
+            status = MCPStatus.INSTALLED
         else:
-            return MCPStatus.NOT_INSTALLED
+            status = MCPStatus.NOT_INSTALLED
+
+        # Update cache
+        if use_cache:
+            from status_cache import get_cache
+            cache = get_cache()
+            cache.set_status(f"{self.name}:{cli}", status.value)
+
+        return status
+
+    def invalidate_status_cache(self, cli: str = "claude"):
+        """
+        Invalidate cached status for this MCP.
+
+        Args:
+            cli: CLI tool to invalidate cache for
+        """
+        from status_cache import get_cache
+        cache = get_cache()
+        # Read cache, remove this MCP's status, and write back
+        cache_data = cache.read_cache()
+        statuses = cache_data.get("statuses", {})
+        key = f"{self.name}:{cli}"
+        if key in statuses:
+            del statuses[key]
+            cache.write_cache(statuses)
 
     # -------------------------------------------------------------------------
     # Installation Methods
@@ -198,6 +236,8 @@ class MCP:
         # Package-based MCPs don't need installation
         if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value]:
             print(f"✅ MCP '{self.name}' is a {self.runtime} package (no installation needed)")
+            # Invalidate cache since installation state may have changed
+            self.invalidate_status_cache()
             return True
 
         # Clone repository
@@ -239,6 +279,9 @@ class MCP:
             self.path = str(target_path)
             print(f"✅ Successfully cloned {self.name}")
 
+            # Invalidate cache since installation state changed
+            self.invalidate_status_cache()
+
             # Run setup commands
             if self.setup_commands:
                 return self._run_setup_commands()
@@ -273,6 +316,8 @@ class MCP:
         if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value]:
             print(f"✅ MCP '{self.name}' is a {self.runtime} package (no files to remove)")
             self.path = None
+            # Invalidate cache since uninstall state changed
+            self.invalidate_status_cache()
             return True
 
         # Remove installation directory
@@ -284,6 +329,8 @@ class MCP:
                     shutil.rmtree(path)
                     print(f"✅ Successfully removed {self.name}")
                 self.path = None
+                # Invalidate cache since uninstall state changed
+                self.invalidate_status_cache()
                 return True
             except Exception as e:
                 print(f"❌ Failed to remove files: {e}")
@@ -402,6 +449,10 @@ class MCP:
                 return False
 
             print(f"✅ Successfully removed '{clean_name}' from {cli}")
+
+            # Invalidate cache since unregistration state changed
+            self.invalidate_status_cache(cli)
+
             return True
 
         except subprocess.TimeoutExpired:
@@ -462,8 +513,20 @@ class MCP:
         cmd.append("--")
         cmd.append(self.server_command or "node")
 
-        # Replace $MCP_PATH placeholder
-        args = [arg.replace("$MCP_PATH", str(self.path)) for arg in self.server_args]
+        # Replace $MCP_PATH placeholder and convert relative paths to absolute
+        mcp_path = Path(self.path)
+        args = []
+        for arg in self.server_args:
+            # Replace $MCP_PATH placeholder
+            arg = arg.replace("$MCP_PATH", str(self.path))
+
+            # Convert relative paths to absolute (for .js files and similar)
+            arg_path = Path(arg)
+            if not arg_path.is_absolute() and (arg.endswith('.js') or arg.endswith('.py') or '/' in arg):
+                arg = str(mcp_path / arg)
+
+            args.append(arg)
+
         cmd.extend(args)
 
         return self._run_register_command(cmd, cli, clean_name)
@@ -516,6 +579,10 @@ class MCP:
             print(f"✅ Successfully registered '{clean_name}' with {cli}")
             print(f"\n   Verify with: {cli} mcp list")
             print(f"   Remove with: {cli} mcp remove {clean_name}")
+
+            # Invalidate cache since registration state changed
+            self.invalidate_status_cache(cli)
+
             return True
 
         except subprocess.TimeoutExpired:
