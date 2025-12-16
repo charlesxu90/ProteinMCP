@@ -184,6 +184,21 @@ mcps:
     - pip install -r requirements.txt
     source: Community
     url: https://github.com/bio-mcp/bio-mcp-blast
+  brave-search:
+    dependencies: []
+    description: Web, image, video, news search with AI summarization
+    env_vars:
+      BRAVE_API_KEY: your-api-key-here
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/brave-search-mcp-server
+    runtime: node
+    server_args:
+    - $MCP_PATH/dist/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Community
+    url: https://github.com/brave/brave-search-mcp-server
   kegg:
     dependencies: []
     description: Access to KEGG database through REST API
@@ -240,6 +255,34 @@ mcps:
     - npm run build
     source: Augmented Nature
     url: https://github.com/Augmented-Nature/ProteinAtlas-MCP-Server
+  pubmed:
+    dependencies: []
+    description: Search and analyze PubMed articles
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/PubMed-MCP-Server
+    runtime: python
+    server_args:
+    - src/pubmed_mcp_server/server.py
+    server_command: python
+    setup_commands:
+    - pip install -r requirements.txt
+    source: Community
+    url: https://github.com/JackKuo666/PubMed-MCP-Server
+  pymol:
+    dependencies:
+    - pymol
+    description: AI agents interact with and control PyMOL
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/pymol-mcp
+    runtime: python
+    server_args:
+    - -m
+    - pymol_mcp
+    server_command: python
+    setup_commands:
+    - pip install -e .
+    source: Community
+    url: https://github.com/vrtejus/pymol-mcp
   string-db:
     dependencies: []
     description: Access to STRING protein interaction database

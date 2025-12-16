@@ -50,33 +50,6 @@ mcps:
     - pip install -e .
     source: Community
     url: https://github.com/genomoncology/biomcp
-  blast:
-    dependencies:
-    - blast+
-    description: NCBI BLAST sequence similarity search
-    env_vars: {}
-    runtime: python
-    server_args:
-    - src/server.py
-    server_command: python
-    setup_commands:
-    - pip install -r requirements.txt
-    source: Community
-    url: https://github.com/bio-mcp/bio-mcp-blast
-  brave-search:
-    dependencies: []
-    description: Web, image, video, news search with AI summarization
-    env_vars:
-      BRAVE_API_KEY: your-api-key-here
-    runtime: node
-    server_args:
-    - $MCP_PATH/dist/index.js
-    server_command: node
-    setup_commands:
-    - npm install
-    - npm run build
-    source: Community
-    url: https://github.com/brave/brave-search-mcp-server
   kegg:
     dependencies: []
     description: Access to KEGG database through REST API
@@ -148,7 +121,7 @@ mcps:
     env_vars: {}
     runtime: python
     server_args:
-    - src/pubmed_mcp_server/server.py
+    - pubmed_server.py
     server_command: python
     setup_commands:
     - pip install -r requirements.txt
