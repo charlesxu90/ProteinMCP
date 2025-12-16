@@ -1,4 +1,96 @@
 mcps:
+  AlphaFold-MCP-Server:
+    dependencies: []
+    description: '!AlphaFold MCP Server Logo'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/AlphaFold-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  Augmented-Nature-UniProt-MCP-Server:
+    dependencies: []
+    description: A comprehensive Model Context Protocol (MCP) server providing advanced
+      access to...
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/Augmented-Nature-UniProt-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  KEGG-MCP-Server:
+    dependencies: []
+    description: A Model Context Protocol (MCP) server that provides comprehensive
+      access to the ...
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/KEGG-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  NCBI-Datasets-MCP-Server:
+    dependencies: []
+    description: '!NCBI Datasets MCP Server Logo'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/NCBI-Datasets-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  OpenTargets-MCP-Server:
+    dependencies: []
+    description: Unofficial Model Context Protocol server for accessing Open Targets
+      platform dat...
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/OpenTargets-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  PDB-MCP-Server:
+    dependencies: []
+    description: '!PDB MCP Server Logo'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/PDB-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  ProteinAtlas-MCP-Server:
+    dependencies: []
+    description: A comprehensive Model Context Protocol (MCP) server for accessing
+      Human Protein ...
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/ProteinAtlas-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  STRING-db-MCP-Server:
+    dependencies: []
+    description: '!STRING DB MCP Server Logo'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/STRING-db-MCP-Server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
   alphafold-db:
     dependencies: []
     description: Access to AlphaFold Protein Structure Database
@@ -27,6 +119,71 @@ mcps:
     - pip install -e .
     source: Community
     url: https://github.com/blazickjp/arxiv-mcp-server
+  arxiv-mcp-server:
+    dependencies: []
+    description: '![Twitter Follow](https://twitter.com/JoeBlazick)'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/arxiv-mcp-server
+    runtime: python
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Local
+    url: ''
+  bio-mcp:
+    dependencies: []
+    description: Protein structure analysis capabilities
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/bio-mcp
+    runtime: node
+    server_args:
+    - $MCP_PATH/build/index.js
+    server_command: node
+    setup_commands:
+    - npm install
+    - npm run build
+    source: Community
+    url: https://github.com/acashmoney/bio-mcp
+  biomedical:
+    dependencies: []
+    description: Clinical trials, literature, genomic variants
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/biomcp
+    runtime: python
+    server_args:
+    - run
+    server_command: biomcp
+    setup_commands:
+    - pip install -e .
+    source: Community
+    url: https://github.com/genomoncology/biomcp
+  biorxiv:
+    dependencies: []
+    description: Search and access bioRxiv papers
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/bioRxiv-MCP-Server
+    runtime: python
+    server_args:
+    - biorxiv_server.py
+    server_command: python
+    setup_commands:
+    - pip install -r requirements.txt
+    source: Community
+    url: https://github.com/JackKuo666/bioRxiv-MCP-Server
+  blast:
+    dependencies:
+    - blast+
+    description: NCBI BLAST sequence similarity search
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/public/bio-mcp-blast
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - pip install -r requirements.txt
+    source: Community
+    url: https://github.com/bio-mcp/bio-mcp-blast
   kegg:
     dependencies: []
     description: Access to KEGG database through REST API

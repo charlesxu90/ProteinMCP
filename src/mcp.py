@@ -537,12 +537,6 @@ class MCP:
             print(f"❌ MCP not installed. Run install() first.")
             return False
 
-        # Find server entry point
-        server_path = self._find_server_entry()
-        if not server_path:
-            print(f"⚠️  Could not find server entry point in: {self.path}")
-            return False
-
         # Find Python environment
         python_cmd = self._find_python_env()
 
@@ -555,12 +549,27 @@ class MCP:
         cmd.append("--")
         cmd.append(python_cmd)
 
-        if self.server_command:
-            # Use specified server command
-            args = [arg.replace("$MCP_PATH", str(self.path)) for arg in self.server_args]
+        if self.server_command and self.server_args:
+            # Use specified server command and args
+            mcp_path = Path(self.path)
+            args = []
+            for arg in self.server_args:
+                # Replace $MCP_PATH placeholder
+                arg = arg.replace("$MCP_PATH", str(self.path))
+
+                # Convert relative paths to absolute
+                arg_path = Path(arg)
+                if not arg_path.is_absolute() and (arg.endswith('.py') or '/' in arg):
+                    arg = str(mcp_path / arg)
+
+                args.append(arg)
             cmd.extend(args)
         else:
-            # Use auto-detected server path
+            # Auto-detect server entry point
+            server_path = self._find_server_entry()
+            if not server_path:
+                print(f"⚠️  Could not find server entry point in: {self.path}")
+                return False
             cmd.append(str(server_path))
 
         return self._run_register_command(cmd, cli, clean_name)
