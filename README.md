@@ -19,24 +19,29 @@ npm install -g @anthropic-ai/claude-code
 # Install gemini-cli (optional)
 npm install -g @google/gemini-cli
 ```
-## Create a new MCP tool:
+## 1. MCP tool usage:
 
 ### Create from github repository
 ```shell
-python src/create_mcp/create_mcp.py  --github-url https://github.com/dauparas/ProteinMPNN  --mcp-dir tool-mcps/proteinmpnn_mcp
+python src/create_mcp.py --github-url https://github.com/jwohlwend/boltz --mcp-dir tool-mcps/boltz_mcp --use-case-filter 'structure prediction with boltz2, affinity prediciton with boltz2, batch structure prediction for protein variants given prepared configs'
 ```
 ### Create from local code repository
 ```shell
-python src/create_mcp/create_mcp.py  --local-repo-path /home/xux/Desktop/AlphaVariant/alphavariant/fitness_model/ev_onehot  --mcp-dir tool-mcps/ev_onehot_mcp
+python src/create_mcp.py --local-repo-path /opt/rosetta/rosetta.binary.ubuntu.release-371/main/ --mcp-dir tool-mcps/rosetta_mcp --use-case-filter 'Membrane protein structure prediction, Loop modeling, Enzyme design, Protein Design with non-canonical amino acids, Protein-protein docking, Ligand docking, Antibody-antigen docking (SnugDock), Symmetric docking, RNA design, RNA-protein complex prediction, CDR loop modeling, Antibody design, Relax, Structure quality analysis, Clustering, Covalent docking, Ligand design, Peptide modeling, Symmetric assembly modeling, Membrane protein design, Multi-state design, ddG calculations, NMR-guided modeling, Cryo-EM refinement, Comparative modeling'
 ```
 
-## 1. MCP tool usage:
-- 1.1 Generate MSA for a given sequences with online MSA server.
-- 1.2 Predict protein sturcute with AlphaFold3.
-- 1.3 Sequence generation with ProteinMPNN.
-- 1.4 Train an ev+onehot model for fitness prediction.
-- 1.5 Zeroshot fitness prediction with MutComputeX.
-- 1.6 Stability preidiction with SpiredStab.
+### Install a public MCP
+```shell
+python src/install_mcp.py list                     # List all MCPs
+python src/install_mcp.py list --local             # List local MCPs only
+```
+
+### Install a MCP in ProteinMCP
+```shell
+python src/install_mcp.py install proteinmpnn      # Install with Claude Code (default)
+```
+
+### Call MCP service
 
 ## Demo cases:
 
