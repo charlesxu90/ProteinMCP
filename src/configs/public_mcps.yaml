@@ -12,6 +12,19 @@ mcps:
     - npm run build
     source: Augmented Nature
     url: https://github.com/Augmented-Nature/AlphaFold-MCP-Server
+  amber:
+    dependencies: []
+    description: Molecular dynamics simulations and PDB structure relaxation
+    env_vars: {}
+    runtime: python
+    server_args:
+    - -m
+    - bio_mcp_amber
+    server_command: python
+    setup_commands:
+    - pip install -e .
+    source: bio-mcp
+    url: https://github.com/bio-mcp/bio-mcp-amber
   arxiv:
     dependencies: []
     description: Search and access arXiv papers
@@ -63,6 +76,19 @@ mcps:
     - npm run build
     source: Augmented Nature
     url: https://github.com/Augmented-Nature/KEGG-MCP-Server
+  interpro:
+    dependencies: []
+    description: Protein domain and family analysis, functional annotation, and GO term mapping
+    env_vars: {}
+    runtime: python
+    server_args:
+    - -m
+    - src.server_with_queue
+    server_command: python
+    setup_commands:
+    - pip install -e .
+    source: bio-mcp
+    url: https://github.com/bio-mcp/bio-mcp-interpro
   ncbi-datasets:
     dependencies: []
     description: Access to NCBI Datasets API with 31 tools

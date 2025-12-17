@@ -167,7 +167,7 @@ class MCP:
         """
         # Try cache first if enabled
         if use_cache:
-            from status_cache import get_cache
+            from .status_cache import get_cache
             cache = get_cache()
             cached_status = cache.get_status(f"{self.name}:{cli}")
             if cached_status:
@@ -191,7 +191,7 @@ class MCP:
 
         # Update cache
         if use_cache:
-            from status_cache import get_cache
+            from .status_cache import get_cache
             cache = get_cache()
             cache.set_status(f"{self.name}:{cli}", status.value)
 
@@ -204,7 +204,7 @@ class MCP:
         Args:
             cli: CLI tool to invalidate cache for
         """
-        from status_cache import get_cache
+        from .status_cache import get_cache
         cache = get_cache()
         # Read cache, remove this MCP's status, and write back
         cache_data = cache.read_cache()

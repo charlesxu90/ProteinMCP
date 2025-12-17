@@ -9,7 +9,7 @@ from typing import Optional, Dict
 import yaml
 
 # Import MCP class and related types
-from mcp import (
+from .mcp import (
     MCP,
     MCPScope,
     MCPStatus,

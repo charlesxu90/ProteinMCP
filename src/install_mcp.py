@@ -23,8 +23,8 @@ Note: Status checks are cached for 5 minutes to improve performance. Use --refre
 
 import argparse
 
-from mcp_manager import MCPManager
-from mcp import MCPStatus
+from .mcp_manager import MCPManager
+from .mcp import MCPStatus
 
 
 # =============================================================================
@@ -44,7 +44,7 @@ def list_mcps(local_only: bool = False, public_only: bool = False, refresh_cache
 
     # Refresh cache if requested
     if refresh_cache:
-        from status_cache import get_cache
+        from .status_cache import get_cache
         cache = get_cache()
         cache.invalidate()
         print("🔄 Cache invalidated, will fetch fresh status...")

@@ -20,7 +20,7 @@ from typing import Optional
 import click
 from loguru import logger
 
-from mcp_creator import MCPCreator
+from .mcp_creator import MCPCreator
 
 
 # ============================================================================
