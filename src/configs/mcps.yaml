@@ -1,8 +1,29 @@
 mcps:
+  mmseqs2_mcp:
+    dependencies: []
+    description: Sequence search, clustering, and MSA generation using MMseqs2
+    env_vars:
+      MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/mmseqs2_mcp
+    runtime: python
+    server_args:
+    - src/mmseqs2_mcp.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
+      -y && ./env/bin/pip install fastmcp) || (command -v conda >/dev/null 2>&1 &&
+      conda env create -p ./env python=3.10 -y && ./env/bin/pip install fastmcp) ||
+      (echo "Warning: Neither mamba nor conda found, creating venv instead" && python3
+      -m venv ./env && ./env/bin/pip install fastmcp)'
+    - 'if command -v wget >/dev/null 2>&1; then wget -q https://mmseqs.com/latest/mmseqs-linux-gpu.tar.gz
+      && tar xzf mmseqs-linux-gpu.tar.gz && cp mmseqs/bin/mmseqs ./env/bin/ && rm
+      -rf mmseqs mmseqs-linux-gpu.tar.gz; else echo "Warning: wget not found, skipping
+      mmseqs2 GPU installation. Install manually or install wget."; fi'
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/mmseqs2_mcp
   msa_mcp:
     dependencies: []
-    description: Generate Multiple Sequence Alignments (MSA) using ColabFold/MMseqs2
-      server
+    description: Generate Multiple Sequence Alignments (MSA) using ColabFold server
     env_vars: {}
     path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/msa_mcp
     runtime: python
