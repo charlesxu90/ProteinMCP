@@ -28,34 +28,34 @@ Please find the supported MCPS in [the MCP list](./tool-mcps/README.md).
 ## Usage:
 ```shell
 # List all MCPs
-proteinmcp list
+pmcp list
 
 # List only local MCPs
-proteinmcp list --local
+pmcp list --local
 
 # Search for MCPs
-proteinmcp search protein
+pmcp search protein
 
 # Show MCP details
-proteinmcp info interpro
+pmcp info interpro
 
 # Install an MCP
-proteinmcp install proteinmpnn
+pmcp install proteinmpnn
 
 # Create a new MCP from a repository
-proteinmcp create --github-url https://github.com/user/repo --mcp-dir /path/to/mcp
+pmcp create --github-url https://github.com/user/repo --mcp-dir /path/to/mcp
 
 # Uninstall an MCP
-proteinmcp uninstall arxiv
+pmcp uninstall arxiv
 ```
 
 ### Create a MCP from github repository
 ```shell
-proteinmcp create --github-url https://github.com/jwohlwend/boltz --mcp-dir tool-mcps/boltz_mcp --use-case-filter 'structure prediction with boltz2, affinity prediciton with boltz2, batch structure prediction for protein variants given prepared configs'
+pmcp create --github-url https://github.com/jwohlwend/boltz --mcp-dir tool-mcps/boltz_mcp --use-case-filter 'structure prediction with boltz2, affinity prediciton with boltz2, batch structure prediction for protein variants given prepared configs'
 ```
 ### Create a MCP from local code repository
 ```shell
-proteinmcp create --local-repo-path /opt/rosetta/rosetta.binary.ubuntu.release-371/main/ --mcp-dir tool-mcps/rosetta_mcp --use-case-filter 'Membrane protein structure prediction, Loop modeling, Enzyme design, Protein Design with non-canonical amino acids, Protein-protein docking, Ligand docking, Antibody-antigen docking (SnugDock), Symmetric docking, RNA design, RNA-protein complex prediction, CDR loop modeling, Antibody design, Relax, Structure quality analysis, Clustering, Covalent docking, Ligand design, Peptide modeling, Symmetric assembly modeling, Membrane protein design, Multi-state design, ddG calculations, NMR-guided modeling, Cryo-EM refinement, Comparative modeling'
+pmcp create --local-repo-path /opt/rosetta/rosetta.binary.ubuntu.release-371/main/ --mcp-dir tool-mcps/rosetta_mcp --use-case-filter 'Membrane protein structure prediction, Loop modeling, Enzyme design, Protein Design with non-canonical amino acids, Protein-protein docking, Ligand docking, Antibody-antigen docking (SnugDock), Symmetric docking, RNA design, RNA-protein complex prediction, CDR loop modeling, Antibody design, Relax, Structure quality analysis, Clustering, Covalent docking, Ligand design, Peptide modeling, Symmetric assembly modeling, Membrane protein design, Multi-state design, ddG calculations, NMR-guided modeling, Cryo-EM refinement, Comparative modeling'
 ```
 
 ### Install a MCP

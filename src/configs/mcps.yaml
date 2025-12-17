@@ -34,3 +34,85 @@ mcps:
     - pip install fastmcp requests
     source: Tool
     url: https://github.com/Biomolecular-Design-Nexus/msa_mcp
+  plmc_mcp:
+    dependencies: []
+    description: Evolutionary coupling analysis using PLMC for protein structure prediction
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/plmc_mcp
+    runtime: python
+    server_args:
+    - src/plmc_mcp.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
+      -y && ./env/bin/pip install pydantic fastmcp) || (command -v conda >/dev/null 2>&1 &&
+      conda env create -p ./env python=3.10 -y && ./env/bin/pip install pydantic fastmcp) ||
+      (echo "Warning: Neither mamba nor conda found, creating venv instead" && python3
+      -m venv ./env && ./env/bin/pip install pydantic fastmcp)'
+    - './env/bin/pip install https://github.com/debbiemarkslab/EVcouplings/archive/develop.zip'
+    - 'if [ ! -d "./repo/plmc" ]; then mkdir -p ./repo && cd ./repo && git clone
+      https://github.com/debbiemarkslab/plmc.git && cd plmc && make all-openmp; else
+      echo "plmc already exists, skipping clone and build"; fi'
+    - '(command -v mamba >/dev/null 2>&1 && mamba install -c conda-forge -c bioconda
+      hhsuite -y) || (command -v conda >/dev/null 2>&1 && conda install -c conda-forge
+      -c bioconda hhsuite -y) || echo "Warning: Cannot install hhsuite without conda/mamba"'
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/plmc_mcp
+  ev_onehot_mcp:
+    dependencies: []
+    description: Protein fitness prediction combining evolutionary coupling and one-hot encoding
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/ev_onehot_mcp
+    runtime: python
+    server_args:
+    - src/ev_onehot_mcp.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
+      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
+      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - './env/bin/pip install -r requirements.txt'
+    - './env/bin/pip install --ignore-installed fastmcp'
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/ev_onehot_mcp
+  esm_mcp:
+    dependencies: []
+    description: Protein analysis using ESM (Evolutionary Scale Modeling) for embeddings, fitness prediction, and structure-based analysis
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/esm_mcp
+    runtime: python
+    server_args:
+    - src/esm_mcp.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
+      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
+      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - './env/bin/pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118'
+    - './env/bin/pip install fair-esm transformers'
+    - './env/bin/pip install -r requirements.txt'
+    - './env/bin/pip install --ignore-installed fastmcp'
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/esm_mcp
+  prottrans_mcp:
+    dependencies: []
+    description: Protein fitness modeling using ProtTrans transformer models for embeddings and log-likelihood calculations
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/prottrans_mcp
+    runtime: python
+    server_args:
+    - src/prottrans_mcp.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
+      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
+      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - './env/bin/pip install torch==2.6.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118'
+    - './env/bin/pip install transformers sentencepiece'
+    - './env/bin/pip install pandas loguru scikit-learn xgboost biopython sniffio'
+    - './env/bin/pip install --ignore-installed fastmcp'
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/prottrans_mcp
