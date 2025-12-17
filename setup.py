@@ -68,6 +68,7 @@ setup(
     entry_points={
         'console_scripts': [
             'proteinmcp=src.cli:main',
+            'pmcp=src.cli:main',
         ],
     },
     extras_require={

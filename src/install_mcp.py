@@ -7,10 +7,11 @@ List and install MCP servers from:
 2. Public MCPs (tool-mcps/public/) - from src/configs/public_mcps.yaml
 
 Usage:
-    python src/install_mcp.py list                    # List all available MCPs (cached)
-    python src/install_mcp.py list --local            # List local MCPs only
-    python src/install_mcp.py list --public           # List public MCPs only
-    python src/install_mcp.py list --refresh          # Refresh cache (slower)
+    python src/install_mcp.py avail                   # Show all available MCPs
+    python src/install_mcp.py avail --local           # Show local MCPs only
+    python src/install_mcp.py avail --public          # Show public MCPs only
+    python src/install_mcp.py status                  # Show downloaded/installed status
+    python src/install_mcp.py status --refresh        # Refresh cache (slower)
     python src/install_mcp.py install <mcp_name>      # Install and register with Claude Code
     python src/install_mcp.py install <mcp_name> --cli gemini  # Install with Gemini CLI
     python src/install_mcp.py install <mcp_name> --no-register # Install only, don't register
@@ -39,8 +40,131 @@ mcp_manager = MCPManager()
 # Core Functions
 # =============================================================================
 
+def show_available_mcps(local_only: bool = False, public_only: bool = False) -> None:
+    """Show all available MCPs that can be installed."""
+
+    # Load MCPs
+    local_mcps = {}
+    public_mcps = {}
+
+    if not public_only:
+        local_mcps = mcp_manager.load_installed_mcps()
+
+    if not local_only:
+        public_mcps = mcp_manager.load_public_mcps()
+
+    # Display local MCPs (developed in MCP directory)
+    if local_mcps and not public_only:
+        print("\n📁 Local MCPs (developed in tool-mcps/)")
+        print("=" * 80)
+        print("\n  Available local MCPs:")
+        for name, mcp in sorted(local_mcps.items()):
+            desc = mcp.description[:60] + "..." if len(mcp.description) > 60 else mcp.description
+            print(f"    • {name:<20} [{mcp.runtime:<6}] {desc}")
+        print(f"\n  Total: {len(local_mcps)} local MCPs")
+
+    # Display public MCPs
+    if public_mcps and not local_only:
+        print("\n🌐 Public MCPs (from public registry)")
+        print("=" * 80)
+
+        # Group by source
+        sources = {}
+        for name, mcp in public_mcps.items():
+            source = mcp.source
+            if source not in sources:
+                sources[source] = []
+            sources[source].append((name, mcp))
+
+        for source, mcp_list in sorted(sources.items()):
+            print(f"\n  [{source}]")
+            for name, mcp in sorted(mcp_list):
+                desc = mcp.description[:60] + "..." if len(mcp.description) > 60 else mcp.description
+                print(f"    • {name:<20} [{mcp.runtime:<6}] {desc}")
+
+        print(f"\n  Total: {len(public_mcps)} public MCPs")
+
+    if not local_mcps and not public_mcps:
+        print("  No MCPs found.")
+
+    print()
+
+
+def show_status(refresh_cache: bool = False) -> None:
+    """Show status of downloaded and installed MCPs."""
+
+    # Refresh cache if requested
+    if refresh_cache:
+        from .status_cache import get_cache
+        cache = get_cache()
+        cache.invalidate()
+        print("🔄 Cache invalidated, fetching fresh status...\n")
+
+    # Load all MCPs
+    local_mcps = mcp_manager.load_installed_mcps()
+    public_mcps = mcp_manager.load_public_mcps()
+
+    # Combine all MCPs
+    all_mcps = {}
+    all_mcps.update(public_mcps)
+    all_mcps.update(local_mcps)  # Local MCPs override public ones
+
+    # Separate MCPs by status
+    downloaded = {}  # Installed on filesystem
+    registered = {}  # Registered with Claude
+    both = {}        # Both downloaded and registered
+
+    for name, mcp in all_mcps.items():
+        status = mcp.get_status()
+        if status == MCPStatus.BOTH:
+            both[name] = mcp
+        elif status == MCPStatus.INSTALLED:
+            downloaded[name] = mcp
+        elif status == MCPStatus.REGISTERED:
+            registered[name] = mcp
+
+    # Display status
+    print("📊 MCP Status Overview")
+    print("=" * 80)
+
+    # Show fully installed MCPs
+    if both:
+        print("\n🟢 Downloaded & Registered with Claude:")
+        for name, mcp in sorted(both.items()):
+            desc = mcp.description[:50] + "..." if len(mcp.description) > 50 else mcp.description
+            scope = "Local" if name in local_mcps else "Public"
+            print(f"    • {name:<20} [{scope:<7}] [{mcp.runtime:<6}] {desc}")
+        print(f"\n  Total: {len(both)} MCPs")
+
+    # Show downloaded but not registered
+    if downloaded:
+        print("\n🔵 Downloaded but not registered with Claude:")
+        for name, mcp in sorted(downloaded.items()):
+            desc = mcp.description[:50] + "..." if len(mcp.description) > 50 else mcp.description
+            scope = "Local" if name in local_mcps else "Public"
+            print(f"    • {name:<20} [{scope:<7}] [{mcp.runtime:<6}] {desc}")
+        print(f"\n  Total: {len(downloaded)} MCPs")
+        print(f"  Tip: Register with 'proteinmcp install <mcp_name>'")
+
+    # Show registered but not downloaded (shouldn't happen often)
+    if registered:
+        print("\n🟡 Registered but not downloaded:")
+        for name, mcp in sorted(registered.items()):
+            desc = mcp.description[:50] + "..." if len(mcp.description) > 50 else mcp.description
+            scope = "Local" if name in local_mcps else "Public"
+            print(f"    • {name:<20} [{scope:<7}] [{mcp.runtime:<6}] {desc}")
+        print(f"\n  Total: {len(registered)} MCPs")
+
+    if not both and not downloaded and not registered:
+        print("\n  No MCPs downloaded or installed.")
+        print("  Use 'proteinmcp avail' to see available MCPs")
+        print("  Use 'proteinmcp install <mcp_name>' to install")
+
+    print()
+
+
 def list_mcps(local_only: bool = False, public_only: bool = False, refresh_cache: bool = False) -> None:
-    """List all available MCPs."""
+    """List all available MCPs. (Deprecated - use show_available_mcps or show_status)"""
 
     # Refresh cache if requested
     if refresh_cache:
@@ -240,9 +364,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python src/install_mcp.py list                          # List all MCPs
-  python src/install_mcp.py list --local                  # List local MCPs only
-  python src/install_mcp.py list --public                 # List public MCPs only
+  python src/install_mcp.py avail                         # Show all available MCPs
+  python src/install_mcp.py avail --local                 # Show local MCPs only
+  python src/install_mcp.py avail --public                # Show public MCPs only
+  python src/install_mcp.py status                        # Show downloaded/installed status
+  python src/install_mcp.py status --refresh              # Refresh cache and show status
   python src/install_mcp.py search blast                  # Search for MCPs
   python src/install_mcp.py install proteinmpnn           # Install with Claude Code
   python src/install_mcp.py install pdb --cli gemini      # Install with Gemini CLI
@@ -256,8 +382,17 @@ Examples:
 
     subparsers = parser.add_subparsers(dest="command", help="Command")
 
-    # List command
-    list_parser = subparsers.add_parser("list", help="List available MCPs")
+    # Avail command
+    avail_parser = subparsers.add_parser("avail", help="Show all available MCPs to install")
+    avail_parser.add_argument("--local", action="store_true", help="Show local MCPs only")
+    avail_parser.add_argument("--public", action="store_true", help="Show public MCPs only")
+
+    # Status command
+    status_parser = subparsers.add_parser("status", help="Show downloaded and installed MCPs")
+    status_parser.add_argument("--refresh", action="store_true", help="Refresh status cache (slower but accurate)")
+
+    # List command (deprecated, for backwards compatibility)
+    list_parser = subparsers.add_parser("list", help="List available MCPs (deprecated, use 'avail' or 'status')")
     list_parser.add_argument("--local", action="store_true", help="Show local MCPs only")
     list_parser.add_argument("--public", action="store_true", help="Show public MCPs only")
     list_parser.add_argument("--refresh", action="store_true", help="Refresh status cache (slower but accurate)")
@@ -291,7 +426,11 @@ Examples:
 
     args = parser.parse_args()
 
-    if args.command == "list":
+    if args.command == "avail":
+        show_available_mcps(local_only=args.local, public_only=args.public)
+    elif args.command == "status":
+        show_status(refresh_cache=args.refresh)
+    elif args.command == "list":
         list_mcps(local_only=args.local, public_only=args.public, refresh_cache=args.refresh)
     elif args.command == "search":
         search_mcps(args.query)

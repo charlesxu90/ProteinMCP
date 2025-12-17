@@ -4,8 +4,9 @@ ProteinMCP CLI - Main Command Line Interface
 
 Provides unified access to ProteinMCP functionality through subcommands:
 - proteinmcp create: Create new MCP servers from repositories
+- proteinmcp avail: Show all available MCP servers to install
+- proteinmcp status: Show downloaded and installed MCP servers
 - proteinmcp install: Install MCP servers
-- proteinmcp list: List available MCP servers
 - proteinmcp uninstall: Uninstall MCP servers
 """
 
@@ -16,19 +17,34 @@ from typing import Optional
 
 # Import functions from existing modules
 from .create_mcp import create_mcp
-from .install_mcp import list_mcps, install_mcp_cmd, uninstall_mcp_cmd, search_mcps, show_info
+from .install_mcp import show_available_mcps, show_status, install_mcp_cmd, uninstall_mcp_cmd, search_mcps, show_info
+
+# Logo for ProteinMCP
+LOGO = """\033[31m
+  ____            _       _       __  __  ____ ____
+ |  _ \\ _ __ ___ | |_ ___(_)_ __ |  \\/  |/ ___| _ \\
+ | |_) | '__/ _ \\| __/ _ \\ | '_ \\| |\\/| | |   | |_) |
+ |  __/| | | (_) | ||  __/ | | | | |  | | |___|  __/
+ |_|   |_|  \\___/ \\__\\___|_|_| |_|_|  |_|\\____|_|
+\033[0m"""
 
 
-@click.group()
+@click.group(invoke_without_command=True)
 @click.version_option(version="0.1.0", prog_name="proteinmcp")
-def cli():
+@click.pass_context
+def cli(ctx):
     """
     ProteinMCP - Protein Engineering Model Context Protocol Package
 
     A comprehensive toolkit for creating, installing, and managing MCP servers
     for protein engineering, analysis, and prediction.
     """
-    pass
+    # Display logo whenever proteinmcp is called
+    click.echo(LOGO)
+
+    # Show help when no command is given
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
 
 @cli.command(name="create")
@@ -69,32 +85,49 @@ def create_command(github_url: str, local_repo_path: Optional[Path], mcp_dir: Pa
     )
 
 
-@cli.command(name="list")
+@cli.command(name="avail")
 @click.option('--local', is_flag=True, help='Show local MCPs only')
 @click.option('--public', is_flag=True, help='Show public MCPs only')
-@click.option('--refresh', is_flag=True, help='Refresh status cache (slower but accurate)')
-def list_command(local: bool, public: bool, refresh: bool):
+def avail_command(local: bool, public: bool):
     """
-    List available MCP servers.
+    Show all available MCP servers that can be installed.
 
-    By default, shows both local and public MCPs. Use --local or --public
-    to filter results. Use --refresh to update the status cache.
+    By default, shows both local MCPs (developed in MCP directory) and
+    public MCPs (from public registry). Use --local or --public to filter.
 
     Examples:
 
-      # List all MCPs:
-      proteinmcp list
+      # Show all available MCPs:
+      proteinmcp avail
 
-      # List only local MCPs:
-      proteinmcp list --local
+      # Show only local MCPs:
+      proteinmcp avail --local
 
-      # List only public MCPs:
-      proteinmcp list --public
-
-      # Refresh cache and list:
-      proteinmcp list --refresh
+      # Show only public MCPs:
+      proteinmcp avail --public
     """
-    list_mcps(local_only=local, public_only=public, refresh_cache=refresh)
+    show_available_mcps(local_only=local, public_only=public)
+
+
+@cli.command(name="status")
+@click.option('--refresh', is_flag=True, help='Refresh status cache (slower but accurate)')
+def status_command(refresh: bool):
+    """
+    Show status of downloaded and installed MCPs.
+
+    Displays which MCPs are currently downloaded to your system and
+    which ones are registered with Claude Code CLI. Use --refresh to
+    update the status cache.
+
+    Examples:
+
+      # Show current MCP status:
+      proteinmcp status
+
+      # Refresh cache and show status:
+      proteinmcp status --refresh
+    """
+    show_status(refresh_cache=refresh)
 
 
 @cli.command(name="install")
