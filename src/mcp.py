@@ -101,7 +101,11 @@ class MCP:
     def is_installed(self) -> bool:
         """Check if MCP is installed locally"""
         if self.path:
-            return Path(self.path).exists()
+            path = Path(self.path)
+            # Handle relative paths (for local tool MCPs)
+            if not path.is_absolute():
+                path = PROJECT_ROOT / path
+            return path.exists()
 
         # Check in default locations
         if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value]:
@@ -136,7 +140,7 @@ class MCP:
                     ["claude", "mcp", "list"],
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=30  # Increased timeout for health checks
                 )
                 return clean_name in result.stdout
 
@@ -145,7 +149,7 @@ class MCP:
                     ["gemini", "mcp", "list"],
                     capture_output=True,
                     text=True,
-                    timeout=5
+                    timeout=30  # Increased timeout for health checks
                 )
                 return clean_name in result.stdout
 
@@ -228,6 +232,10 @@ class MCP:
         Returns:
             True if successful, False otherwise
         """
+        # Invalidate status cache to ensure fresh status check
+        # (in case claude mcp remove was called directly)
+        self.invalidate_status_cache()
+
         # Check if already installed
         if self.is_installed() and not force:
             print(f"✅ MCP '{self.name}' is already installed at: {self.path}")
@@ -240,14 +248,52 @@ class MCP:
             self.invalidate_status_cache()
             return True
 
-        # Clone repository
+        # Handle local tool MCPs (check if already present in tool-mcps directory)
+        if self.path:
+            local_path = Path(self.path)
+
+            # Make path absolute if it's relative
+            if not local_path.is_absolute():
+                local_path = PROJECT_ROOT / local_path
+
+            # If local path exists, use it (even if URL is provided)
+            if local_path.exists():
+                self.path = str(local_path)
+                print(f"📁 Found local MCP '{self.name}' at: {self.path}")
+
+                # Invalidate cache since installation state may have changed
+                self.invalidate_status_cache()
+
+                # Run setup commands
+                if self.setup_commands:
+                    return self._run_setup_commands()
+
+                return True
+
+            # If local path doesn't exist but URL is provided, fall through to clone
+            elif self.url:
+                print(f"📦 Local path not found, will clone from GitHub...")
+            # If no URL and path doesn't exist, error
+            else:
+                print(f"❌ Local MCP path does not exist: {local_path}")
+                return False
+
+        # Clone repository for public/tool MCPs
         if not self.url:
             print(f"❌ No URL provided for MCP '{self.name}'")
             return False
 
-        repo_name = self.url.rstrip("/").split("/")[-1]
-        PUBLIC_MCPS_DIR.mkdir(parents=True, exist_ok=True)
-        target_path = PUBLIC_MCPS_DIR / repo_name
+        # Determine target path for cloning
+        if self.path:
+            # If path is specified, clone to that location
+            target_path = Path(self.path)
+            if not target_path.is_absolute():
+                target_path = PROJECT_ROOT / target_path
+        else:
+            # Default: clone to public MCPs directory
+            repo_name = self.url.rstrip("/").split("/")[-1]
+            PUBLIC_MCPS_DIR.mkdir(parents=True, exist_ok=True)
+            target_path = PUBLIC_MCPS_DIR / repo_name
 
         # Handle existing installation
         if target_path.exists():
@@ -258,6 +304,9 @@ class MCP:
                 print(f"📁 MCP '{self.name}' already exists at: {target_path}")
                 self.path = str(target_path)
                 return True
+
+        # Create parent directory if it doesn't exist
+        target_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Clone repository
         print(f"📦 Cloning {self.name} from {self.source}...")
@@ -515,10 +564,13 @@ class MCP:
 
         # Replace $MCP_PATH placeholder and convert relative paths to absolute
         mcp_path = Path(self.path)
+        if not mcp_path.is_absolute():
+            mcp_path = PROJECT_ROOT / mcp_path
+        mcp_path = mcp_path.resolve()
         args = []
         for arg in self.server_args:
-            # Replace $MCP_PATH placeholder
-            arg = arg.replace("$MCP_PATH", str(self.path))
+            # Replace $MCP_PATH placeholder with absolute path
+            arg = arg.replace("$MCP_PATH", str(mcp_path))
 
             # Convert relative paths to absolute (for .js files and similar)
             arg_path = Path(arg)
@@ -551,11 +603,15 @@ class MCP:
 
         if self.server_command and self.server_args:
             # Use specified server command and args
+            # Convert path to absolute
             mcp_path = Path(self.path)
+            if not mcp_path.is_absolute():
+                mcp_path = PROJECT_ROOT / mcp_path
+            mcp_path = mcp_path.resolve()
             args = []
             for arg in self.server_args:
-                # Replace $MCP_PATH placeholder
-                arg = arg.replace("$MCP_PATH", str(self.path))
+                # Replace $MCP_PATH placeholder with absolute path
+                arg = arg.replace("$MCP_PATH", str(mcp_path))
 
                 # Convert relative paths to absolute
                 arg_path = Path(arg)
@@ -636,6 +692,9 @@ class MCP:
             return "python"
 
         mcp_path = Path(self.path)
+        if not mcp_path.is_absolute():
+            mcp_path = PROJECT_ROOT / mcp_path
+        mcp_path = mcp_path.resolve()
 
         # Check for local environments
         env_candidates = [
@@ -646,7 +705,7 @@ class MCP:
 
         for env in env_candidates:
             if env.exists():
-                return str(env)
+                return str(env.resolve())
 
         # Fall back to system python
         return "python"

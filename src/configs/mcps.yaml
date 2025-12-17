@@ -1,14 +1,15 @@
 mcps:
   msa_mcp:
     dependencies: []
-    description: Access to AlphaFold Protein Structure Database
+    description: Generate Multiple Sequence Alignments (MSA) using ColabFold/MMseqs2
+      server
     env_vars: {}
-    runtime: node
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/msa_mcp
+    runtime: python
     server_args:
-    - $MCP_PATH/build/index.js
-    server_command: node
+    - src/msa_mcp.py
+    server_command: python
     setup_commands:
-    - npm install
-    - npm run build
-    source: Augmented Nature
-    url: https://github.com/Augmented-Nature/AlphaFold-MCP-Server
+    - pip install fastmcp requests
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/msa_mcp

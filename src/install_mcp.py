@@ -53,9 +53,9 @@ def show_available_mcps(local_only: bool = False, public_only: bool = False) -> 
     if not local_only:
         public_mcps = mcp_manager.load_public_mcps()
 
-    # Display local MCPs (developed in MCP directory)
+    # Display MCPs in ProteinMCP (located in tool-mcps/ if installed)
     if local_mcps and not public_only:
-        print("\n📁 Local MCPs (developed in tool-mcps/)")
+        print("\n📁 MCPs in ProteinMCP (located in tool-mcps/ if installed)")
         print("=" * 80)
         print("\n  Available local MCPs:")
         for name, mcp in sorted(local_mcps.items()):
@@ -65,7 +65,7 @@ def show_available_mcps(local_only: bool = False, public_only: bool = False) -> 
 
     # Display public MCPs
     if public_mcps and not local_only:
-        print("\n🌐 Public MCPs (from public registry)")
+        print("\n🌐 Public MCPs (from public registry, located in tool-mcps/public if installed)")
         print("=" * 80)
 
         # Group by source
@@ -220,8 +220,11 @@ def install_mcp_cmd(mcp_name: str, cli: str = "claude", no_register: bool = Fals
         print(f"   Run 'python src/install_mcp.py list' to see available MCPs.")
         return False
 
+    # Invalidate cache to get fresh status (in case claude mcp remove was called)
+    mcp.invalidate_status_cache(cli)
+
     # Check current status
-    status = mcp.get_status(cli)
+    status = mcp.get_status(cli, use_cache=False)
     print(f"\n📊 Current status: {status.value}")
 
     # Install if needed
@@ -241,8 +244,8 @@ def install_mcp_cmd(mcp_name: str, cli: str = "claude", no_register: bool = Fals
         else:
             print(f"✅ MCP '{mcp_name}' already registered with {cli}")
 
-    # Show final status
-    final_status = mcp.get_status(cli)
+    # Show final status (use fresh data, not cache)
+    final_status = mcp.get_status(cli, use_cache=False)
     print(f"\n✨ Final status: {final_status.value}")
 
     if final_status == MCPStatus.BOTH:

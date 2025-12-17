@@ -5,7 +5,7 @@ MCPManager Class - Manages collections of MCPs and maintains YAML registries
 
 import re
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 import yaml
 
 # Import MCP class and related types
@@ -715,6 +715,161 @@ class MCPManager:
 
         return mcps
 
+    def discover_tool_mcps(self, skip_public_dir: bool = True) -> Dict[str, MCP]:
+        """
+        Discover and configure MCPs from tool-mcps directory.
+
+        Automatically detects runtime, entry points, and configuration for
+        local tool MCPs like msa_server_mcp, proteinmpnn_mcp, etc.
+
+        Args:
+            skip_public_dir: If True, skip the 'public' subdirectory (default: True)
+
+        Returns:
+            Dictionary of discovered tool MCPs
+        """
+        from .mcp import TOOL_MCPS_DIR
+
+        mcps = {}
+
+        if not TOOL_MCPS_DIR.exists():
+            return mcps
+
+        for item in TOOL_MCPS_DIR.iterdir():
+            # Skip if not a directory
+            if not item.is_dir():
+                continue
+
+            # Skip 'public' directory and other non-MCP directories
+            if skip_public_dir and item.name == "public":
+                continue
+            if item.name in [".git", "__pycache__", "mcp.status"]:
+                continue
+
+            # Try to detect MCP configuration
+            mcp_config = self._detect_mcp_config(item)
+            if mcp_config:
+                mcps[mcp_config['name']] = MCP(**mcp_config)
+
+        return mcps
+
+    def _detect_mcp_config(self, mcp_dir: Path) -> Optional[Dict[str, Any]]:
+        """
+        Detect MCP configuration from directory structure.
+
+        Args:
+            mcp_dir: Path to MCP directory
+
+        Returns:
+            Dictionary with MCP configuration or None if not detected
+        """
+        name = mcp_dir.name
+        description = "Tool MCP from local repository"
+        runtime = "python"
+        server_command = "python"
+        server_args = []
+        setup_commands = []
+        env_vars = {}
+        dependencies = []
+
+        # Extract description from README
+        readme = mcp_dir / "README.md"
+        if readme.exists():
+            try:
+                content = readme.read_text()
+                lines = content.split("\n")
+
+                # Look for first non-empty, non-header line
+                for line in lines:
+                    line = line.strip()
+                    if not line or line.startswith("#") or line.startswith("```"):
+                        continue
+                    # Remove markdown links
+                    line = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', line)
+                    if len(line) > 10:
+                        description = line[:100] + "..." if len(line) > 100 else line
+                        break
+            except:
+                pass
+
+        # Detect entry point (Python-based MCPs)
+        # Look for common patterns:
+        # 1. src/mcp_name.py or src/server.py
+        # 2. mcp_name.py in root
+        # 3. server.py in root
+
+        entry_points = [
+            mcp_dir / "src" / f"{name.replace('_mcp', '_mcp')}.py",
+            mcp_dir / "src" / "mcp.py",
+            mcp_dir / "src" / "server.py",
+            mcp_dir / f"{name}.py",
+            mcp_dir / "server.py",
+        ]
+
+        # Also check for variations like msa_mcp.py when name is msa_server_mcp
+        if "_server_" in name or "_" in name:
+            # Try shortened names
+            short_name = name.replace("_server", "").replace("_mcp", "_mcp")
+            entry_points.insert(0, mcp_dir / "src" / f"{short_name}.py")
+
+        entry_point = None
+        for ep in entry_points:
+            if ep.exists():
+                entry_point = ep
+                break
+
+        if not entry_point:
+            # No valid entry point found
+            return None
+
+        # Make path relative to mcp_dir for portability
+        try:
+            relative_entry = entry_point.relative_to(mcp_dir)
+            server_args = [str(relative_entry)]
+        except ValueError:
+            server_args = [str(entry_point)]
+
+        # Detect setup commands
+        if (mcp_dir / "setup.py").exists() or (mcp_dir / "pyproject.toml").exists():
+            setup_commands.append("pip install -e .")
+        elif (mcp_dir / "requirements.txt").exists():
+            setup_commands.append("pip install -r requirements.txt")
+        else:
+            # Assume fastmcp or basic dependencies
+            setup_commands.append("pip install fastmcp requests")
+
+        # Check for Node.js MCPs
+        if (mcp_dir / "package.json").exists():
+            runtime = "node"
+            server_command = "node"
+            # Look for build output
+            if (mcp_dir / "build" / "index.js").exists():
+                server_args = ["build/index.js"]
+            elif (mcp_dir / "dist" / "index.js").exists():
+                server_args = ["dist/index.js"]
+            elif (mcp_dir / "index.js").exists():
+                server_args = ["index.js"]
+            else:
+                # No entry point found
+                return None
+
+            setup_commands = ["npm install"]
+            if (mcp_dir / "tsconfig.json").exists():
+                setup_commands.append("npm run build")
+
+        return {
+            "name": name,
+            "description": description,
+            "source": "Tool",
+            "runtime": runtime,
+            "server_command": server_command,
+            "server_args": server_args,
+            "setup_commands": setup_commands,
+            "env_vars": env_vars,
+            "dependencies": dependencies,
+            "path": str(mcp_dir),
+        }
+
     def sync_installed_with_filesystem(self):
         """
         Synchronize installed MCPs registry with filesystem.
@@ -742,6 +897,63 @@ class MCPManager:
         # Save updated registry
         self.save_installed_mcps(installed)
         print(f"✅ Synchronized {len(installed)} MCPs")
+
+    def discover_and_add_tool_mcps(self, overwrite: bool = False) -> Dict[str, MCP]:
+        """
+        Discover tool MCPs from tool-mcps directory and add them to installed registry.
+
+        Args:
+            overwrite: If True, overwrite existing entries in mcps.yaml (default: False)
+
+        Returns:
+            Dictionary of discovered and added MCPs
+        """
+        print("🔍 Discovering tool MCPs from tool-mcps directory...")
+
+        # Discover tool MCPs
+        tool_mcps = self.discover_tool_mcps()
+
+        if not tool_mcps:
+            print("   No tool MCPs found.")
+            return {}
+
+        print(f"   Found {len(tool_mcps)} tool MCPs\n")
+
+        # Load current installed MCPs
+        installed = self.load_installed_mcps()
+
+        # Add discovered MCPs
+        added = {}
+        skipped = {}
+        updated = {}
+
+        for name, mcp in tool_mcps.items():
+            if name in installed and not overwrite:
+                skipped[name] = mcp
+                print(f"   ⏭️  Skipped '{name}' (already in registry)")
+            elif name in installed and overwrite:
+                installed[name] = mcp
+                updated[name] = mcp
+                print(f"   🔄 Updated '{name}'")
+            else:
+                installed[name] = mcp
+                added[name] = mcp
+                print(f"   ➕ Added '{name}'")
+
+        # Save updated registry
+        self.save_installed_mcps(installed)
+
+        # Print summary
+        print(f"\n✅ Discovery complete:")
+        print(f"   Added: {len(added)}")
+        print(f"   Updated: {len(updated)}")
+        print(f"   Skipped: {len(skipped)}")
+        print(f"   Total in registry: {len(installed)}")
+
+        if skipped:
+            print(f"\n   💡 Use --overwrite flag to update existing entries")
+
+        return {**added, **updated}
 
     # -------------------------------------------------------------------------
     # Display Methods
