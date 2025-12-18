@@ -53,6 +53,7 @@ pmcp uninstall arxiv
 ```shell
 pmcp create --github-url https://github.com/jwohlwend/boltz --mcp-dir tool-mcps/boltz_mcp --use-case-filter 'structure prediction with boltz2, affinity prediciton with boltz2, batch structure prediction for protein variants given prepared configs'
 ```
+
 ### Create a MCP from local code repository
 ```shell
 pmcp create --local-repo-path /opt/rosetta/rosetta.binary.ubuntu.release-371/main/ --mcp-dir tool-mcps/rosetta_mcp --use-case-filter 'Membrane protein structure prediction, Loop modeling, Enzyme design, Protein Design with non-canonical amino acids, Protein-protein docking, Ligand docking, Antibody-antigen docking (SnugDock), Symmetric docking, RNA design, RNA-protein complex prediction, CDR loop modeling, Antibody design, Relax, Structure quality analysis, Clustering, Covalent docking, Ligand design, Peptide modeling, Symmetric assembly modeling, Membrane protein design, Multi-state design, ddG calculations, NMR-guided modeling, Cryo-EM refinement, Comparative modeling'
@@ -70,12 +71,22 @@ python src/install_mcp.py install proteinmpnn       # Install a MPC in ProteinMC
 **Performance Note:** The `list` command uses status caching to avoid repetitive CLI checks. Status is cached for 5 minutes in `tool-mcps/mcp.status`. Use `--refresh` to force update.
 
 ## Demo cases:
-
+``` /home/xux/Desktop/ProteinMCP/ProteinMCP/
+  ├── .claude/
+  │   ├── skills/
+  │   │   └── fitness-modeling/
+  │   │       └── SKILL.md              ← Auto-discovered skill
+  │   └── commands/
+  │       └── fitness-model.md          ← Slash command /fitness-model
+  └── workflow-skills/
+      └── fitness_modeling_skill.md     ← Original reference file
+```
 ### Protein sequence analysis
 
 ### Protein structural analysis
 
-### Train a protein language model on fitness dataset
+### Train and compare protein fitness models on a dataset
+
 
 ### Desing a binder to bind target protein
 

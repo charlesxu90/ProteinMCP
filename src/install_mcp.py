@@ -144,7 +144,7 @@ def show_status(refresh_cache: bool = False) -> None:
             scope = "Local" if name in local_mcps else "Public"
             print(f"    • {name:<20} [{scope:<7}] [{mcp.runtime:<6}] {desc}")
         print(f"\n  Total: {len(downloaded)} MCPs")
-        print(f"  Tip: Register with 'proteinmcp install <mcp_name>'")
+        print(f"  Tip: Register with 'pmcp install <mcp_name>'")
 
     # Show registered but not downloaded (shouldn't happen often)
     if registered:
@@ -157,8 +157,8 @@ def show_status(refresh_cache: bool = False) -> None:
 
     if not both and not downloaded and not registered:
         print("\n  No MCPs downloaded or installed.")
-        print("  Use 'proteinmcp avail' to see available MCPs")
-        print("  Use 'proteinmcp install <mcp_name>' to install")
+        print("  Use 'pmcp avail' to see available MCPs")
+        print("  Use 'pmcp install <mcp_name>' to install")
 
     print()
 
@@ -217,7 +217,7 @@ def install_mcp_cmd(mcp_name: str, cli: str = "claude", no_register: bool = Fals
 
     if not mcp:
         print(f"❌ MCP '{mcp_name}' not found.")
-        print(f"   Run 'python src/install_mcp.py list' to see available MCPs.")
+        print(f"   Run 'pmcp avail' to see available MCPs.")
         return False
 
     # Invalidate cache to get fresh status (in case claude mcp remove was called)
