@@ -30,7 +30,7 @@ Your data.csv should contain at minimum:
 
 ---
 
-## Step 1: Generate MSA (if needed)
+## Step 1: Generate MSA with msa_mcp (if needed)
 
 Install and use the MSA MCP server to generate multiple sequence alignment.
 
