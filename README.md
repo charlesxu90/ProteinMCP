@@ -4,8 +4,8 @@
 [x] Support easy MCP creation 
 [x] Support easy MCP installation
 [x] Create common MCP servers for protein design tasks
-[ ] Support Claude code, Gemini cli, Qwen Code, and Aider
-[ ] Support standard workflows: 1) protein sequence analysis; 2) protein structure analysis; 3) train fitness models; 4) binder design; 5) antibody design.
+[ ] Support Claude code and Gemini-cli in usage
+[ ] Demo tasks: 1) protein sequence analysis; 2) protein structure analysis; 3) train fitness models; 4) binder design; 5) antibody design.
 
 ## Install:
 ```shell

@@ -101,7 +101,8 @@ ${detailed_description_of_what_this_mcp_does}
 - Python 3.10+
 - ${any_other_prerequisites}
 
-### Step 1: Create Environment
+### Create Environment
+Please strictly following the information in `reports/step3_environment.md` to obtain the procedure to setup the environment. An example workflow is shown below.
 
 \`\`\`bash
 # Navigate to the MCP directory
@@ -114,23 +115,12 @@ mamba create -p ./env python=3.10 -y
 # Activate environment
 mamba activate ./env
 # or: conda activate ./env
-\`\`\`
+# Install Dependencies
 
-### Step 2: Install Dependencies
-
-\`\`\`bash
-# Install Python dependencies
 pip install -r requirements.txt
 
 # Install MCP dependencies
-pip install fastmcp loguru
-\`\`\`
-
-### Step 3: Verify Installation
-
-\`\`\`bash
-# Test imports
-python -c "from src.server import mcp; print(f'Found {len(mcp.list_tools())} tools')"
+pip install fastmcp loguru --ignore-installed
 \`\`\`
 
 ---
