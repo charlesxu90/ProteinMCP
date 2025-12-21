@@ -58,6 +58,45 @@ mcps:
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
     url: https://github.com/RosettaCommons/RFdiffusion2
+  alphafold3_mcp:
+    dependencies: []
+    description: '> AI-powered protein structure prediction and variant analysis using
+      AlphaFold3 through Model Contex...'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/alphafold3_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.11 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.11 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install -r requirements.txt
+    - ./env/bin/pip install fastmcp loguru --ignore-installed
+    source: Tool
+    url: ''
+  alphafold_mcp:
+    dependencies: []
+    description: '> AlphaFold2 protein structure prediction via Model Context Protocol
+      (MCP)'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/alphafold2_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install -r repo/alphafold/requirements.txt
+    - ./env/bin/pip install loguru --ignore-installed
+    - ./env/bin/pip install --ignore-installed fastmcp
+    source: Tool
+    url: https://github.com/google-deepmind/alphafold
   boltz_mcp:
     dependencies: []
     description: '> Protein structure and affinity prediction using Boltz2 deep learning
@@ -77,27 +116,70 @@ mcps:
     - ./env/bin/pip install --ignore-installed fastmcp loguru
     source: Tool
     url: https://github.com/jwohlwend/boltz
-  esm_mcp:
+  boltzgen_mcp:
     dependencies: []
-    description: Protein analysis using ESM (Evolutionary Scale Modeling) for embeddings,
-      fitness prediction, and structure-based analysis
+    description: '> AI-powered protein design through the Model Context Protocol -
+      Design protein binders, peptide bin...'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/esm_mcp
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/boltzgen_mcp
     runtime: python
     server_args:
-    - src/esm_mcp.py
+    - src/server.py
     server_command: python
     setup_commands:
-    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
-      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
-      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
-      && python3 -m venv ./env)'
-    - ./env/bin/pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-    - ./env/bin/pip install fair-esm transformers
-    - ./env/bin/pip install -r requirements.txt
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.12 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.12 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install fastmcp==2.13.3 loguru==0.7.3
+    - ./env/bin/pip install boltzgen
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/esm_mcp
+    url: ''
+  chai-lab_mcp:
+    dependencies: []
+    description: '> Protein structure prediction using Chai-1 model via Model Context
+      Protocol (MCP)'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/chai1_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install loguru click pandas numpy tqdm
+    - ./env/bin/pip install --force-reinstall --no-cache-dir fastmcp
+    - ./env/bin/pip install chai_lab==0.6.1
+    source: Tool
+    url: https://github.com/chaidiscovery/chai-lab
+  esm_mcp:
+    dependencies: []
+    description: '> **Protein sequence analysis using ESM-2 language models via Model
+      Context Protocol (MCP)**'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/esmfold_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 pip
+      -y) || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10
+      pip -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - ./env/bin/pip install fastmcp loguru
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -f repo/esm/environment.yml
+      -p ./env_esmfold) || (command -v conda >/dev/null 2>&1 && conda env create -f
+      repo/esm/environment.yml -p ./env_esmfold) || (echo "Warning: Neither mamba
+      nor conda found, ESM environment creation failed" && exit 1)'
+    - ./env_esmfold/bin/pip install -e repo/esm/
+    - ./env/bin/pip install --ignore-installed fastmcp
+    source: Tool
+    url: https://github.com/facebookresearch/esm
   ev_onehot_mcp:
     dependencies: []
     description: Protein fitness prediction combining evolutionary coupling and one-hot
@@ -119,24 +201,31 @@ mcps:
     url: https://github.com/Biomolecular-Design-Nexus/ev_onehot_mcp
   gromacs-2025.4_mcp:
     dependencies: []
-    description: MCP created from /home/xux/Downloads/gromacs-2025.4
+    description: '> MCP server for GROMACS 2025.4 providing molecular dynamics simulation,
+      analysis, and workflow mana...'
     env_vars: {}
     path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/gromacs_mcp
     runtime: python
-    server_args: []
+    server_args:
+    - src/server.py
     server_command: python
     setup_commands:
-    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
-      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
-      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
-      && python3 -m venv ./env)'
-    - ./env/bin/pip install --ignore-installed fastmcp
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/python -m pip install --upgrade pip
+    - '(command -v mamba >/dev/null 2>&1 && mamba install -c conda-forge -p ./env
+      gromacs=2025.4 -y) || (command -v conda >/dev/null 2>&1 && conda install -c
+      conda-forge -p ./env gromacs=2025.4 -y) || echo "Warning: Could not install
+      GROMACS via conda/mamba. Please install manually."'
+    - ./env/bin/pip install fastmcp loguru --ignore-installed
     source: Tool
     url: ''
   main_mcp:
     dependencies: []
-    description: '> Molecular modeling and protein structure analysis using the powerful
-      Rosetta computational framewo...'
+    description: '> Model Control Protocol (MCP) server for Rosetta molecular modeling
+      and protein design suite'
     env_vars: {}
     path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/rosetta_mcp
     runtime: python
@@ -149,6 +238,7 @@ mcps:
       || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
       python3 -m venv ./env)'
     - ./env/bin/pip install numpy pandas loguru click tqdm
+    - ./env/bin/pip install --force-reinstall --no-cache-dir fastmcp
     - ./env/bin/pip install biopython matplotlib
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
@@ -188,6 +278,69 @@ mcps:
     - pip install fastmcp requests
     source: Tool
     url: https://github.com/Biomolecular-Design-Nexus/msa_mcp
+  mutcompute_mcp:
+    dependencies: []
+    description: '> A Model Context Protocol (MCP) server for protein mutation effect
+      prediction using neural networks'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/mutcompute_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 pip
+      -y) || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10
+      pip -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - ./env/bin/pip install fastmcp loguru pandas numpy matplotlib seaborn scipy tqdm
+    - ./env/bin/pip install --ignore-installed fastmcp
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -f repo/mutcompute/environment.yaml
+      -p ./env_py36 -y) || (command -v conda >/dev/null 2>&1 && conda env create -f
+      repo/mutcompute/environment.yaml -p ./env_py36 -y) || (echo "Warning: Legacy
+      environment creation requires conda/mamba for neural network support")'
+    source: Tool
+    url: ''
+  netMHCIIpan-4.3_mcp:
+    dependencies: []
+    description: '> MCP Server for NetMHCIIpan-4.3 - MHC Class II binding prediction
+      tools for epitope analysis and im...'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/netmhc2pan_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install fastmcp loguru click pandas numpy tqdm --no-cache-dir
+    - ./env/bin/pip install openpyxl
+    - ./env/bin/pip install --ignore-installed fastmcp
+    source: Tool
+    url: ''
+  netMHCpan-4.2_mcp:
+    dependencies: []
+    description: '> Model Context Protocol (MCP) server for NetMHCpan-4.2, enabling
+      AI-powered MHC Class I binding pre...'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/netmhcpan_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install fastmcp==2.14.1 loguru==0.7.3 pandas==2.3.3 numpy==2.4.0
+      tqdm==4.67.1 click==8.3.1
+    - ./env/bin/pip install --ignore-installed mcp pydantic uvicorn websockets rich
+    source: Tool
+    url: ''
   plmc_mcp:
     dependencies: []
     description: Evolutionary coupling analysis using PLMC for protein structure prediction
@@ -214,18 +367,20 @@ mcps:
     url: https://github.com/Biomolecular-Design-Nexus/plmc_mcp
   protein-sol_mcp:
     dependencies: []
-    description: MCP Server for protein solubility prediction from sequence data using
-      protein-sol.
+    description: '> Comprehensive protein solubility prediction and sequence analysis
+      through Model Context Protocol'
     env_vars: {}
     path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/protein_sol_mcp
     runtime: python
-    server_args: []
+    server_args:
+    - src/server.py
     server_command: python
     setup_commands:
-    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
-      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
-      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
-      && python3 -m venv ./env)'
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 pandas
+      -y) || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10
+      pandas -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env && ./env/bin/pip install pandas)'
+    - ./env/bin/pip install fastmcp loguru
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
     url: ''
@@ -250,16 +405,24 @@ mcps:
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
     url: https://github.com/Biomolecular-Design-Nexus/prottrans_mcp
-  rosetta_mcp:
+  scripts_mcp:
     dependencies: []
-    description: '> Molecular modeling and protein design tools powered by PyRosetta
-      and integrated with Claude Code t...'
+    description: '> Model Context Protocol (MCP) server for protein binder design
+      using BindCraft'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/rosetta_mcp
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/bindcraft_mcp
     runtime: python
     server_args:
     - src/server.py
     server_command: python
-    setup_commands: []
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install numpy pandas biopython click
+    - ./env/bin/pip install jax[cuda12] jaxlib
+    - ./env/bin/pip install fastmcp loguru
+    - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/rosetta_mcp
+    url: ''
