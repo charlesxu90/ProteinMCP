@@ -1,0 +1,27 @@
+2025-12-21 10:42:26,605 - docket.worker - INFO - Starting worker 'KW61090#363664' with the following tasks:
+2025-12-21 10:42:26,606 - docket.worker - INFO - * trace(message: str, ...)
+2025-12-21 10:42:26,606 - docket.worker - INFO - * fail(message: str, ...)
+2025-12-21 10:42:26,606 - docket.worker - INFO - * sleep(seconds: float, ...)
+2025-12-21 10:42:26,621 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-12-21 10:42:26,624 - mcp.server.lowlevel.server - INFO - Processing request of type ListPromptsRequest
+2025-12-21 10:42:26,626 - mcp.server.lowlevel.server - INFO - Processing request of type ListResourcesRequest
+2025-12-21 23:09:02,686 - docket.worker - INFO - Starting worker 'KW61090#568985' with the following tasks:
+2025-12-21 23:09:02,686 - docket.worker - INFO - * trace(message: str, ...)
+2025-12-21 23:09:02,687 - docket.worker - INFO - * fail(message: str, ...)
+2025-12-21 23:09:02,687 - docket.worker - INFO - * sleep(seconds: float, ...)
+2025-12-21 23:09:12,210 - docket.worker - INFO - Starting worker 'KW61090#569157' with the following tasks:
+2025-12-21 23:09:12,210 - docket.worker - INFO - * trace(message: str, ...)
+2025-12-21 23:09:12,210 - docket.worker - INFO - * fail(message: str, ...)
+2025-12-21 23:09:12,211 - docket.worker - INFO - * sleep(seconds: float, ...)
+2025-12-21 23:09:31,947 - docket.worker - INFO - Starting worker 'KW61090#569383' with the following tasks:
+2025-12-21 23:09:31,947 - docket.worker - INFO - * trace(message: str, ...)
+2025-12-21 23:09:31,947 - docket.worker - INFO - * fail(message: str, ...)
+2025-12-21 23:09:31,947 - docket.worker - INFO - * sleep(seconds: float, ...)
+2025-12-21 23:09:41,562 - docket.worker - INFO - Starting worker 'KW61090#569540' with the following tasks:
+2025-12-21 23:09:41,562 - docket.worker - INFO - * trace(message: str, ...)
+2025-12-21 23:09:41,562 - docket.worker - INFO - * fail(message: str, ...)
+2025-12-21 23:09:41,562 - docket.worker - INFO - * sleep(seconds: float, ...)
+2025-12-21 23:09:51,688 - docket.worker - INFO - Starting worker 'KW61090#569740' with the following tasks:
+2025-12-21 23:09:51,689 - docket.worker - INFO - * trace(message: str, ...)
+2025-12-21 23:09:51,689 - docket.worker - INFO - * fail(message: str, ...)
+2025-12-21 23:09:51,689 - docket.worker - INFO - * sleep(seconds: float, ...)

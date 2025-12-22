@@ -97,6 +97,48 @@ mcps:
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
     url: https://github.com/google-deepmind/alphafold
+  bio-mcp-amber_mcp:
+    dependencies: []
+    description: '> Molecular dynamics tools for AMBER simulations with energy minimization
+      and system preparation cap...'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/amber_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.12 pip
+      -y) || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.12
+      pip -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - ./env/bin/pip install mcp>=1.1.0 pydantic>=2.0.0 pydantic-settings>=2.0.0
+    - ./env/bin/pip install loguru click pytest pytest-asyncio
+    - ./env/bin/pip install --ignore-installed fastmcp
+    source: Tool
+    url: https://github.com/bio-mcp/bio-mcp-amber
+  bio-mcp-interpro_mcp:
+    dependencies: []
+    description: '> MCP (Model Context Protocol) server for InterProScan protein domain
+      and functional analysis'
+    env_vars: {}
+    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/interpro_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
+      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
+      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
+      python3 -m venv ./env)'
+    - ./env/bin/pip install loguru click pandas numpy tqdm
+    - ./env/bin/pip install "mcp>=1.1.0" "pydantic>=2.0.0" "pydantic-settings>=2.0.0"
+      "httpx>=0.24.0"
+    - ./env/bin/pip install "pytest>=7.0.0" "pytest-asyncio>=0.21.0" "ruff>=0.1.0"
+    - ./env/bin/pip install --ignore-installed fastmcp loguru --force-reinstall --no-cache-dir
+    source: Tool
+    url: https://github.com/bio-mcp/bio-mcp-interpro
   boltz_mcp:
     dependencies: []
     description: '> Protein structure and affinity prediction using Boltz2 deep learning
