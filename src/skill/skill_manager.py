@@ -63,6 +63,11 @@ class SkillManager:
         if self.skills_dir.exists():
             for f in self.skills_dir.glob("*.md"):
                 skill_name = f.stem
+
+                # Skip steps files (used for skill creation)
+                if skill_name.endswith("_steps"):
+                    continue
+
                 if skill_name.endswith("_skill"):
                     skill_name = skill_name[:-6]
 

@@ -9,15 +9,18 @@ Provides unified access to skill management functionality through subcommands:
 - skill install: Install a skill and its required MCPs
 - skill execute: Guide through skill execution
 - skill uninstall: Uninstall a skill and cleanup MCPs
+- skill create: Create a new skill interactively
 """
 
 import sys
 import textwrap
+from pathlib import Path
 from typing import List, Tuple
 
 import click
 
 from .skill.skill_manager import SkillManager
+from .skill.create_skill import SkillCreator, interactive_add_step
 from .mcp.mcp_manager import MCPManager
 
 
@@ -259,6 +262,155 @@ def uninstall_command(skill_name: str):
     manager = SkillManager()
     success = manager.uninstall_skill_and_mcps(skill_name)
     if not success:
+        sys.exit(1)
+
+
+# =============================================================================
+# Skill Creation Commands
+# =============================================================================
+
+@cli.group(name="create")
+def create_group():
+    """
+    Create new skills interactively.
+
+    Use these subcommands to create new workflow skills by recording
+    steps as you test MCP tools.
+
+    Workflow:
+      1. pskill create init <skill_name>
+      2. Test MCP tools interactively in Claude Code
+      3. pskill create add-step <skill_name> (repeat for each step)
+      4. pskill create generate <skill_name>
+      5. pskill install <skill_name>
+    """
+    pass
+
+
+@create_group.command(name="init")
+@click.argument('skill_name')
+@click.option('--description', '-d', default="", help='Skill description')
+@click.option('--mcps', '-m', multiple=True, help='Required MCP servers (can be repeated)')
+def create_init_command(skill_name: str, description: str, mcps: tuple):
+    """
+    Initialize a new skill with a steps file template.
+
+    Creates a template steps file that you can edit to add steps,
+    or use the add-step command interactively.
+
+    Examples:
+
+      # Initialize a new binder design skill:
+      pskill create init binder_design -d "Design protein binders" -m bindcraft_mcp
+
+      # Initialize with multiple MCPs:
+      pskill create init my_skill -m mcp1 -m mcp2
+    """
+    creator = SkillCreator(skill_name)
+    mcps_list = list(mcps) if mcps else None
+    creator.init_skill(description=description, required_mcps=mcps_list)
+
+
+@create_group.command(name="add-step")
+@click.argument('skill_name')
+@click.option('--title', '-t', default=None, help='Step title (interactive if not provided)')
+@click.option('--prompt', '-p', default=None, help='Step prompt (interactive if not provided)')
+def create_add_step_command(skill_name: str, title: str, prompt: str):
+    """
+    Add a step to the skill interactively or with options.
+
+    Adds a new step to the skill's steps file. If title and prompt
+    are not provided, enters interactive mode.
+
+    Examples:
+
+      # Add step interactively:
+      pskill create add-step binder_design
+
+      # Add step with options:
+      pskill create add-step binder_design -t "Generate config" -p "Generate a BindCraft config..."
+    """
+    creator = SkillCreator(skill_name)
+    if title and prompt:
+        creator.add_step(title=title, prompt=prompt)
+    else:
+        interactive_add_step(creator)
+
+
+@create_group.command(name="list-steps")
+@click.argument('skill_name')
+def create_list_steps_command(skill_name: str):
+    """
+    List all steps in the skill's steps file.
+
+    Displays the steps that have been recorded for the skill.
+
+    Examples:
+
+      # List steps for binder_design:
+      pskill create list-steps binder_design
+    """
+    creator = SkillCreator(skill_name)
+    steps = creator.list_steps()
+    if steps:
+        click.echo(f"\nSteps in '{skill_name}':")
+        click.echo("-" * 40)
+        for step in steps:
+            click.echo(f"  Step {step['number']}: {step['title']}")
+        click.echo()
+    else:
+        click.echo("No steps found.")
+
+
+@create_group.command(name="generate")
+@click.argument('skill_name')
+@click.option('--description', '-d', default=None, help='Override description')
+@click.option('--mcps', '-m', multiple=True, help='Override required MCPs')
+def create_generate_command(skill_name: str, description: str, mcps: tuple):
+    """
+    Generate the skill file from the steps file.
+
+    Transforms the steps file into a full skill markdown file and
+    updates the configs.yaml to register the skill.
+
+    Examples:
+
+      # Generate skill from steps:
+      pskill create generate binder_design
+
+      # Generate with overrides:
+      pskill create generate binder_design -d "New description" -m mcp1 -m mcp2
+    """
+    creator = SkillCreator(skill_name)
+    mcps_list = list(mcps) if mcps else None
+    creator.generate_skill(description=description, required_mcps=mcps_list)
+
+
+@create_group.command(name="from-steps")
+@click.argument('steps_file', type=click.Path(exists=True))
+@click.option('--description', '-d', default=None, help='Override description')
+@click.option('--mcps', '-m', multiple=True, help='Override required MCPs')
+def create_from_steps_command(steps_file: str, description: str, mcps: tuple):
+    """
+    Generate a skill from an existing steps file.
+
+    Useful when you've manually edited a steps file or have one
+    from a previous session.
+
+    Examples:
+
+      # Generate from existing steps file:
+      pskill create from-steps workflow-skills/my_steps.md
+
+      # With overrides:
+      pskill create from-steps my_steps.md -d "Description" -m mcp1
+    """
+    steps_path = Path(steps_file)
+    creator = SkillCreator.from_steps_file(steps_path)
+    if creator:
+        mcps_list = list(mcps) if mcps else None
+        creator.generate_skill(description=description, required_mcps=mcps_list)
+    else:
         sys.exit(1)
 
 

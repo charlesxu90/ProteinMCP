@@ -8,4 +8,4 @@ Can you obtain the msa for TEVP @examples/case1_sequence_analysis/TEVp.fasta usi
 
 # Annotate the domains, active sites, and conserved sites
 
-# Query PubMed reviews to learn the applications of this protein and the chanllenges
+# Query reviews in PubMed to learn the applications of this protein and the chanllenges
