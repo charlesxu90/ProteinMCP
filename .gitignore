@@ -13,3 +13,4 @@ env/
 examples/
 public/
 mcp.status
+.pytest_cache/
