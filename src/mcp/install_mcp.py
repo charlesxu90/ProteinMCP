@@ -7,17 +7,17 @@ List and install MCP servers from:
 2. Public MCPs (tool-mcps/public/) - from src/configs/public_mcps.yaml
 
 Usage:
-    python src/install_mcp.py avail                   # Show all available MCPs
-    python src/install_mcp.py avail --local           # Show local MCPs only
-    python src/install_mcp.py avail --public          # Show public MCPs only
-    python src/install_mcp.py status                  # Show downloaded/installed status
-    python src/install_mcp.py status --refresh        # Refresh cache (slower)
-    python src/install_mcp.py install <mcp_name>      # Install and register with Claude Code
-    python src/install_mcp.py install <mcp_name> --cli gemini  # Install with Gemini CLI
-    python src/install_mcp.py install <mcp_name> --no-register # Install only, don't register
-    python src/install_mcp.py search <query>          # Search MCPs
-    python src/install_mcp.py info <mcp_name>         # Show MCP details
-    python src/install_mcp.py uninstall <mcp_name>    # Unregister MCP from CLI
+    pmcp avail                   # Show all available MCPs
+    pmcp avail --local           # Show local MCPs only
+    pmcp avail --public          # Show public MCPs only
+    pmcp status                  # Show downloaded/installed status
+    pmcp status --refresh        # Refresh cache (slower)
+    pmcp install <mcp_name>      # Install and register with Claude Code
+    pmcp install <mcp_name> --cli gemini  # Install with Gemini CLI
+    pmcp install <mcp_name> --no-register # Install only, don't register
+    pmcp search <query>          # Search MCPs
+    pmcp info <mcp_name>         # Show MCP details
+    pmcp uninstall <mcp_name>    # Unregister MCP from CLI
 
 Note: Status checks are cached for 5 minutes to improve performance. Use --refresh to force update.
 """
@@ -355,99 +355,3 @@ def sync_mcps() -> None:
     """Synchronize MCP registry with filesystem."""
     print("🔄 Synchronizing MCP registry with filesystem...")
     mcp_manager.sync_installed_with_filesystem()
-
-
-# =============================================================================
-# CLI
-# =============================================================================
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="List and install MCP servers",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python src/install_mcp.py avail                         # Show all available MCPs
-  python src/install_mcp.py avail --local                 # Show local MCPs only
-  python src/install_mcp.py avail --public                # Show public MCPs only
-  python src/install_mcp.py status                        # Show downloaded/installed status
-  python src/install_mcp.py status --refresh              # Refresh cache and show status
-  python src/install_mcp.py search blast                  # Search for MCPs
-  python src/install_mcp.py install proteinmpnn           # Install with Claude Code
-  python src/install_mcp.py install pdb --cli gemini      # Install with Gemini CLI
-  python src/install_mcp.py install arxiv --no-register   # Install only
-  python src/install_mcp.py info uniprot                  # Show MCP details
-  python src/install_mcp.py uninstall arxiv               # Unregister from CLI
-  python src/install_mcp.py uninstall arxiv --remove-files # Unregister and delete
-  python src/install_mcp.py sync                          # Sync registry with filesystem
-        """
-    )
-
-    subparsers = parser.add_subparsers(dest="command", help="Command")
-
-    # Avail command
-    avail_parser = subparsers.add_parser("avail", help="Show all available MCPs to install")
-    avail_parser.add_argument("--local", action="store_true", help="Show local MCPs only")
-    avail_parser.add_argument("--public", action="store_true", help="Show public MCPs only")
-
-    # Status command
-    status_parser = subparsers.add_parser("status", help="Show downloaded and installed MCPs")
-    status_parser.add_argument("--refresh", action="store_true", help="Refresh status cache (slower but accurate)")
-
-    # List command (deprecated, for backwards compatibility)
-    list_parser = subparsers.add_parser("list", help="List available MCPs (deprecated, use 'avail' or 'status')")
-    list_parser.add_argument("--local", action="store_true", help="Show local MCPs only")
-    list_parser.add_argument("--public", action="store_true", help="Show public MCPs only")
-    list_parser.add_argument("--refresh", action="store_true", help="Refresh status cache (slower but accurate)")
-
-    # Search command
-    search_parser = subparsers.add_parser("search", help="Search MCPs")
-    search_parser.add_argument("query", help="Search query")
-
-    # Install command
-    install_parser = subparsers.add_parser("install", help="Install an MCP")
-    install_parser.add_argument("mcp_name", help="Name of MCP to install")
-    install_parser.add_argument("--cli", choices=["claude", "gemini"], default="claude",
-                                help="CLI tool to register with (default: claude)")
-    install_parser.add_argument("--no-register", action="store_true",
-                                help="Install only, don't register with CLI")
-
-    # Info command
-    info_parser = subparsers.add_parser("info", help="Show MCP details")
-    info_parser.add_argument("mcp_name", help="Name of MCP")
-
-    # Uninstall command
-    uninstall_parser = subparsers.add_parser("uninstall", help="Uninstall an MCP")
-    uninstall_parser.add_argument("mcp_name", help="Name of MCP to uninstall")
-    uninstall_parser.add_argument("--cli", choices=["claude", "gemini"], default="claude",
-                                  help="CLI tool to unregister from (default: claude)")
-    uninstall_parser.add_argument("--remove-files", action="store_true",
-                                  help="Also remove installation files")
-
-    # Sync command
-    sync_parser = subparsers.add_parser("sync", help="Sync MCP registry with filesystem")
-
-    args = parser.parse_args()
-
-    if args.command == "avail":
-        show_available_mcps(local_only=args.local, public_only=args.public)
-    elif args.command == "status":
-        show_status(refresh_cache=args.refresh)
-    elif args.command == "list":
-        list_mcps(local_only=args.local, public_only=args.public, refresh_cache=args.refresh)
-    elif args.command == "search":
-        search_mcps(args.query)
-    elif args.command == "install":
-        install_mcp_cmd(args.mcp_name, cli=args.cli, no_register=args.no_register)
-    elif args.command == "info":
-        show_info(args.mcp_name)
-    elif args.command == "uninstall":
-        uninstall_mcp_cmd(args.mcp_name, cli=args.cli, remove_files=args.remove_files)
-    elif args.command == "sync":
-        sync_mcps()
-    else:
-        parser.print_help()
-
-
-if __name__ == "__main__":
-    main()

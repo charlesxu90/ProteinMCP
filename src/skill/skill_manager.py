@@ -5,7 +5,7 @@ Manages workflow skills, including loading, installation, and uninstallation.
 
 from pathlib import Path
 
-from . import install_mcp
+from ..mcp.install_mcp import install_mcp_cmd, uninstall_mcp_cmd
 from .skill import Skill
 
 
@@ -63,7 +63,7 @@ class SkillManager:
             print(f"\nInstalling required MCPs: {', '.join(required_mcps)}")
             for mcp_name in required_mcps:
                 print(f"\n--- Installing MCP: {mcp_name} ---")
-                if not install_mcp.install_mcp_cmd(mcp_name, cli="claude"):
+                if not install_mcp_cmd(mcp_name, cli="claude"):
                     print(f"⚠️ Failed to install MCP '{mcp_name}'. Continuing...")
             print("\n--- Finished MCP installation ---")
         else:
@@ -95,7 +95,7 @@ class SkillManager:
             print(f"\nCleaning up associated MCPs: {', '.join(cleanup_mcps)}")
             for mcp_name in cleanup_mcps:
                 print(f"\n--- Uninstalling MCP: {mcp_name} ---")
-                if not install_mcp.uninstall_mcp_cmd(mcp_name, cli="claude"):
+                if not uninstall_mcp_cmd(mcp_name, cli="claude"):
                     print(f"⚠️ Failed to uninstall MCP '{mcp_name}'.")
             print("\n--- Finished MCP cleanup ---")
         else:

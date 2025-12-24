@@ -38,16 +38,14 @@ setup(
     description="Protein Engineering Model Context Protocol Package",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/proteinmcp",
+    url="https://github.com/charlesxu90/proteinmcp",
     packages=find_packages(),
     package_dir={"proteinmcp": "src"},
     include_package_data=True,
     package_data={
         'proteinmcp': [
             'prompts/*.md',
-            'prompts/*.txt',
-            'configs/*.yaml',
-            'configs/*.yml',
+            'mcp/configs/*.yaml',
         ],
     },
     classifiers=[
@@ -67,8 +65,10 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'proteinmcp=src.cli:main',
-            'pmcp=src.cli:main',
+            'proteinmcp=src.mcp_cli:main',
+            'pmcp=src.mcp_cli:main',
+            'proteinskill=src.skill_cli:main',
+            'pskill=src.skill_cli:main',
         ],
     },
     extras_require={

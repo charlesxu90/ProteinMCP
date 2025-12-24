@@ -322,28 +322,3 @@ def create_mcp(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path,
 
     except Exception:
         raise Exception("MCP Creation Pipeline failed")
-
-
-@click.command()
-@click.option('--github-url', default='', help='GitHub repository URL to clone (e.g., https://github.com/user/repo)')
-@click.option('--local-repo-path', default=None, type=click.Path(exists=True, path_type=Path),
-              help='Path to local repository (alternative to --github-url)')
-@click.option('--mcp-dir', required=True, type=click.Path(path_type=Path), 
-              help='MCP project directory to create (e.g., /path/to/my-mcp-project)')
-@click.option('--use-case-filter', default='', help='Optional filter for use cases (e.g., "prediction", "analysis")')
-@click.option('--rerun-from-step', default=0, type=click.IntRange(0, 8),
-              help='Force rerun from this step number (1-8). Clears markers for this step and all subsequent steps.')
-def cli(github_url: str, local_repo_path: Optional[Path], mcp_dir: Path, 
-        use_case_filter: str, rerun_from_step: int):
-    create_mcp(
-        github_url=github_url,
-        local_repo_path=local_repo_path,
-        mcp_dir=mcp_dir,
-        use_case_filter=use_case_filter,
-        api_key="",  # Not needed - uses Claude Code CLI with logged-in account
-        rerun_from_step=rerun_from_step
-    )
-
-
-if __name__ == '__main__':
-    cli()
