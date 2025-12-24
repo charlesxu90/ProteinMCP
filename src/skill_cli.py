@@ -13,10 +13,37 @@ Provides unified access to skill management functionality through subcommands:
 
 import sys
 import textwrap
+from typing import List, Tuple
 
 import click
 
 from .skill.skill_manager import SkillManager
+from .mcp.mcp_manager import MCPManager
+
+
+def check_required_mcps(required_mcps: List[str], cli: str = "claude") -> Tuple[List[str], List[str]]:
+    """
+    Check if required MCPs are installed and registered.
+
+    Args:
+        required_mcps: List of MCP names to check
+        cli: CLI tool to check registration against
+
+    Returns:
+        Tuple of (available_mcps, missing_mcps)
+    """
+    mcp_manager = MCPManager()
+    available = []
+    missing = []
+
+    for mcp_name in required_mcps:
+        mcp = mcp_manager.get_mcp(mcp_name)
+        if mcp and mcp.is_registered(cli):
+            available.append(mcp_name)
+        else:
+            missing.append(mcp_name)
+
+    return available, missing
 
 
 @click.group(invoke_without_command=True)
@@ -121,15 +148,17 @@ def info_command(skill_name: str):
 
     required_mcps = skill.get_required_mcps()
     if required_mcps:
+        # Check MCP availability
+        available, missing = check_required_mcps(required_mcps)
+
         click.echo(f"\n  Required MCPs ({len(required_mcps)}):")
         for mcp in required_mcps:
-            click.echo(f"    - {mcp}")
+            status = "✅" if mcp in available else "❌"
+            click.echo(f"    {status} {mcp}")
 
-    cleanup_mcps = skill.get_cleanup_mcps()
-    if cleanup_mcps:
-        click.echo(f"\n  Cleanup MCPs ({len(cleanup_mcps)}):")
-        for mcp in cleanup_mcps:
-            click.echo(f"    - {mcp}")
+        if missing:
+            click.echo(f"\n  ⚠️  {len(missing)} MCP(s) not registered. Install with:")
+            click.echo(f"      pskill install {skill_name}")
     click.echo()
 
 
@@ -174,7 +203,25 @@ def execute_command(skill_name: str):
         click.echo(f"Skill '{skill_name}' not found.", err=True)
         sys.exit(1)
 
-    click.echo(f"\nExecuting Skill: {skill.name}")
+    # Check if required MCPs are available
+    required_mcps = skill.get_required_mcps()
+    if required_mcps:
+        click.echo(f"\n🔍 Checking required MCPs for '{skill_name}'...")
+        available, missing = check_required_mcps(required_mcps)
+
+        if missing:
+            click.echo(f"\n❌ Missing required MCPs ({len(missing)}):")
+            for mcp in missing:
+                click.echo(f"    - {mcp}")
+            click.echo(f"\n💡 Please install the skill first:")
+            click.echo(f"    pskill install {skill_name}")
+            click.echo(f"\n   Or install MCPs manually:")
+            click.echo(f"    pmcp install {' '.join(missing)}")
+            sys.exit(1)
+
+        click.echo(f"✅ All {len(available)} required MCPs are available")
+
+    click.echo(f"\n▶️  Executing Skill: {skill.name}")
     click.echo("=" * 70)
     click.echo("This will guide you through the steps defined in the skill file.")
     click.echo("Copy and paste the prompts into your conversation with the assistant.")
@@ -187,7 +234,7 @@ def execute_command(skill_name: str):
 
     for i, step in enumerate(steps, 1):
         click.echo(f"\n--- Step {i}: {step['title']} ---")
-        click.echo("\nPrompt to copy:")
+        click.echo("\n📋 Prompt to copy:")
         prompt_block = textwrap.indent(step['prompt'], "    ")
         click.echo(prompt_block)
 

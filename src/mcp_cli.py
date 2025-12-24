@@ -131,22 +131,25 @@ def status_command(refresh: bool):
 
 
 @cli.command(name="install")
-@click.argument('mcp_name')
+@click.argument('mcp_names', nargs=-1, required=True)
 @click.option('--cli', type=click.Choice(['claude', 'gemini']), default='claude',
               help='CLI tool to register with (default: claude)')
 @click.option('--no-register', is_flag=True,
               help='Install only, do not register with CLI')
-def install_command(mcp_name: str, cli: str, no_register: bool):
+def install_command(mcp_names: tuple, cli: str, no_register: bool):
     """
-    Install an MCP server and optionally register it with a CLI.
+    Install one or more MCP servers and optionally register them with a CLI.
 
-    By default, installs the MCP and registers it with Claude Code.
+    By default, installs the MCPs and registers them with Claude Code.
     Use --no-register to skip CLI registration.
 
     Examples:
 
-      # Install and register with Claude Code:
+      # Install a single MCP:
       pmcp install proteinmpnn
+
+      # Install multiple MCPs at once:
+      pmcp install esm_mcp plmc_mcp prottrans_mcp
 
       # Install and register with Gemini CLI:
       pmcp install pdb --cli gemini
@@ -154,28 +157,41 @@ def install_command(mcp_name: str, cli: str, no_register: bool):
       # Install only, don't register:
       pmcp install arxiv --no-register
     """
-    success = install_mcp_cmd(mcp_name, cli=cli, no_register=no_register)
-    if not success:
+    failed = []
+    for mcp_name in mcp_names:
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Installing: {mcp_name}")
+        click.echo('='*60)
+        if not install_mcp_cmd(mcp_name, cli=cli, no_register=no_register):
+            failed.append(mcp_name)
+
+    if failed:
+        click.echo(f"\n❌ Failed to install: {', '.join(failed)}")
         sys.exit(1)
+    elif len(mcp_names) > 1:
+        click.echo(f"\n✅ Successfully installed all {len(mcp_names)} MCPs")
 
 
 @cli.command(name="uninstall")
-@click.argument('mcp_name')
+@click.argument('mcp_names', nargs=-1, required=True)
 @click.option('--cli', type=click.Choice(['claude', 'gemini']), default='claude',
               help='CLI tool to unregister from (default: claude)')
 @click.option('--remove-files', is_flag=True,
               help='Also remove installation files')
-def uninstall_command(mcp_name: str, cli: str, remove_files: bool):
+def uninstall_command(mcp_names: tuple, cli: str, remove_files: bool):
     """
-    Uninstall an MCP server from CLI and optionally remove files.
+    Uninstall one or more MCP servers from CLI and optionally remove files.
 
-    By default, only unregisters the MCP from the CLI. Use --remove-files
+    By default, only unregisters the MCPs from the CLI. Use --remove-files
     to also delete the installation files.
 
     Examples:
 
-      # Unregister from CLI only:
+      # Unregister a single MCP:
       pmcp uninstall arxiv
+
+      # Unregister multiple MCPs at once:
+      pmcp uninstall msa_mcp plmc_mcp esm_mcp prottrans_mcp
 
       # Unregister and delete files:
       pmcp uninstall arxiv --remove-files
@@ -183,9 +199,19 @@ def uninstall_command(mcp_name: str, cli: str, remove_files: bool):
       # Unregister from Gemini CLI:
       pmcp uninstall pdb --cli gemini
     """
-    success = uninstall_mcp_cmd(mcp_name, cli=cli, remove_files=remove_files)
-    if not success:
+    failed = []
+    for mcp_name in mcp_names:
+        click.echo(f"\n{'='*60}")
+        click.echo(f"Uninstalling: {mcp_name}")
+        click.echo('='*60)
+        if not uninstall_mcp_cmd(mcp_name, cli=cli, remove_files=remove_files):
+            failed.append(mcp_name)
+
+    if failed:
+        click.echo(f"\n❌ Failed to uninstall: {', '.join(failed)}")
         sys.exit(1)
+    elif len(mcp_names) > 1:
+        click.echo(f"\n✅ Successfully uninstalled all {len(mcp_names)} MCPs")
 
 
 @cli.command(name="search")

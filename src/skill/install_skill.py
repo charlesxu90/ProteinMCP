@@ -6,18 +6,20 @@ This tool manages workflow skills for Claude Code, allowing you to list,
 install, execute, and uninstall complex workflows.
 
 Usage:
-    python src/install_skill.py avail              # Show all available skills
-    python src/install_skill.py status             # Show installed status of skills
-    python src/install_skill.py info <skill_name>  # Show details about a skill
-    python src/install_skill.py install <skill_name> # Install a skill and its MCPs
-    python src/install_skill.py execute <skill_name> # Guide through skill execution
-    python src/install_skill.py uninstall <skill_name> # Uninstall skill and cleanup MCPs
+    pskill avail              # Show all available skills
+    pskill status             # Show installed status of skills
+    pskill info <skill_name>  # Show details about a skill
+    pskill install <skill_name> # Install a skill and its MCPs
+    pskill execute <skill_name> # Guide through skill execution
+    pskill uninstall <skill_name> # Uninstall skill and cleanup MCPs
 """
 
 import argparse
 import textwrap
+from typing import List, Tuple
 
 from .skill_manager import SkillManager
+from ..mcp.mcp_manager import MCPManager
 
 
 def show_available_skills(manager: SkillManager):
@@ -51,6 +53,32 @@ def show_status(manager: SkillManager):
         print(f"  • {name:<25} {status}")
     print()
 
+
+def check_required_mcps(required_mcps: List[str], cli: str = "claude") -> Tuple[List[str], List[str]]:
+    """
+    Check if required MCPs are installed and registered.
+
+    Args:
+        required_mcps: List of MCP names to check
+        cli: CLI tool to check registration against
+
+    Returns:
+        Tuple of (available_mcps, missing_mcps)
+    """
+    mcp_manager = MCPManager()
+    available = []
+    missing = []
+
+    for mcp_name in required_mcps:
+        mcp = mcp_manager.get_mcp(mcp_name)
+        if mcp and mcp.is_registered(cli):
+            available.append(mcp_name)
+        else:
+            missing.append(mcp_name)
+
+    return available, missing
+
+
 def show_info(manager: SkillManager, skill_name: str):
     """Displays detailed information about a single skill."""
     skill = manager.get_skill(skill_name)
@@ -67,16 +95,19 @@ def show_info(manager: SkillManager, skill_name: str):
 
     required_mcps = skill.get_required_mcps()
     if required_mcps:
+        # Check MCP availability
+        available, missing = check_required_mcps(required_mcps)
+
         print(f"\n  Required MCPs ({len(required_mcps)}):")
         for mcp in required_mcps:
-            print(f"    - {mcp}")
+            status = "✅" if mcp in available else "❌"
+            print(f"    {status} {mcp}")
 
-    cleanup_mcps = skill.get_cleanup_mcps()
-    if cleanup_mcps:
-        print(f"\n  Cleanup MCPs ({len(cleanup_mcps)}):")
-        for mcp in cleanup_mcps:
-            print(f"    - {mcp}")
+        if missing:
+            print(f"\n  ⚠️  {len(missing)} MCP(s) not registered. Install with:")
+            print(f"      pskill install {skill_name}")
     print()
+
 
 def execute_skill(manager: SkillManager, skill_name: str):
     """Guides the user through executing a skill."""
@@ -84,6 +115,24 @@ def execute_skill(manager: SkillManager, skill_name: str):
     if not skill:
         print(f"❌ Skill '{skill_name}' not found.")
         return
+
+    # Check if required MCPs are available
+    required_mcps = skill.get_required_mcps()
+    if required_mcps:
+        print(f"\n🔍 Checking required MCPs for '{skill_name}'...")
+        available, missing = check_required_mcps(required_mcps)
+
+        if missing:
+            print(f"\n❌ Missing required MCPs ({len(missing)}):")
+            for mcp in missing:
+                print(f"    - {mcp}")
+            print(f"\n💡 Please install the skill first:")
+            print(f"    pskill install {skill_name}")
+            print(f"\n   Or install MCPs manually:")
+            print(f"    pmcp install {' '.join(missing)}")
+            return
+
+        print(f"✅ All {len(available)} required MCPs are available")
 
     print(f"\n▶️  Executing Skill: {skill.name}")
     print("=" * 70)
@@ -102,7 +151,7 @@ def execute_skill(manager: SkillManager, skill_name: str):
         # Indent the prompt for clarity
         prompt_block = textwrap.indent(step['prompt'], "    ")
         print(prompt_block)
-        
+
         if i < len(steps):
             input("\nPress Enter to continue to the next step...")
 

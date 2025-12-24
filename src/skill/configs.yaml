@@ -1,0 +1,76 @@
+# =============================================================================
+# Skill Configuration File
+# =============================================================================
+#
+# This file defines available skills and their requirements.
+#
+# Each skill entry should contain:
+#   - name: Skill identifier (used in pskill commands)
+#   - description: Brief description of what the skill does
+#   - file_path: Relative path to the skill markdown file (from ProteinMCP root)
+#   - required_mcps: List of MCP servers needed to run the skill
+#
+# Usage:
+#   pskill avail              # Show all available skills
+#   pskill install <name>     # Install skill and its MCPs
+#   pskill uninstall <name>   # Uninstall skill and its MCPs
+#
+# =============================================================================
+
+skills:
+  # ---------------------------------------------------------------------------
+  # Protein Fitness Modeling Skill
+  # ---------------------------------------------------------------------------
+  fitness_modeling:
+    description: >-
+      Build and compare protein fitness prediction models using ESM, ProtTrans,
+      EV+OneHot, and PLMC backbones. Includes MSA generation, model training,
+      and performance comparison visualization.
+    file_path: workflow-skills/fitness_modeling_skill.md
+    required_mcps:
+      - msa_mcp
+      - plmc_mcp
+      - ev_onehot_mcp
+      - esm_mcp
+      - prottrans_mcp
+
+  # ---------------------------------------------------------------------------
+  # Sequence Analysis Skill (Work in Progress)
+  # ---------------------------------------------------------------------------
+  case1_sequence_analysis:
+    description: >-
+      Analyze protein sequences including MSA generation, WebLogo visualization,
+      domain annotation, and literature search.
+    file_path: workflow-skills/case1_sequence_analysis.md
+    required_mcps:
+      - msa_mcp
+      - uniprot_mcp
+      - pubmed_mcp
+
+  # ---------------------------------------------------------------------------
+  # Structure Analysis Skill (Work in Progress)
+  # ---------------------------------------------------------------------------
+  case2_structure_analysis:
+    description: >-
+      Analyze protein structures including MSA generation, structure prediction,
+      and active site annotation.
+    file_path: workflow-skills/case2_structure_analysis.md
+    required_mcps:
+      - msa_mcp
+      - uniprot_mcp
+      - alphafold_db_mcp
+
+  # ---------------------------------------------------------------------------
+  # Case 3: Fitness Modeling (Simplified)
+  # ---------------------------------------------------------------------------
+  case3_fitness_modeling:
+    description: >-
+      Step-by-step fitness modeling workflow for TEV protease including MSA,
+      PLMC, EV+OneHot, ESM, and ProtTrans model training.
+    file_path: workflow-skills/case3_fitness_modeling.md
+    required_mcps:
+      - msa_mcp
+      - plmc_mcp
+      - ev_onehot_mcp
+      - esm_mcp
+      - prottrans_mcp

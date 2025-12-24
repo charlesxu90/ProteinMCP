@@ -6,21 +6,32 @@ Defines the Skill class, which represents a workflow skill.
 import re
 import shutil
 from pathlib import Path
+from typing import List, Optional
 
 
 class Skill:
     """Represents a workflow skill defined in a markdown file."""
 
-    def __init__(self, name: str, file_path: Path):
+    def __init__(
+        self,
+        name: str,
+        file_path: Path,
+        description: Optional[str] = None,
+        required_mcps: Optional[List[str]] = None,
+    ):
         """
         Initializes a Skill instance.
 
         Args:
             name: The name of the skill, derived from the filename.
             file_path: The path to the skill's markdown file.
+            description: Optional description from config (overrides file parsing).
+            required_mcps: Optional list of required MCPs from config.
         """
         self.name = name
         self.file_path = file_path
+        self._description = description
+        self._required_mcps = required_mcps
 
         # Derive command name from skill name
         command_name_base = self.name.replace("_", "-")
@@ -37,7 +48,12 @@ class Skill:
 
     @property
     def description(self) -> str:
-        """Extracts the description from the skill file."""
+        """Returns description from config or extracts from skill file."""
+        # Use config description if available
+        if self._description:
+            return self._description
+
+        # Fall back to parsing from file
         try:
             content = self.file_path.read_text()
             # Find first non-empty line after the title
@@ -51,20 +67,24 @@ class Skill:
         except Exception:
             return "Could not read description."
 
-    def get_required_mcps(self) -> list[str]:
-        """Parses the skill file for required MCPs to install."""
-        content = self.file_path.read_text()
-        matches = re.findall(r"pmcp install ([\w_]+)", content)
-        return sorted(list(set(matches)))
+    def get_required_mcps(self) -> List[str]:
+        """Returns required MCPs from config or parses from skill file."""
+        # Use config MCPs if available
+        if self._required_mcps is not None:
+            return self._required_mcps
 
-    def get_cleanup_mcps(self) -> list[str]:
-        """Parses the skill file for MCPs to uninstall during cleanup."""
-        content = self.file_path.read_text()
-        matches = re.findall(r"pmcp uninstall ([\w\s_]+)", content)
-        mcps = []
-        for match in matches:
-            mcps.extend(match.split())
-        return sorted(list(set(mcps)))
+        # Fall back to parsing from file
+        try:
+            content = self.file_path.read_text()
+            matches = re.findall(r"pmcp install ([\w_]+)", content)
+            return sorted(list(set(matches)))
+        except Exception:
+            return []
+
+    def get_cleanup_mcps(self) -> List[str]:
+        """Returns MCPs to cleanup (same as required_mcps)."""
+        # Cleanup MCPs are the same as required MCPs
+        return self.get_required_mcps()
 
     def get_status(self) -> str:
         """Checks if the skill is installed."""

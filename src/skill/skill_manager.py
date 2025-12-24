@@ -4,27 +4,72 @@ Manages workflow skills, including loading, installation, and uninstallation.
 """
 
 from pathlib import Path
+from typing import Dict, Optional
+
+import yaml
 
 from ..mcp.install_mcp import install_mcp_cmd, uninstall_mcp_cmd
 from .skill import Skill
 
 
+# Path to the skills config file
+SKILL_CONFIG_PATH = Path(__file__).parent / "configs.yaml"
+
+
 class SkillManager:
     """Manages discovery and handling of workflow skills."""
 
-    def __init__(self, skills_dir="workflow-skills"):
+    def __init__(self, skills_dir: str = "workflow-skills"):
         self.skills_dir = Path(skills_dir)
+        self._config: Optional[Dict] = None
 
-    def load_available_skills(self) -> dict[str, Skill]:
-        """Loads all available skills from the skills directory."""
+    def _load_config(self) -> Dict:
+        """Load skills configuration from YAML file."""
+        if self._config is not None:
+            return self._config
+
+        if SKILL_CONFIG_PATH.exists():
+            try:
+                with open(SKILL_CONFIG_PATH, "r") as f:
+                    self._config = yaml.safe_load(f) or {}
+            except Exception as e:
+                print(f"Warning: Failed to load skill config: {e}")
+                self._config = {}
+        else:
+            self._config = {}
+
+        return self._config
+
+    def load_available_skills(self) -> Dict[str, Skill]:
+        """Loads all available skills from config file and skills directory."""
         skills = {}
-        if not self.skills_dir.exists():
-            return skills
-        for f in self.skills_dir.glob("*.md"):
-            skill_name = f.stem
-            if skill_name.endswith("_skill"):
-                skill_name = skill_name[:-6]
-            skills[skill_name] = Skill(skill_name, f)
+
+        # First, load skills from config file
+        config = self._load_config()
+        if "skills" in config:
+            for skill_name, skill_config in config["skills"].items():
+                file_path = skill_config.get("file_path", "")
+                if file_path:
+                    full_path = Path(file_path)
+                    if full_path.exists():
+                        skills[skill_name] = Skill(
+                            name=skill_name,
+                            file_path=full_path,
+                            description=skill_config.get("description"),
+                            required_mcps=skill_config.get("required_mcps"),
+                        )
+
+        # Then, scan skills directory for any skills not in config (backward compatibility)
+        if self.skills_dir.exists():
+            for f in self.skills_dir.glob("*.md"):
+                skill_name = f.stem
+                if skill_name.endswith("_skill"):
+                    skill_name = skill_name[:-6]
+
+                # Only add if not already loaded from config
+                if skill_name not in skills:
+                    skills[skill_name] = Skill(skill_name, f)
+
         return skills
 
     def get_skill(self, skill_name: str) -> Skill | None:
@@ -90,7 +135,8 @@ class SkillManager:
         print(f"Uninstalling skill '{skill_name}'...")
         skill.uninstall()
 
-        cleanup_mcps = skill.get_cleanup_mcps()
+        # Use required_mcps for cleanup (same MCPs that were installed)
+        cleanup_mcps = skill.get_required_mcps()
         if cleanup_mcps:
             print(f"\nCleaning up associated MCPs: {', '.join(cleanup_mcps)}")
             for mcp_name in cleanup_mcps:

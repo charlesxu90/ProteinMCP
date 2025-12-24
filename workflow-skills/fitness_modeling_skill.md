@@ -4,6 +4,28 @@ A comprehensive workflow for building and comparing protein fitness prediction m
 
 ---
 
+## Prerequisites
+
+Before running this workflow, install the skill and all required MCPs:
+
+```bash
+pskill install fitness_modeling
+```
+
+This will install the following MCP servers:
+- `msa_mcp` - Multiple sequence alignment generation
+- `plmc_mcp` - PLMC evolutionary coupling model
+- `ev_onehot_mcp` - EV+OneHot feature combination
+- `esm_mcp` - ESM protein language model embeddings
+- `prottrans_mcp` - ProtTrans transformer embeddings
+
+**Verify MCPs are installed:**
+```bash
+pmcp status
+```
+
+---
+
 ## Configuration Parameters
 
 Before running this workflow, set the following parameters:
@@ -32,49 +54,27 @@ Your data.csv should contain at minimum:
 
 ## Step 1: Generate MSA with msa_mcp (if needed)
 
-Install and use the MSA MCP server to generate multiple sequence alignment.
-
-```bash
-pmcp install msa_mcp
-```
+Use the MSA MCP server to generate multiple sequence alignment.
 
 **Prompt:**
 > Can you obtain the MSA for {PROTEIN_NAME} from {WT_FASTA} using msa mcp and save it to {MSA_FILE}.
 > Please convert the relative path to absolute path before calling the MCP servers.
 
-**Cleanup:**
-```bash
-pmcp uninstall msa_mcp
-```
-
 ---
 
 ## Step 2: Build PLMC Evolutionary Coupling Model
 
-Install and use the PLMC MCP server to build an evolutionary coupling model.
-
-```bash
-pmcp install plmc_mcp
-```
+Use the PLMC MCP server to build an evolutionary coupling model.
 
 **Prompt:**
 > I have created an a3m file in {MSA_FILE}. Can you help build an EV model using plmc mcp and save it to {WORK_DIR}/plmc directory. The wild-type sequence is {WT_FASTA}.
 > Please convert the relative path to absolute path before calling the MCP servers.
 
-**Cleanup:**
-```bash
-pmcp uninstall plmc_mcp
-```
-
 ---
 
 ## Step 3: Build EV+OneHot Model
 
-Install and use the EV+OneHot MCP server to combine evolutionary features with one-hot encoding.
-
-```bash
-pmcp install ev_onehot_mcp
-```
+Use the EV+OneHot MCP server to combine evolutionary features with one-hot encoding.
 
 **Prompt:**
 > I have created a plmc model in directory {WORK_DIR}/plmc. Can you help build an EV+OneHot model using ev_onehot_mcp and save it to {WORK_DIR}/ directory. The wild-type sequence is {WT_FASTA}, and the dataset is {DATA_CSV}.
@@ -84,20 +84,11 @@ pmcp install ev_onehot_mcp
 - `{WORK_DIR}/metrics_summary.csv` - Cross-validation results
 - `{WORK_DIR}/ridge_model.joblib` - Trained model
 
-**Cleanup:**
-```bash
-pmcp uninstall ev_onehot_mcp
-```
-
 ---
 
 ## Step 4: Build ESM Models
 
-Install and use the ESM MCP server for deep learning embeddings.
-
-```bash
-pmcp install esm_mcp
-```
+Use the ESM MCP server for deep learning embeddings.
 
 ### 4.1 ESM2-650M Models
 
@@ -126,20 +117,11 @@ Train models using all 5 ESM1v checkpoints for ensemble predictions.
 - `{WORK_DIR}/{backbone}_{head}/training_summary.csv` - Training metrics
 - `{WORK_DIR}/{backbone}_{head}/final_model/` - Trained model files
 
-**Cleanup:**
-```bash
-pmcp uninstall esm_mcp
-```
-
 ---
 
 ## Step 5: Build ProtTrans Models
 
-Install and use the ProtTrans MCP server for transformer-based embeddings.
-
-```bash
-pmcp install prottrans_mcp
-```
+Use the ProtTrans MCP server for transformer-based embeddings.
 
 **Prompt:**
 > Can you help train ProtTrans models for data {WORK_DIR}/ and save them to {WORK_DIR}/{backbone_model}_{head_model} using the prottrans mcp server with ProtT5-XL and ProtAlbert as backbone_models and knn, xgboost, and svr as the head models.
@@ -149,11 +131,6 @@ pmcp install prottrans_mcp
 **Expected Output per model:**
 - `{WORK_DIR}/{backbone}_{head}/training_summary.csv` - Training metrics
 - `{WORK_DIR}/{backbone}_{head}/final_model/` - Trained model files
-
-**Cleanup:**
-```bash
-pmcp uninstall prottrans_mcp
-```
 
 ---
 
@@ -244,46 +221,17 @@ The visualization should:
 
 ## Quick Start Template
 
-For a new protein fitness prediction project, copy and modify:
+For a new protein fitness prediction project:
 
-```markdown
-# {PROTEIN_NAME} Fitness Modeling
+```bash
+# 1. Install the skill and all required MCPs
+pskill install fitness_modeling
 
-## Setup
-Working directory: {WORK_DIR}
-Wild-type: {WT_FASTA}
-Dataset: {DATA_CSV}
+# 2. Run the workflow steps (Step 1-6 above)
 
-## Step 1: MSA
-pmcp install msa_mcp
-[Run MSA generation prompt]
-pmcp uninstall msa_mcp
-
-## Step 2: PLMC
-pmcp install plmc_mcp
-[Run PLMC prompt]
-pmcp uninstall plmc_mcp
-
-## Step 3: EV+OneHot
-pmcp install ev_onehot_mcp
-[Run EV+OneHot prompt]
-pmcp uninstall ev_onehot_mcp
-
-## Step 4: ESM Models
-pmcp install esm_mcp
-[Run ESM prompts]
-pmcp uninstall esm_mcp
-
-## Step 5: ProtTrans Models
-pmcp install prottrans_mcp
-[Run ProtTrans prompts]
-pmcp uninstall prottrans_mcp
-
-## Step 6: Compare
-[Run comparison prompt]
+# 3. Uninstall when done (optional)
+pskill uninstall fitness_modeling
 ```
-
-**Note:** Uninstalling MCPs after each step keeps the CLI clean and avoids potential conflicts between servers.
 
 ---
 
@@ -307,17 +255,15 @@ Based on typical benchmarks, expected performance ranges (CV Spearman):
 
 ---
 
-## MCP Cleanup
+## Cleanup
 
-### Uninstall All Fitness MCPs at Once
-
-If you want to clean up all fitness-related MCPs after completing the workflow:
+When you're done with the workflow, uninstall the skill and all its MCPs:
 
 ```bash
-pmcp uninstall msa_mcp plmc_mcp ev_onehot_mcp esm_mcp prottrans_mcp
+pskill uninstall fitness_modeling
 ```
 
-### Check Currently Installed MCPs
+To check currently installed MCPs:
 
 ```bash
 pmcp status
@@ -343,6 +289,11 @@ pmcp status
    - Increase dataset size
    - Use SVR instead of XGBoost
    - Consider ensemble methods
+
+4. **MCP Not Found**
+   - Ensure skill is installed: `pskill install fitness_modeling`
+   - Check MCP status: `pmcp status`
+   - Reinstall if needed: `pskill uninstall fitness_modeling && pskill install fitness_modeling`
 
 ---
 
