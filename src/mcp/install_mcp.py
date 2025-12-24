@@ -238,7 +238,6 @@ def install_mcp_cmd(mcp_name: str, cli: str = "claude", no_register: bool = Fals
     # Register if requested
     if not no_register:
         if status in [MCPStatus.NOT_INSTALLED, MCPStatus.INSTALLED]:
-            print(f"\n🔧 Registering '{mcp_name}' with {cli}...")
             if not mcp_manager.register_mcp(mcp_name, cli=cli):
                 return False
         else:
@@ -250,8 +249,6 @@ def install_mcp_cmd(mcp_name: str, cli: str = "claude", no_register: bool = Fals
 
     if final_status == MCPStatus.BOTH:
         print(f"🎉 Successfully installed and registered '{mcp_name}'!")
-        print(f"\n   Verify with: {cli} mcp list")
-        print(f"   Remove with: {cli} mcp remove {mcp._get_clean_name()}")
 
     return True
 
