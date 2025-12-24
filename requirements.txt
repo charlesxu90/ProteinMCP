@@ -4,3 +4,5 @@ subprocess
 fastmcp
 requests
 yaml
+matplotlib
+seaborn
