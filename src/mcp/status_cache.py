@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 
 
 # Cache file location
-CACHE_FILE = Path(__file__).parent.parent / "tool-mcps" / "mcp.status"
+CACHE_FILE = Path(__file__).parent.parent.parent / "tool-mcps" / "mcp.status"
 CACHE_TIMEOUT = 300  # 5 minutes in seconds
 
 

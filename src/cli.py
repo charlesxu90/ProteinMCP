@@ -3,11 +3,11 @@
 ProteinMCP CLI - Main Command Line Interface
 
 Provides unified access to ProteinMCP functionality through subcommands:
-- proteinmcp create: Create new MCP servers from repositories
-- proteinmcp avail: Show all available MCP servers to install
-- proteinmcp status: Show downloaded and installed MCP servers
-- proteinmcp install: Install MCP servers
-- proteinmcp uninstall: Uninstall MCP servers
+- pmcp create: Create new MCP servers from repositories
+- pmcp avail: Show all available MCP servers to install
+- pmcp status: Show downloaded and installed MCP servers
+- pmcp install: Install MCP servers
+- pmcp uninstall: Uninstall MCP servers
 """
 
 import sys
@@ -16,8 +16,8 @@ from pathlib import Path
 from typing import Optional
 
 # Import functions from existing modules
-from .create_mcp import create_mcp
-from .install_mcp import show_available_mcps, show_status, install_mcp_cmd, uninstall_mcp_cmd, search_mcps, show_info
+from .mcp.create_mcp import create_mcp
+from .mcp.install_mcp import show_available_mcps, show_status, install_mcp_cmd, uninstall_mcp_cmd, search_mcps, show_info
 
 # Logo for ProteinMCP
 LOGO = """\033[31m
@@ -67,13 +67,13 @@ def create_command(github_url: str, local_repo_path: Optional[Path], mcp_dir: Pa
     Examples:
 
       # From GitHub repository:
-      proteinmcp create --github-url https://github.com/user/repo --mcp-dir /path/to/my-mcp
+      pmcp create --github-url https://github.com/user/repo --mcp-dir /path/to/my-mcp
 
       # From local repository:
-      proteinmcp create --local-repo-path /path/to/local/repo --mcp-dir /path/to/my-mcp
+      pmcp create --local-repo-path /path/to/local/repo --mcp-dir /path/to/my-mcp
 
       # Force rerun from step 3:
-      proteinmcp create --local-repo-path /path/to/repo --mcp-dir /path/to/mcp --rerun-from-step 3
+      pmcp create --local-repo-path /path/to/repo --mcp-dir /path/to/mcp --rerun-from-step 3
     """
     create_mcp(
         github_url=github_url,
@@ -98,13 +98,13 @@ def avail_command(local: bool, public: bool):
     Examples:
 
       # Show all available MCPs:
-      proteinmcp avail
+      pmcp avail
 
       # Show only local MCPs:
-      proteinmcp avail --local
+      pmcp avail --local
 
       # Show only public MCPs:
-      proteinmcp avail --public
+      pmcp avail --public
     """
     show_available_mcps(local_only=local, public_only=public)
 
@@ -122,10 +122,10 @@ def status_command(refresh: bool):
     Examples:
 
       # Show current MCP status:
-      proteinmcp status
+      pmcp status
 
       # Refresh cache and show status:
-      proteinmcp status --refresh
+      pmcp status --refresh
     """
     show_status(refresh_cache=refresh)
 
@@ -146,13 +146,13 @@ def install_command(mcp_name: str, cli: str, no_register: bool):
     Examples:
 
       # Install and register with Claude Code:
-      proteinmcp install proteinmpnn
+      pmcp install proteinmpnn
 
       # Install and register with Gemini CLI:
-      proteinmcp install pdb --cli gemini
+      pmcp install pdb --cli gemini
 
       # Install only, don't register:
-      proteinmcp install arxiv --no-register
+      pmcp install arxiv --no-register
     """
     success = install_mcp_cmd(mcp_name, cli=cli, no_register=no_register)
     if not success:
@@ -175,13 +175,13 @@ def uninstall_command(mcp_name: str, cli: str, remove_files: bool):
     Examples:
 
       # Unregister from CLI only:
-      proteinmcp uninstall arxiv
+      pmcp uninstall arxiv
 
       # Unregister and delete files:
-      proteinmcp uninstall arxiv --remove-files
+      pmcp uninstall arxiv --remove-files
 
       # Unregister from Gemini CLI:
-      proteinmcp uninstall pdb --cli gemini
+      pmcp uninstall pdb --cli gemini
     """
     success = uninstall_mcp_cmd(mcp_name, cli=cli, remove_files=remove_files)
     if not success:
@@ -197,10 +197,10 @@ def search_command(query: str):
     Examples:
 
       # Search for blast-related MCPs:
-      proteinmcp search blast
+      pmcp search blast
 
       # Search for prediction tools:
-      proteinmcp search prediction
+      pmcp search prediction
     """
     search_mcps(query)
 
@@ -214,10 +214,10 @@ def info_command(mcp_name: str):
     Examples:
 
       # Show info about UniProt MCP:
-      proteinmcp info uniprot
+      pmcp info uniprot
 
       # Show info about ProteinMPNN MCP:
-      proteinmcp info proteinmpnn
+      pmcp info proteinmpnn
     """
     show_info(mcp_name)
 
