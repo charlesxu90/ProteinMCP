@@ -12,19 +12,6 @@ mcps:
     - npm run build
     source: Augmented Nature
     url: https://github.com/Augmented-Nature/AlphaFold-MCP-Server
-  amber:
-    dependencies: []
-    description: Molecular dynamics simulations and PDB structure relaxation
-    env_vars: {}
-    runtime: python
-    server_args:
-    - -m
-    - bio_mcp_amber
-    server_command: python
-    setup_commands:
-    - pip install -e .
-    source: bio-mcp
-    url: https://github.com/bio-mcp/bio-mcp-amber
   arxiv:
     dependencies: []
     description: Search and access arXiv papers

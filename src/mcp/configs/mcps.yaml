@@ -1,10 +1,9 @@
 mcps:
-  LigandMPNN_mcp:
+  ligandmpnn_mcp:
     dependencies: []
-    description: '> AI-powered protein design toolkit for scaffold-based sequence
-      generation and ligand-aware protein ...'
+    description: '> LigandMPNN MCP server for ligand-aware scaffold-based sequence generation (inverse folding)'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/ligandmpnn_mcp
+    path: tool-mcps/ligandmpnn_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -17,13 +16,12 @@ mcps:
     - ./env/bin/pip install -r repo/LigandMPNN/requirements.txt
     - ./env/bin/pip install --ignore-installed fastmcp loguru
     source: Tool
-    url: https://github.com/dauparas/LigandMPNN
-  ProteinMPNN_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/ligandmpnn_mcp
+  proteinmpnn_mcp:
     dependencies: []
-    description: '> Model Context Protocol (MCP) server providing access to ProteinMPNN
-      protein design capabilities th...'
+    description: '> ProteinMPNN MCP server for protein design (inverse folding)'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/proteinmpnn_mcp
+    path: tool-mcps/proteinmpnn_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -37,13 +35,12 @@ mcps:
     - ./env/bin/pip install loguru click pandas tqdm
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/dauparas/ProteinMPNN
-  RFdiffusion2_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/proteinmpnn_mcp
+  rfdiffusion2_mcp:
     dependencies: []
-    description: '> Protein design and structure prediction tools using RFdiffusion2
-      and Chai1, available as MCP tools...'
+    description: '> RFdiffusion2 MCP server for protein structure generation (backbone)'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/rfdiffusion2_mcp
+    path: tool-mcps/rfdiffusion2_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -57,13 +54,12 @@ mcps:
     - ./env/bin/pip install chai-lab
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/RosettaCommons/RFdiffusion2
+    url: https://github.com/Biomolecular-Design-Nexus/rfdiffusion2_mcp
   alphafold3_mcp:
     dependencies: []
-    description: '> AI-powered protein structure prediction and variant analysis using
-      AlphaFold3 through Model Contex...'
+    description: '> AlphaFold3 MCP server for protein structure prediction, supporting batch prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/alphafold3_mcp
+    path: tool-mcps/alphafold3_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -76,13 +72,12 @@ mcps:
     - ./env/bin/pip install -r requirements.txt
     - ./env/bin/pip install fastmcp loguru --ignore-installed
     source: Tool
-    url: ''
-  alphafold_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/alphafold3_mcp
+  alphafold2_mcp:
     dependencies: []
-    description: '> AlphaFold2 protein structure prediction via Model Context Protocol
-      (MCP)'
+    description: '> AlphaFold2 MCP server for protein structure prediction, supporting complex and batch predictions'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/alphafold2_mcp
+    path: tool-mcps/alphafold2_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -96,13 +91,12 @@ mcps:
     - ./env/bin/pip install loguru --ignore-installed
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/google-deepmind/alphafold
-  bio-mcp-amber_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/alphafold2_mcp
+  amber_mcp:
     dependencies: []
-    description: '> Molecular dynamics tools for AMBER simulations with energy minimization
-      and system preparation cap...'
+    description: '> AMBER MCP server for MD simulations and analysis'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/amber_mcp
+    path: tool-mcps/amber_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -116,13 +110,12 @@ mcps:
     - ./env/bin/pip install loguru click pytest pytest-asyncio
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/bio-mcp/bio-mcp-amber
-  bio-mcp-interpro_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/amber_mcp
+  interpro_mcp:
     dependencies: []
-    description: '> MCP (Model Context Protocol) server for InterProScan protein domain
-      and functional analysis'
+    description: '> InterProScan MCP server for protein domain and functional analysis'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/interpro_mcp
+    path: tool-mcps/interpro_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -138,13 +131,12 @@ mcps:
     - ./env/bin/pip install "pytest>=7.0.0" "pytest-asyncio>=0.21.0" "ruff>=0.1.0"
     - ./env/bin/pip install --ignore-installed fastmcp loguru --force-reinstall --no-cache-dir
     source: Tool
-    url: https://github.com/bio-mcp/bio-mcp-interpro
+    url: https://github.com/Biomolecular-Design-Nexus/interpro_mcp
   boltz_mcp:
     dependencies: []
-    description: '> Protein structure and affinity prediction using Boltz2 deep learning
-      models via MCP (Model Context...'
+    description: '> Boltz2 MCP server for protein structure and affinity prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/boltz_mcp
+    path: tool-mcps/boltz_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -157,13 +149,12 @@ mcps:
     - cd repo/boltz && ../../env/bin/pip install -e . && cd ../..
     - ./env/bin/pip install --ignore-installed fastmcp loguru
     source: Tool
-    url: https://github.com/jwohlwend/boltz
+    url: https://github.com/Biomolecular-Design-Nexus/boltz_mcp
   boltzgen_mcp:
     dependencies: []
-    description: '> AI-powered protein design through the Model Context Protocol -
-      Design protein binders, peptide bin...'
+    description: '> BoltzGen MCP server for protein binder design'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/boltzgen_mcp
+    path: tool-mcps/boltzgen_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -177,13 +168,12 @@ mcps:
     - ./env/bin/pip install boltzgen
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: ''
-  chai-lab_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/boltzgen_mcp
+  chai1_mcp:
     dependencies: []
-    description: '> Protein structure prediction using Chai-1 model via Model Context
-      Protocol (MCP)'
+    description: '> Chai-1 MCP server for protein structure prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/chai1_mcp
+    path: tool-mcps/chai1_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -197,13 +187,12 @@ mcps:
     - ./env/bin/pip install --force-reinstall --no-cache-dir fastmcp
     - ./env/bin/pip install chai_lab==0.6.1
     source: Tool
-    url: https://github.com/chaidiscovery/chai-lab
+    url: https://github.com/Biomolecular-Design-Nexus/chai1_mcp
   esm_mcp:
     dependencies: []
-    description: '> **Protein sequence analysis using ESM-2 language models via Model
-      Context Protocol (MCP)**'
+    description: '> ESM MCP server for protein embedding and fitness modeling'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/esmfold_mcp
+    path: tool-mcps/esm_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -221,13 +210,36 @@ mcps:
     - ./env_esmfold/bin/pip install -e repo/esm/
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: https://github.com/facebookresearch/esm
+    url: https://github.com/Biomolecular-Design-Nexus/esm_mcp
+  esmfold_mcp:
+    dependencies: []
+    description: '> ESMFold MCP server for protein structure prediction'
+    env_vars: {}
+    path: tool-mcps/esmfold_mcp
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands:
+    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 pip
+      -y) || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10
+      pip -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
+      && python3 -m venv ./env)'
+    - ./env/bin/pip install fastmcp loguru
+    - '(command -v mamba >/dev/null 2>&1 && mamba env create -f repo/esm/environment.yml
+      -p ./env_esmfold) || (command -v conda >/dev/null 2>&1 && conda env create -f
+      repo/esm/environment.yml -p ./env_esmfold) || (echo "Warning: Neither mamba
+      nor conda found, ESM environment creation failed" && exit 1)'
+    - ./env_esmfold/bin/pip install -e repo/esm/
+    - ./env/bin/pip install --ignore-installed fastmcp
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/esmfold_mcp
   ev_onehot_mcp:
     dependencies: []
     description: Protein fitness prediction combining evolutionary coupling and one-hot
       encoding
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/ev_onehot_mcp
+    path: tool-mcps/ev_onehot_mcp
     runtime: python
     server_args:
     - src/ev_onehot_mcp.py
@@ -241,12 +253,11 @@ mcps:
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
     url: https://github.com/Biomolecular-Design-Nexus/ev_onehot_mcp
-  gromacs-2025.4_mcp:
+  gromacs_mcp:
     dependencies: []
-    description: '> MCP server for GROMACS 2025.4 providing molecular dynamics simulation,
-      analysis, and workflow mana...'
+    description: '> GROMACS 2025.4 molecular dynamics simulations via MCP'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/gromacs_mcp
+    path: tool-mcps/gromacs_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -263,13 +274,13 @@ mcps:
       GROMACS via conda/mamba. Please install manually."'
     - ./env/bin/pip install fastmcp loguru --ignore-installed
     source: Tool
-    url: ''
-  main_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/gromacs_mcp
+  rosetta_mcp:
     dependencies: []
     description: '> Model Control Protocol (MCP) server for Rosetta molecular modeling
       and protein design suite'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/rosetta_mcp
+    path: tool-mcps/rosetta_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -284,13 +295,13 @@ mcps:
     - ./env/bin/pip install biopython matplotlib
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: ''
+    url: https://github.com/Biomolecular-Design-Nexus/rosetta_mcp
   mmseqs2_mcp:
     dependencies: []
     description: Sequence search, clustering, and MSA generation using MMseqs2
     env_vars:
       MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/mmseqs2_mcp
+    path: tool-mcps/mmseqs2_mcp
     runtime: python
     server_args:
     - src/mmseqs2_mcp.py
@@ -311,7 +322,7 @@ mcps:
     dependencies: []
     description: Generate Multiple Sequence Alignments (MSA) using ColabFold server
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/msa_mcp
+    path: tool-mcps/msa_mcp
     runtime: python
     server_args:
     - src/msa_mcp.py
@@ -322,10 +333,9 @@ mcps:
     url: https://github.com/Biomolecular-Design-Nexus/msa_mcp
   mutcompute_mcp:
     dependencies: []
-    description: '> A Model Context Protocol (MCP) server for protein mutation effect
-      prediction using neural networks'
+    description: '> MutCompute MCP server for protein mutation effect prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/mutcompute_mcp
+    path: tool-mcps/mutcompute_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -342,13 +352,12 @@ mcps:
       repo/mutcompute/environment.yaml -p ./env_py36 -y) || (echo "Warning: Legacy
       environment creation requires conda/mamba for neural network support")'
     source: Tool
-    url: ''
-  netMHCIIpan-4.3_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/mutcompute_mcp
+  netMHCIIpan_mcp:
     dependencies: []
-    description: '> MCP Server for NetMHCIIpan-4.3 - MHC Class II binding prediction
-      tools for epitope analysis and im...'
+    description: '> NetMHCIIpan-4.3 MCP Server for MHC Class II binding prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/netmhc2pan_mcp
+    path: tool-mcps/netmhc2pan_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -362,13 +371,12 @@ mcps:
     - ./env/bin/pip install openpyxl
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: ''
-  netMHCpan-4.2_mcp:
+    url: https://github.com/Biomolecular-Design-Nexus/netmhc2pan_mcp
+  netMHCpan_mcp:
     dependencies: []
-    description: '> Model Context Protocol (MCP) server for NetMHCpan-4.2, enabling
-      AI-powered MHC Class I binding pre...'
+    description: '> MCP server for NetMHCpan-4.2 - MHC Class I binding prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/netmhcpan_mcp
+    path: tool-mcps/netmhcpan_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -382,12 +390,12 @@ mcps:
       tqdm==4.67.1 click==8.3.1
     - ./env/bin/pip install --ignore-installed mcp pydantic uvicorn websockets rich
     source: Tool
-    url: ''
+    url: https://github.com/Biomolecular-Design-Nexus/netmhcpan_mcp
   plmc_mcp:
     dependencies: []
-    description: Evolutionary coupling analysis using PLMC for protein structure prediction
+    description: Evolutionary coupling analysis using PLMC for protein fitness prediction
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/plmc_mcp
+    path: tool-mcps/plmc_mcp
     runtime: python
     server_args:
     - src/plmc_mcp.py
@@ -409,10 +417,9 @@ mcps:
     url: https://github.com/Biomolecular-Design-Nexus/plmc_mcp
   protein-sol_mcp:
     dependencies: []
-    description: '> Comprehensive protein solubility prediction and sequence analysis
-      through Model Context Protocol'
+    description: '> Protein-Sol MCP server for protein solubility prediction'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/protein_sol_mcp
+    path: tool-mcps/protein_sol_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -425,13 +432,12 @@ mcps:
     - ./env/bin/pip install fastmcp loguru
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: ''
+    url: https://github.com/Biomolecular-Design-Nexus/protein_sol_mcp
   prottrans_mcp:
     dependencies: []
-    description: Protein fitness modeling using ProtTrans transformer models for embeddings
-      and log-likelihood calculations
+    description: ProtTrans MCP server for protein embeddings and fitness modeling prediction
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/prottrans_mcp
+    path: tool-mcps/prottrans_mcp
     runtime: python
     server_args:
     - src/prottrans_mcp.py
@@ -447,12 +453,11 @@ mcps:
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
     url: https://github.com/Biomolecular-Design-Nexus/prottrans_mcp
-  scripts_mcp:
+  bindcraft_mcp:
     dependencies: []
-    description: '> Model Context Protocol (MCP) server for protein binder design
-      using BindCraft'
+    description: '> BindCraft MCP server for protein binder design'
     env_vars: {}
-    path: /home/xux/Desktop/ProteinMCP/ProteinMCP/tool-mcps/bindcraft_mcp
+    path: tool-mcps/bindcraft_mcp
     runtime: python
     server_args:
     - src/server.py
@@ -467,4 +472,4 @@ mcps:
     - ./env/bin/pip install fastmcp loguru
     - ./env/bin/pip install --ignore-installed fastmcp
     source: Tool
-    url: ''
+    url: https://github.com/Biomolecular-Design-Nexus/bindcraft_mcp

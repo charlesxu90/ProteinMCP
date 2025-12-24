@@ -16,6 +16,9 @@ from .mcp import (
     PUBLIC_MCPS_CONFIG,
     MCPS_CONFIG,
     PUBLIC_MCPS_DIR,
+    PROJECT_ROOT,
+    resolve_path,
+    make_relative_path,
 )
 
 
@@ -166,13 +169,15 @@ class MCPManager:
         Args:
             mcps: Dictionary of MCP objects
         """
-
         # Convert MCP objects to dictionaries
         mcps_dict = {}
         for name, mcp in mcps.items():
             mcp_data = mcp.to_dict()
             # Remove name from data (it's the key)
             mcp_data.pop('name', None)
+            # Convert absolute paths to relative paths for portability
+            if 'path' in mcp_data and mcp_data['path']:
+                mcp_data['path'] = make_relative_path(mcp_data['path'])
             mcps_dict[name] = mcp_data
 
         with open(self.public_config, "w") as f:
@@ -193,6 +198,9 @@ class MCPManager:
             mcp_data = mcp.to_dict()
             # Remove name from data (it's the key)
             mcp_data.pop('name', None)
+            # Convert absolute paths to relative paths for portability
+            if 'path' in mcp_data and mcp_data['path']:
+                mcp_data['path'] = make_relative_path(mcp_data['path'])
             mcps_dict[name] = mcp_data
 
         with open(self.installed_config, "w") as f:

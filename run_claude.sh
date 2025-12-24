@@ -32,7 +32,7 @@
 
 # pmcp create --github-url https://github.com/facebookresearch/esm --mcp-dir tool-mcps/esmfold_mcp --use-case-filter 'Protein structure prediction using ESMFold'
 
-pmcp create --github-url https://github.com/bio-mcp/bio-mcp-interpro --mcp-dir tool-mcps/interpro_mcp --use-case-filter 'Protein analysis using interproscan'
+# pmcp create --github-url https://github.com/bio-mcp/bio-mcp-interpro --mcp-dir tool-mcps/interpro_mcp --use-case-filter 'Protein analysis using interproscan'
 
 
 # pmcp create --github-url https://github.com/bio-mcp/bio-mcp-amber --mcp-dir tool-mcps/amber_mcp --use-case-filter 'Protein MD simulations with Amber, QM/MM of enzyme-substrate complex with amber'

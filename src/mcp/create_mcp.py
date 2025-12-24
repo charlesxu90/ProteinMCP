@@ -23,7 +23,7 @@ from loguru import logger
 
 from .mcp_creator import MCPCreator
 from .mcp_manager import MCPManager
-from .mcp import MCP
+from .mcp import MCP, make_relative_path
 from .status_cache import get_cache
 from ..utils import run_claude_with_streaming
 

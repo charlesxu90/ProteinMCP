@@ -15,13 +15,50 @@ from enum import Enum
 # Constants and Path Configuration
 # =============================================================================
 
-SCRIPT_DIR = Path(__file__).parent.resolve()
-PROJECT_ROOT = SCRIPT_DIR.parent
+SCRIPT_DIR = Path(__file__).parent.resolve()  # src/mcp/
+SRC_DIR = SCRIPT_DIR.parent  # src/
+PROJECT_ROOT = SRC_DIR.parent  # ProteinMCP root
 CONFIGS_DIR = SCRIPT_DIR / "configs"
 PUBLIC_MCPS_CONFIG = CONFIGS_DIR / "public_mcps.yaml"
 MCPS_CONFIG = CONFIGS_DIR / "mcps.yaml"
 TOOL_MCPS_DIR = PROJECT_ROOT / "tool-mcps"
 PUBLIC_MCPS_DIR = TOOL_MCPS_DIR / "public"
+
+
+def resolve_path(path_str: str) -> Path:
+    """
+    Resolve a path that may be relative to PROJECT_ROOT.
+
+    Args:
+        path_str: Path string (absolute or relative to PROJECT_ROOT)
+
+    Returns:
+        Absolute Path object
+    """
+    path = Path(path_str)
+    if path.is_absolute():
+        return path
+    return (PROJECT_ROOT / path).resolve()
+
+
+def make_relative_path(abs_path: str) -> str:
+    """
+    Convert an absolute path to a relative path from PROJECT_ROOT.
+
+    Args:
+        abs_path: Absolute path string
+
+    Returns:
+        Relative path string if under PROJECT_ROOT, otherwise original path
+    """
+    try:
+        path = Path(abs_path)
+        if path.is_absolute():
+            rel_path = path.relative_to(PROJECT_ROOT)
+            return str(rel_path)
+    except ValueError:
+        pass
+    return abs_path
 
 
 # =============================================================================
@@ -101,10 +138,7 @@ class MCP:
     def is_installed(self) -> bool:
         """Check if MCP is installed locally"""
         if self.path:
-            path = Path(self.path)
-            # Handle relative paths (for local tool MCPs)
-            if not path.is_absolute():
-                path = PROJECT_ROOT / path
+            path = resolve_path(self.path)
             return path.exists()
 
         # Check in default locations
@@ -250,16 +284,12 @@ class MCP:
 
         # Handle local tool MCPs (check if already present in tool-mcps directory)
         if self.path:
-            local_path = Path(self.path)
-
-            # Make path absolute if it's relative
-            if not local_path.is_absolute():
-                local_path = PROJECT_ROOT / local_path
+            local_path = resolve_path(self.path)
 
             # If local path exists, use it (even if URL is provided)
             if local_path.exists():
-                self.path = str(local_path)
-                print(f"📁 Found local MCP '{self.name}' at: {self.path}")
+                # Keep path as-is (may be relative) for portability
+                print(f"📁 Found local MCP '{self.name}' at: {local_path}")
 
                 # Invalidate cache since installation state may have changed
                 self.invalidate_status_cache()
@@ -272,7 +302,7 @@ class MCP:
 
             # If local path doesn't exist but URL is provided, fall through to clone
             elif self.url:
-                print(f"📦 Local path not found, will clone from GitHub...")
+                print(f"📦 Local path not found at {local_path}, will clone from GitHub...")
             # If no URL and path doesn't exist, error
             else:
                 print(f"❌ Local MCP path does not exist: {local_path}")
@@ -286,9 +316,7 @@ class MCP:
         # Determine target path for cloning
         if self.path:
             # If path is specified, clone to that location
-            target_path = Path(self.path)
-            if not target_path.is_absolute():
-                target_path = PROJECT_ROOT / target_path
+            target_path = resolve_path(self.path)
         else:
             # Default: clone to public MCPs directory
             repo_name = self.url.rstrip("/").split("/")[-1]
@@ -372,9 +400,9 @@ class MCP:
         # Remove installation directory
         if remove_files and self.path:
             try:
-                path = Path(self.path)
+                path = resolve_path(self.path)
                 if path.exists():
-                    print(f"🗑️  Removing {self.path}...")
+                    print(f"🗑️  Removing {path}...")
                     shutil.rmtree(path)
                     print(f"✅ Successfully removed {self.name}")
                 self.path = None
@@ -392,6 +420,8 @@ class MCP:
         if not self.path:
             return False
 
+        # Resolve path to absolute for command execution
+        cwd = resolve_path(self.path)
         print(f"📦 Running setup commands for {self.name}...")
 
         for cmd in self.setup_commands:
@@ -400,7 +430,7 @@ class MCP:
                 result = subprocess.run(
                     cmd,
                     shell=True,
-                    cwd=self.path,
+                    cwd=str(cwd),
                     capture_output=True,
                     text=True,
                     timeout=600
@@ -562,11 +592,8 @@ class MCP:
         cmd.append("--")
         cmd.append(self.server_command or "node")
 
-        # Replace $MCP_PATH placeholder and convert relative paths to absolute
-        mcp_path = Path(self.path)
-        if not mcp_path.is_absolute():
-            mcp_path = PROJECT_ROOT / mcp_path
-        mcp_path = mcp_path.resolve()
+        # Resolve path to absolute
+        mcp_path = resolve_path(self.path)
         args = []
         for arg in self.server_args:
             # Replace $MCP_PATH placeholder with absolute path
@@ -603,11 +630,8 @@ class MCP:
 
         if self.server_command and self.server_args:
             # Use specified server command and args
-            # Convert path to absolute
-            mcp_path = Path(self.path)
-            if not mcp_path.is_absolute():
-                mcp_path = PROJECT_ROOT / mcp_path
-            mcp_path = mcp_path.resolve()
+            # Resolve path to absolute
+            mcp_path = resolve_path(self.path)
             args = []
             for arg in self.server_args:
                 # Replace $MCP_PATH placeholder with absolute path
@@ -662,7 +686,7 @@ class MCP:
         if not self.path:
             return None
 
-        mcp_path = Path(self.path)
+        mcp_path = resolve_path(self.path)
 
         # Common locations
         candidates = [
@@ -691,10 +715,7 @@ class MCP:
         if not self.path:
             return "python"
 
-        mcp_path = Path(self.path)
-        if not mcp_path.is_absolute():
-            mcp_path = PROJECT_ROOT / mcp_path
-        mcp_path = mcp_path.resolve()
+        mcp_path = resolve_path(self.path)
 
         # Check for local environments
         env_candidates = [
