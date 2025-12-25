@@ -10,35 +10,9 @@ skills:
     - ev_onehot_mcp
     - esm_mcp
     - prottrans_mcp
-  case1_sequence_analysis:
-    description: Analyze protein sequences including MSA generation, WebLogo visualization,
-      domain annotation, and literature search.
-    file_path: workflow-skills/case1_sequence_analysis.md
-    required_mcps:
-    - msa_mcp
-    - uniprot_mcp
-    - pubmed_mcp
-  case2_structure_analysis:
-    description: Analyze protein structures including MSA generation, structure prediction,
-      and active site annotation.
-    file_path: workflow-skills/case2_structure_analysis.md
-    required_mcps:
-    - msa_mcp
-    - uniprot_mcp
-    - alphafold_db_mcp
-  case3_fitness_modeling:
-    description: Step-by-step fitness modeling workflow for TEV protease including
-      MSA, PLMC, EV+OneHot, ESM, and ProtTrans model training.
-    file_path: workflow-skills/case3_fitness_modeling.md
-    required_mcps:
-    - msa_mcp
-    - plmc_mcp
-    - ev_onehot_mcp
-    - esm_mcp
-    - prottrans_mcp
   binder_design:
     description: Design protein binders using BindCraft with GPU-accelerated deep
       learning for de novo binder generation
     file_path: workflow-skills/binder_design.md
     required_mcps:
-    - scripts_mcp
+    - bindcraft_mcp
