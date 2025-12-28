@@ -16,3 +16,9 @@ skills:
     file_path: workflow-skills/binder_design.md
     required_mcps:
     - bindcraft_mcp
+  nanobody_design:
+    description: Design nanobody CDR regions using BoltzGen with optimized cysteine
+      filtering for single-domain antibodies (VHH)
+    file_path: workflow-skills/nanobody_design.md
+    required_mcps:
+    - boltzgen_mcp

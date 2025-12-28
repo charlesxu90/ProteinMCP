@@ -13,7 +13,7 @@ pskill install binder_design
 ```
 
 This will install the following MCP servers:
-- `scripts_mcp` - Scripts Mcp
+- `bindcraft_mcp` - BindCraft protein binder design server
 
 **Verify MCPs are installed:**
 ```bash
@@ -67,7 +67,7 @@ RESULTS_DIR/                     # All outputs go here
 > Can you list the available example data files for BindCraft using the scripts_mcp server? Show me what files are available and their paths.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__list_example_data` tool
+- Use `mcp__bindcraft_mcp__list_example_data` tool
 - Returns a list of example PDB files with paths and descriptions
 - Use example files for testing the workflow before using your own targets
 
@@ -85,7 +85,7 @@ RESULTS_DIR/                     # All outputs go here
 > Can you show me the available default configurations for BindCraft using the scripts_mcp server? I want to understand what settings are available.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__get_default_configs` tool
+- Use `mcp__bindcraft_mcp__get_default_configs` tool
 - Returns available config files and their settings
 - Useful for understanding optimization parameters
 
@@ -124,7 +124,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Please convert relative paths to absolute paths before calling the MCP server.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__generate_config` tool
+- Use `mcp__bindcraft_mcp__generate_config` tool
 - Parameters:
   - `input_file`: Path to target PDB
   - `output_file`: Path for config output
@@ -148,7 +148,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Please convert relative paths to absolute paths before calling the MCP server.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__quick_design` tool
+- Use `mcp__bindcraft_mcp__quick_design` tool
 - Parameters:
   - `input_file`: Path to target PDB
   - `output_dir`: Output directory
@@ -176,7 +176,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Please convert relative paths to absolute paths before calling the MCP server.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__submit_async_design` tool
+- Use `mcp__bindcraft_mcp__submit_async_design` tool
 - Parameters:
   - `input_file`: Path to target PDB
   - `output_dir`: Output directory
@@ -203,9 +203,9 @@ mkdir -p {RESULTS_DIR}/logs
 > Can you check the status of my BindCraft design job with ID {job_id}? Also show me the recent log output.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__get_job_status` to check job status
-- Use `mcp__scripts_mcp__get_job_log` to view logs
-- Alternative: Use `mcp__scripts_mcp__monitor_progress` for directory-based monitoring
+- Use `mcp__bindcraft_mcp__get_job_status` to check job status
+- Use `mcp__bindcraft_mcp__get_job_log` to view logs
+- Alternative: Use `mcp__bindcraft_mcp__monitor_progress` for directory-based monitoring
 - Parameters for get_job_status:
   - `job_id`: The job ID from submission
 - Parameters for get_job_log:
@@ -227,7 +227,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Can you list all BindCraft jobs I've submitted? Show me their statuses.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__list_jobs` tool
+- Use `mcp__bindcraft_mcp__list_jobs` tool
 - Optional parameter:
   - `status`: Filter by status (pending, running, completed, failed, cancelled)
 
@@ -245,7 +245,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Can you get the results of my completed BindCraft job with ID {job_id}?
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__get_job_result` tool
+- Use `mcp__bindcraft_mcp__get_job_result` tool
 - Parameters:
   - `job_id`: The job ID of a completed job
 - Only works for completed jobs
@@ -267,7 +267,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Please convert relative paths to absolute paths before calling the MCP server.
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__submit_batch_design` tool
+- Use `mcp__bindcraft_mcp__submit_batch_design` tool
 - Parameters:
   - `input_file`: Path to batch input file or directory with PDBs
   - `output_dir`: Base output directory
@@ -293,7 +293,7 @@ mkdir -p {RESULTS_DIR}/logs
 > Can you cancel my BindCraft job with ID {job_id}?
 
 **Implementation Notes:**
-- Use `mcp__scripts_mcp__cancel_job` tool
+- Use `mcp__bindcraft_mcp__cancel_job` tool
 - Parameters:
   - `job_id`: The job ID to cancel
 - Only affects running or pending jobs
@@ -354,7 +354,7 @@ mkdir -p {RESULTS_DIR}/logs
 
 5. **MCP Connection Errors**
    - Verify MCP is registered: `pmcp status`
-   - Reinstall if needed: `pmcp install scripts_mcp`
+   - Reinstall if needed: `pmcp install bindcraft_mcp`
    - Check server logs for errors
 
 6. **Config Generation Fails**
@@ -371,6 +371,23 @@ mkdir -p {RESULTS_DIR}/logs
    - Ensure all PDB files in directory are valid
    - Check max_concurrent doesn't exceed GPU capacity
    - Monitor individual job statuses
+
+9. **Settings File Format Errors (KeyError)**
+   - BindCraft expects specific field names in target_settings.json
+   - Required fields: `design_path`, `starting_pdb`, `chains`, `lengths`, `number_of_final_designs`, `binder_name`
+   - `lengths` must be an array `[min, max]`, not a single integer
+   - Example correct format:
+     ```json
+     {
+       "design_path": "/path/to/output",
+       "binder_name": "MyBinder",
+       "starting_pdb": "/path/to/target.pdb",
+       "chains": "A",
+       "target_hotspot_residues": "18,30,42",
+       "lengths": [65, 150],
+       "number_of_final_designs": 1
+     }
+     ```
 
 ---
 
