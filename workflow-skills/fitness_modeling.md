@@ -55,23 +55,138 @@ Your data.csv should contain at minimum:
 
 **Directory Structure:**
 ```
-DATA_DIR/                    # Input data (read-only)
-├── wt.fasta                 # Wild-type sequence
-└── data.csv                 # Fitness data
+DATA_DIR/                           # Input data (read-only)
+├── wt.fasta                        # Wild-type sequence
+└── data.csv                        # Fitness data
 
-RESULTS_DIR/                 # All outputs go here
-├── msa.a3m                  # Generated MSA
-├── plmc/                    # PLMC model files
-├── sequences.fasta          # Extracted sequences for embeddings
-├── data.csv                 # Copy of input data (for training tools)
-├── wt.fasta                 # Copy of wild-type (for training tools)
-├── metrics_summary.csv      # EV+OneHot results
-├── esm2_650M_*/             # ESM model outputs
-├── esm2_3B_*/               # ESM-3B model outputs
-├── ProtT5-XL_*/             # ProtTrans model outputs
-├── ProtAlbert_*/            # ProtAlbert model outputs
-├── backbone_comparison.png  # Final comparison figure
-└── backbone_comparison.pdf  # Publication-ready figure
+RESULTS_DIR/                        # All outputs go here
+├── msa.a3m                         # Generated MSA
+├── plmc/                           # PLMC model files
+├── sequences.fasta                 # Extracted sequences for embeddings
+├── data.csv                        # Copy of input data (for training tools)
+├── wt.fasta                        # Copy of wild-type (for training tools)
+├── metrics_summary.csv             # EV+OneHot results
+├── esm2_650M_*/                    # ESM model outputs
+├── esm2_3B_*/                      # ESM-3B model outputs
+├── ProtT5-XL_*/                    # ProtTrans model outputs
+├── ProtAlbert_*/                   # ProtAlbert model outputs
+├── all_models_comparison.csv       # All model results combined
+├── execution_timeline.json         # Step execution times
+├── fitness_modeling_summary.png    # Four-panel summary figure
+└── fitness_modeling_summary.pdf    # Publication-ready figure
+```
+
+---
+
+## Execution Time Tracking
+
+**IMPORTANT:** Track execution time for each step to generate the timeline visualization.
+
+The workflow uses a Python helper to record step timing. At the start of each step, call `record_step_start()`, and at the end call `record_step_end()`.
+
+**Standalone Helper Script:** `@workflow-skills/scripts/timing_helper.py`
+
+**Command-line usage:**
+```bash
+# Start timing a step
+python @workflow-skills/scripts/timing_helper.py start -d {RESULTS_DIR} -s MSA
+
+# End timing a step
+python @workflow-skills/scripts/timing_helper.py end -d {RESULTS_DIR} -s MSA
+
+# Get timing summary
+python @workflow-skills/scripts/timing_helper.py summary -d {RESULTS_DIR}
+
+# Reset timeline (start fresh)
+python @workflow-skills/scripts/timing_helper.py reset -d {RESULTS_DIR}
+```
+
+**Python import usage:**
+```python
+import sys
+sys.path.append("@workflow-skills/scripts")
+from timing_helper import record_step_start, record_step_end, get_timing_summary
+```
+
+**Timing Helper Code:**
+```python
+import json
+import time
+from pathlib import Path
+from datetime import datetime
+
+def get_timeline_path(results_dir):
+    """Get path to execution_timeline.json"""
+    return Path(results_dir) / "execution_timeline.json"
+
+def load_timeline(results_dir):
+    """Load existing timeline or create empty one"""
+    timeline_path = get_timeline_path(results_dir)
+    if timeline_path.exists():
+        with open(timeline_path) as f:
+            return json.load(f)
+    return []
+
+def save_timeline(results_dir, timeline):
+    """Save timeline to JSON file"""
+    timeline_path = get_timeline_path(results_dir)
+    with open(timeline_path, 'w') as f:
+        json.dump(timeline, f, indent=2)
+
+def record_step_start(results_dir, step_name):
+    """Record the start time of a step"""
+    timeline = load_timeline(results_dir)
+    # Remove any existing incomplete entry for this step
+    timeline = [s for s in timeline if s.get('name') != step_name]
+    timeline.append({
+        'name': step_name,
+        'start_time': time.time(),
+        'start_datetime': datetime.now().isoformat(),
+        'status': 'running'
+    })
+    save_timeline(results_dir, timeline)
+    print(f"[TIMING] Started step: {step_name}")
+
+def record_step_end(results_dir, step_name):
+    """Record the end time of a step and calculate duration"""
+    timeline = load_timeline(results_dir)
+    for step in timeline:
+        if step.get('name') == step_name and step.get('status') == 'running':
+            end_time = time.time()
+            start_time = step['start_time']
+            duration_minutes = (end_time - start_time) / 60
+            step['end_time'] = end_time
+            step['end_datetime'] = datetime.now().isoformat()
+            step['duration'] = round(duration_minutes, 2)
+            step['status'] = 'completed'
+            # Calculate relative start time from first step
+            first_start = min(s.get('start_time', float('inf')) for s in timeline)
+            step['start'] = round((start_time - first_start) / 60, 2)
+            break
+    save_timeline(results_dir, timeline)
+    print(f"[TIMING] Completed step: {step_name} ({step.get('duration', 0):.2f} min)")
+
+def get_timing_summary(results_dir):
+    """Get a summary of all step timings"""
+    timeline = load_timeline(results_dir)
+    total_time = sum(s.get('duration', 0) for s in timeline if s.get('status') == 'completed')
+    print(f"\n=== Execution Timeline Summary ===")
+    for step in timeline:
+        if step.get('status') == 'completed':
+            print(f"  {step['name']}: {step['duration']:.2f} min (started at +{step['start']:.2f} min)")
+    print(f"  Total: {total_time:.2f} min")
+    return timeline
+```
+
+**Usage in each step:**
+```python
+# At the START of each step:
+record_step_start("{RESULTS_DIR}", "StepName")
+
+# ... execute the step ...
+
+# At the END of each step:
+record_step_end("{RESULTS_DIR}", "StepName")
 ```
 
 ---
@@ -91,6 +206,8 @@ cp {DATA_DIR}/wt.fasta {RESULTS_DIR}/
 cp {DATA_DIR}/data.csv {RESULTS_DIR}/
 ```
 
+**Timing:** This step is quick (setup only), no timing required.
+
 ---
 
 ## Step 1: Generate MSA with msa_mcp (if needed)
@@ -105,6 +222,13 @@ Use the MSA MCP server to generate multiple sequence alignment.
 - Use the `mcp__msa_mcp__generate_msa` tool
 - Required parameters: `sequence` (from WT_FASTA), `output_filename` (absolute path to {RESULTS_DIR}/{PROTEIN_NAME}.a3m), `job_name` (PROTEIN_NAME)
 - The tool returns MSA depth and length information
+
+**Timing:** Record timing for this step:
+```python
+record_step_start("{RESULTS_DIR}", "MSA")
+# ... call mcp__msa_mcp__generate_msa ...
+record_step_end("{RESULTS_DIR}", "MSA")
+```
 
 ---
 
@@ -146,6 +270,13 @@ Use the PLMC MCP server to build an evolutionary coupling model.
 - `{RESULTS_DIR}/plmc/uniref100.model_params` - Symlink (required by ev_onehot_mcp)
 - `{RESULTS_DIR}/plmc/uniref100.EC` - Symlink (required by ev_onehot_mcp)
 
+**Timing:** Record timing for this step:
+```python
+record_step_start("{RESULTS_DIR}", "PLMC")
+# ... convert A3M to A2M and generate PLMC model ...
+record_step_end("{RESULTS_DIR}", "PLMC")
+```
+
 ---
 
 ## Step 3: Build EV+OneHot Model
@@ -167,6 +298,13 @@ Use the EV+OneHot MCP server to combine evolutionary features with one-hot encod
 **Expected Output:**
 - `{RESULTS_DIR}/metrics_summary.csv` - Cross-validation results with columns: stage, fold, n_train, n_test, spearman_correlation
 - `{RESULTS_DIR}/ridge_model.joblib` - Trained model
+
+**Timing:** Record timing for this step:
+```python
+record_step_start("{RESULTS_DIR}", "EV+OneHot")
+# ... call mcp__ev_onehot_mcp__ev_onehot_train_fitness_predictor ...
+record_step_end("{RESULTS_DIR}", "EV+OneHot")
+```
 
 ---
 
@@ -235,6 +373,14 @@ Same process but use `esm2_t36_3B_UR50D` as backbone and `--repr_layers 36`.
 - `{RESULTS_DIR}/{backbone}_{head}/training_summary.csv` - Training metrics with columns: backbone_model, head_model, mean_cv_spearman, std_cv_spearman
 - `{RESULTS_DIR}/{backbone}_{head}/final_model/` - Trained model files
 
+**Timing:** Record timing for all ESM models (embeddings + training):
+```python
+record_step_start("{RESULTS_DIR}", "ESM")
+# ... extract ESM embeddings (ESM2-650M and ESM2-3B) ...
+# ... train all ESM models with different head models ...
+record_step_end("{RESULTS_DIR}", "ESM")
+```
+
 ---
 
 ## Step 5: Build ProtTrans Models
@@ -278,24 +424,35 @@ This creates:
 - `{RESULTS_DIR}/{backbone}_{head}/training_summary.csv` - Training metrics with columns: cv_mean, cv_std, etc.
 - `{RESULTS_DIR}/{backbone}_{head}/final_model/` - Trained model files
 
+**Timing:** Record timing for all ProtTrans models (embeddings + training):
+```python
+record_step_start("{RESULTS_DIR}", "ProtTrans")
+# ... extract ProtTrans embeddings (ProtT5-XL and ProtAlbert) ...
+# ... train all ProtTrans models with different head models ...
+record_step_end("{RESULTS_DIR}", "ProtTrans")
+```
+
 ---
 
 ## Step 6: Compare and Visualize Results
 
-After training all models, create a comparison figure showing Spearman correlations with error bars.
+After training all models, create a comprehensive four-panel visualization showing:
+1. **Model Performance Comparison** - Bar chart comparing best models per backbone
+2. **Predicted vs Observed** - Scatter plot for the best model
+3. **Head Model Comparison** - Table showing all head model results for pLMs
+4. **Execution Timeline** - Gantt chart showing step execution times
 
-### 6.1 Collect Results
+### 6.1 Collect and Aggregate Results
 
 **Prompt:**
 > I have the metrics for EV+OneHot and different ESM and ProtTrans models in {RESULTS_DIR}/metrics_summary.csv and {RESULTS_DIR}/*/training_summary.csv. Can you:
 > 1. Parse all training_summary.csv files to extract CV Spearman correlations
-> 2. Select the best head model for each backbone
-> 3. Create a comparison table with mean and standard deviation
-> 4. Generate a bar chart visualization and save to {RESULTS_DIR}/
+> 2. Create a combined all_models_comparison.csv with columns: backbone, head, mean_cv_spearman, std_cv_spearman
+> 3. Save to {RESULTS_DIR}/all_models_comparison.csv
 
 ### 6.2 Results Collection Code
 
-**IMPORTANT:** Different model types have different CSV formats:
+**IMPORTANT:** Different model types have different CSV formats. Use this code to aggregate all results:
 
 ```python
 import os
@@ -306,13 +463,14 @@ results = []
 
 # EV+OneHot - metrics_summary.csv format:
 # stage,fold,n_train,n_test,spearman_correlation
-ev_metrics = pd.read_csv(os.path.join(results_dir, "metrics_summary.csv"))
-cv_mean = ev_metrics[ev_metrics['fold'] == 'mean']['spearman_correlation'].values[0]
-cv_std = ev_metrics[ev_metrics['fold'] == 'std']['spearman_correlation'].values[0]
-results.append({'backbone': 'EV+OneHot', 'head': 'ridge', 'mean_cv_spearman': cv_mean, 'std_cv_spearman': cv_std})
+ev_metrics_path = os.path.join(results_dir, "metrics_summary.csv")
+if os.path.exists(ev_metrics_path):
+    ev_metrics = pd.read_csv(ev_metrics_path)
+    cv_mean = ev_metrics[ev_metrics['fold'] == 'mean']['spearman_correlation'].values[0]
+    cv_std = ev_metrics[ev_metrics['fold'] == 'std']['spearman_correlation'].values[0]
+    results.append({'backbone': 'EV+OneHot', 'head': 'ridge', 'mean_cv_spearman': cv_mean, 'std_cv_spearman': cv_std})
 
-# ESM models - training_summary.csv format:
-# backbone_model,head_model,mean_cv_spearman,std_cv_spearman
+# ESM and ProtTrans models - training_summary.csv format
 for dir_name in os.listdir(results_dir):
     summary_file = os.path.join(results_dir, dir_name, "training_summary.csv")
     if os.path.exists(summary_file):
@@ -324,71 +482,76 @@ for dir_name in os.listdir(results_dir):
         elif 'cv_mean' in df.columns:
             mean_sp = df['cv_mean'].values[0]
             std_sp = df['cv_std'].values[0]
-        # Parse backbone and head from directory name
-        # ...
+        else:
+            continue
+        # Parse backbone and head from directory name (format: backbone_head)
+        parts = dir_name.rsplit('_', 1)
+        if len(parts) == 2:
+            backbone, head = parts
+            results.append({'backbone': backbone, 'head': head, 'mean_cv_spearman': mean_sp, 'std_cv_spearman': std_sp})
+
+# Save combined results
+all_models_df = pd.DataFrame(results)
+all_models_df.to_csv(os.path.join(results_dir, "all_models_comparison.csv"), index=False)
+print(f"Saved {len(results)} model results to all_models_comparison.csv")
 ```
 
-### 6.3 Visualization Code
+### 6.3 Generate Four-Panel Visualization
 
-**NOTE:** Use ev_onehot_mcp environment for visualization (has matplotlib/seaborn):
+**Prompt:**
+> Generate the four-panel visualization figure for the fitness modeling results in {RESULTS_DIR}. Use the provided visualization script.
 
-```python
-# Run with: /path/to/ev_onehot_mcp/env/bin/python
-
-import matplotlib
-matplotlib.use('Agg')  # Required for non-interactive mode
-import matplotlib.pyplot as plt
-import pandas as pd
-
-def prettify_ax(ax):
-    """Make axes more pleasant to look at"""
-    for i, spine in enumerate(ax.spines.values()):
-        if i == 3 or i == 1:
-            spine.set_visible(False)
-    ax.set_frameon = True
-    ax.tick_params(direction='out', length=3, color='k')
-    ax.set_axisbelow(True)
-
-# Load comparison table
-best_results = pd.read_csv("{RESULTS_DIR}/backbone_comparison_table.csv")
-
-# Create visualization
-fig = plt.figure(figsize=(8, 5))
-ax = fig.add_subplot(111)
-prettify_ax(ax)
-
-methods = best_results['backbone'].tolist()
-spearman = best_results['mean_cv_spearman'].tolist()
-spearman_std = best_results['std_cv_spearman'].tolist()
-head_models = best_results['head'].tolist()
-
-# Create bar chart
-colors = ['#2ecc71', '#3498db', '#e74c3c', '#9b59b6', '#f39c12']
-bars = ax.bar(methods, spearman, color=colors[:len(methods)], alpha=0.85)
-ax.errorbar(methods, spearman, yerr=spearman_std, fmt='none', ecolor='black', capsize=5)
-
-# Add head model labels
-for bar, head in zip(bars, head_models):
-    ax.text(bar.get_x() + bar.get_width()/2., bar.get_height()/2,
-            f'({head})', ha='center', va='center', fontsize=9, color='white', fontweight='bold')
-
-ax.set_title('Protein Fitness Prediction: {PROTEIN_NAME}', fontsize=13, fontweight='bold')
-ax.set_ylabel('Spearman Correlation (5-fold CV)', fontsize=11)
-ax.set_xlabel('Model Backbone', fontsize=11)
-ax.set_ylim([0, max(spearman) * 1.35])
-ax.set_xticklabels(methods, rotation=25, ha='right')
-ax.yaxis.grid(True, linestyle='--', alpha=0.6)
-
-plt.tight_layout()
-fig.savefig("{RESULTS_DIR}/backbone_comparison.pdf", dpi=300, bbox_inches='tight')
-fig.savefig("{RESULTS_DIR}/backbone_comparison.png", dpi=300, bbox_inches='tight')
+**Run the visualization script:**
+```bash
+# Use ev_onehot_mcp environment (has matplotlib, numpy, pandas, scipy)
+# Paths are relative to the ProteinMCP project root
+@tool-mcps/ev_onehot_mcp/env/bin/python @workflow-skills/scripts/fitness_modeling_viz.py {RESULTS_DIR}
 ```
+
+**Note:** The `@` paths should be resolved to absolute paths:
+- `@tool-mcps/` → `<project_root>/tool-mcps/`
+- `@workflow-skills/` → `<project_root>/workflow-skills/`
+
+### 6.4 Four-Panel Figure Description
+
+The generated figure contains four panels:
+
+1. **Model Performance Comparison** (top-left)
+   - Bar chart comparing Spearman ρ (5-fold CV) for best model per backbone
+   - Error bars showing standard deviation across folds
+   - Backbones: EV+OneHot, ESM2-650M, ESM2-3B, ProtT5-XL, etc.
+
+2. **Predicted vs Observed** (top-right)
+   - Scatter plot showing predictions vs observed fitness values
+   - Displays correlation coefficient and sample size
+   - Indicates best model name
+
+3. **Head Model Comparison** (bottom-left)
+   - Table showing performance of SVR, XGB, KNN for each pLM backbone
+   - Best combination highlighted
+   - Summary of best backbone + head model
+
+4. **Execution Timeline** (bottom-right)
+   - Gantt chart showing execution time of each workflow step
+   - Steps: MSA, PLMC, EV+OneHot, ESM, ProtTrans, Plot
+   - Timeline is automatically inferred from file timestamps
+   - Total execution time displayed
 
 **Expected Output:**
-- `{RESULTS_DIR}/backbone_comparison.pdf` - Vector format for publication
-- `{RESULTS_DIR}/backbone_comparison.png` - Raster format for preview
-- `{RESULTS_DIR}/backbone_comparison_table.csv` - Summary table with best models
+- `{RESULTS_DIR}/fitness_modeling_summary.png` - Four-panel figure (150 DPI)
+- `{RESULTS_DIR}/fitness_modeling_summary.pdf` - Vector format for publication
 - `{RESULTS_DIR}/all_models_comparison.csv` - All tested models
+- `{RESULTS_DIR}/execution_timeline.json` - Step timing data
+
+**Timing:** Record timing for visualization step:
+```python
+record_step_start("{RESULTS_DIR}", "Plot")
+# ... aggregate results and generate visualization ...
+record_step_end("{RESULTS_DIR}", "Plot")
+
+# Print final timing summary
+get_timing_summary("{RESULTS_DIR}")
+```
 
 ---
 
