@@ -9,6 +9,12 @@ from pathlib import Path
 from typing import List, Optional
 
 
+# Path configuration - use absolute paths based on project structure
+SCRIPT_DIR = Path(__file__).parent.resolve()  # src/skill/
+SRC_DIR = SCRIPT_DIR.parent  # src/
+PROJECT_ROOT = SRC_DIR.parent  # ProteinMCP root
+
+
 class Skill:
     """Represents a workflow skill defined in a markdown file."""
 
@@ -40,8 +46,9 @@ class Skill:
         else:
             self.command_name = command_name_base
 
-        self.claude_commands_dir = Path(".claude/commands")
-        self.claude_skills_dir = Path(".claude/skills")
+        # Use absolute paths based on PROJECT_ROOT so pskill works from any directory
+        self.claude_commands_dir = PROJECT_ROOT / ".claude/commands"
+        self.claude_skills_dir = PROJECT_ROOT / ".claude/skills"
 
         self.command_file_path = self.claude_commands_dir / f"{self.command_name}.md"
         self.skill_file_path = self.claude_skills_dir / f"{self.name.replace('_', '-')}.md"

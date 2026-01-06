@@ -13,15 +13,22 @@ from ..mcp.mcp_manager import MCPManager
 from .skill import Skill
 
 
+# Path configuration - use absolute paths based on project structure
+SCRIPT_DIR = Path(__file__).parent.resolve()  # src/skill/
+SRC_DIR = SCRIPT_DIR.parent  # src/
+PROJECT_ROOT = SRC_DIR.parent  # ProteinMCP root
+
 # Path to the skills config file
-SKILL_CONFIG_PATH = Path(__file__).parent / "configs.yaml"
+SKILL_CONFIG_PATH = SCRIPT_DIR / "configs.yaml"
+# Default skills directory
+DEFAULT_SKILLS_DIR = PROJECT_ROOT / "workflow-skills"
 
 
 class SkillManager:
     """Manages discovery and handling of workflow skills."""
 
-    def __init__(self, skills_dir: str = "workflow-skills"):
-        self.skills_dir = Path(skills_dir)
+    def __init__(self, skills_dir: Path = None):
+        self.skills_dir = skills_dir if skills_dir is not None else DEFAULT_SKILLS_DIR
         self._config: Optional[Dict] = None
 
     def _load_config(self) -> Dict:
@@ -51,7 +58,9 @@ class SkillManager:
             for skill_name, skill_config in config["skills"].items():
                 file_path = skill_config.get("file_path", "")
                 if file_path:
-                    full_path = Path(file_path)
+                    # Resolve path relative to PROJECT_ROOT if not absolute
+                    path = Path(file_path)
+                    full_path = path if path.is_absolute() else (PROJECT_ROOT / path).resolve()
                     if full_path.exists():
                         skills[skill_name] = Skill(
                             name=skill_name,

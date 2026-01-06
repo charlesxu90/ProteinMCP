@@ -75,7 +75,7 @@ def avail_command():
       skill avail
     """
     manager = SkillManager()
-    click.echo("Finding available skills in 'workflow-skills/'...")
+    click.echo(f"Finding available skills in '{manager.skills_dir}'...")
     skills = manager.load_available_skills()
 
     if not skills:
