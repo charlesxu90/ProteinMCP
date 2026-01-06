@@ -313,6 +313,32 @@ mkdir -p {RESULTS_DIR}/logs
 
 ---
 
+### Step 13: Visualize Results
+
+**Description**: Generate publication-ready figures showcasing design quality and workflow.
+
+**Prompt:**
+> Can you generate visualization figures for the binder design results in {RESULTS_DIR}/? Create a main figure showing quality metrics, a supplementary figure with detailed analysis, and a workflow overview diagram.
+
+**Implementation Notes:**
+- Use the standalone figure generation script:
+  ```bash
+  python workflow-skills/figures/binder_design_figures.py --results_dir {RESULTS_DIR}
+  ```
+- Or run the embedded Python code from the full binder_design.md documentation
+
+**Expected Output:**
+- `{RESULTS_DIR}/binder_design_main.pdf/png` - Main quality metrics figure (4-panel)
+- `{RESULTS_DIR}/binder_design_supplementary.pdf/png` - Detailed analysis figure
+- `{RESULTS_DIR}/binder_workflow_overview.pdf/png` - Workflow schematic diagram
+
+**Figure Contents:**
+- *Main Figure*: pLDDT distribution, pAE comparison, interface score ranking, pTM scores
+- *Supplementary*: Quality heatmap, metric correlations, score distribution, selection summary
+- *Workflow Overview*: BindCraft pipeline diagram (Target → RFdiffusion → ProteinMPNN → AlphaFold2)
+
+---
+
 ## Troubleshooting
 
 ### Common Issues
