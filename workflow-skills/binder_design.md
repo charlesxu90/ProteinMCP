@@ -328,14 +328,64 @@ mkdir -p {RESULTS_DIR}/logs
 
 ## Step 13: Visualize Results
 
-**Description**: Generate publication-ready figures showcasing design quality and workflow.
+**Description**: Generate publication-ready figures showcasing design quality metrics.
 
 **Prompt:**
-> Can you generate visualization figures for the binder design results in {RESULTS_DIR}/? Create a main figure showing quality metrics, a supplementary figure with detailed analysis, and a workflow overview diagram.
+> Can you generate visualization figures for the binder design results in {RESULTS_DIR}/? Create all quality assessment figures and a merged summary figure.
 
 **Implementation Notes:**
 
-Use the binder design figure generation script or run the following Python code:
+Use the binder design visualization script:
+
+```bash
+# Run the visualization script (using ev_onehot_mcp environment which has matplotlib)
+@tool-mcps/ev_onehot_mcp/env/bin/python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR}
+
+# Or with custom output prefix:
+@tool-mcps/ev_onehot_mcp/env/bin/python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR} --output {RESULTS_DIR}/custom_prefix
+```
+
+**Note:** The `@` paths should be resolved to absolute paths:
+- `@tool-mcps/` → `<project_root>/tool-mcps/`
+- `@workflow-skills/` → `<project_root>/workflow-skills/`
+
+**Generated Figures (8 individual + 1 merged):**
+
+1. `binder_design_composite_score.png` - Composite quality score distribution histogram
+2. `binder_design_quality_assessment.png` - pLDDT vs Interface scatter plot (colored by quality)
+3. `binder_design_normalized_heatmap.png` - Heatmap of normalized metrics per design
+4. `binder_design_statistics_table.png` - Table with Mean, Std, Min, Max, Pass Rate
+5. `binder_design_quality_boxplot.png` - Boxplots with threshold lines
+6. `binder_design_sasa_binding_energy.png` - SASA vs Binding Energy scatter plot
+7. `binder_design_top5_designs.png` - Top 5 designs ranked by composite score
+8. `binder_design_correlation.png` - Correlation heatmap of metrics
+9. `binder_design_summary.png` - **Merged 8-panel summary figure** (publication-ready)
+
+**Composite Quality Score Formula:**
+```
+Composite Score = 0.3×pLDDT(norm) + 0.3×pAE(inv,norm) + 0.2×Interface(inv,norm) + 0.2×pTM
+```
+
+**Quality Thresholds:**
+- pLDDT: ≥80 (higher is better)
+- pAE: ≤4Å (lower is better)
+- Interface Score: ≤-13 REU (more negative is better)
+- pTM: ≥0.8 (higher is better)
+
+**Display Results Interactively (Python):**
+```python
+import sys
+sys.path.append("@workflow-skills/scripts")
+from binder_design_viz import display_results
+
+# Display all figures in a GUI window
+display_results("{RESULTS_DIR}")
+
+# Or display only the merged summary
+display_results("{RESULTS_DIR}", show_all=False)
+```
+
+**Alternative: Use inline Python code for custom visualization:**
 
 ```python
 # Run with any Python environment that has matplotlib and numpy
@@ -572,29 +622,31 @@ python workflow-skills/figures/binder_design_figures.py --results_dir {RESULTS_D
 ```
 
 **Expected Output:**
-- `{RESULTS_DIR}/binder_design_main.pdf` - Main quality metrics figure (4-panel)
-- `{RESULTS_DIR}/binder_design_main.png` - PNG version for preview
-- `{RESULTS_DIR}/binder_design_supplementary.pdf` - Detailed analysis figure
-- `{RESULTS_DIR}/binder_design_supplementary.png` - PNG version for preview
-- `{RESULTS_DIR}/binder_workflow_overview.pdf` - Workflow schematic diagram
-- `{RESULTS_DIR}/binder_workflow_overview.png` - PNG version for preview
+
+*Individual Figures (8 files):*
+- `{RESULTS_DIR}/binder_design_composite_score.png/.pdf` - Composite score histogram
+- `{RESULTS_DIR}/binder_design_quality_assessment.png/.pdf` - Quality scatter plot
+- `{RESULTS_DIR}/binder_design_normalized_heatmap.png/.pdf` - Metrics heatmap
+- `{RESULTS_DIR}/binder_design_statistics_table.png/.pdf` - Statistics table
+- `{RESULTS_DIR}/binder_design_quality_boxplot.png/.pdf` - Boxplots with thresholds
+- `{RESULTS_DIR}/binder_design_sasa_binding_energy.png/.pdf` - SASA vs binding energy
+- `{RESULTS_DIR}/binder_design_top5_designs.png/.pdf` - Top 5 designs table
+- `{RESULTS_DIR}/binder_design_correlation.png/.pdf` - Correlation heatmap
+
+*Merged Summary Figure (2x4 panels):*
+- `{RESULTS_DIR}/binder_design_summary.png/.pdf` - **Publication-ready 8-panel figure**
 
 **Figure Descriptions:**
 
-*Main Figure (2x2 panels):*
-- Panel A: pLDDT distribution across designs with quality thresholds
-- Panel B: pAE comparison with acceptability thresholds
-- Panel C: Interface score ranking (sorted, lower is better)
-- Panel D: pTM scores indicating structural confidence
-
-*Supplementary Figure (2x2 panels):*
-- Panel A: Heatmap of normalized quality metrics
-- Panel B: Scatter plot showing metric correlations
-- Panel C: Composite quality score distribution
-- Panel D: Summary statistics and best design selection
-
-*Workflow Overview:*
-- Schematic diagram showing BindCraft pipeline: Target PDB → Config → RFdiffusion → ProteinMPNN → AlphaFold2 → Output
+*Merged Summary Figure (2x4 panels):*
+- Panel A: Composite score distribution with mean and threshold lines
+- Panel B: Quality assessment scatter (pLDDT vs Interface, colored by quality score)
+- Panel C: Normalized metrics heatmap per design
+- Panel D: Metrics statistics table (Mean, Std, Min, Max, Pass Rate)
+- Panel E: Quality boxplots for each metric
+- Panel F: SASA vs Binding Energy scatter colored by pLDDT
+- Panel G: Top 5 designs ranked by composite score with status
+- Panel H: Correlation heatmap between quality metrics
 
 ---
 

@@ -555,6 +555,65 @@ get_timing_summary("{RESULTS_DIR}")
 
 ---
 
+## Step 7: Display Results (Interactive)
+
+After the workflow completes, display the results directly in a GUI window or notebook for immediate visual feedback.
+
+**Prompt:**
+> Display the fitness modeling results from {RESULTS_DIR} in the current session.
+
+**Implementation - From Terminal (recommended):**
+
+```bash
+# One-liner to display results in a GUI window
+python -c "
+import sys
+sys.path.insert(0, '@workflow-skills/scripts')
+from fitness_modeling_viz import display_results
+display_results('{RESULTS_DIR}')
+"
+```
+
+Or using the ev_onehot_mcp environment (guaranteed to have all dependencies):
+```bash
+@tool-mcps/ev_onehot_mcp/env/bin/python -c "
+import sys
+sys.path.insert(0, '@workflow-skills/scripts')
+from fitness_modeling_viz import display_results
+display_results('{RESULTS_DIR}')
+"
+```
+
+**Implementation - In Jupyter Notebook:**
+
+```python
+import sys
+sys.path.append("@workflow-skills/scripts")
+from fitness_modeling_viz import display_results
+
+# Display all 4 figures with summary
+display_results("{RESULTS_DIR}")
+
+# Or display only the backbone comparison
+display_results("{RESULTS_DIR}", show_all=False)
+```
+
+**Parameters:**
+- `results_dir`: Path to results directory
+- `show_all`: If True (default), show all 4 figures. If False, only show backbone comparison.
+- `block`: If True (default), block until window is closed. If False, continue execution.
+
+**What it displays:**
+1. **Model Performance Comparison** - Bar chart comparing all backbones
+2. **Predicted vs Observed** - Scatter plot showing prediction quality
+3. **Head Model Comparison** - Table of all head model results
+4. **Execution Timeline** - Gantt chart of workflow timing
+5. **Text Summary** - Top 5 models with Spearman correlations (printed to terminal)
+
+**Note:** When running from terminal, a GUI window will open with all figures. Close the window to continue.
+
+---
+
 ## Quick Start Template
 
 For a new protein fitness prediction project:
