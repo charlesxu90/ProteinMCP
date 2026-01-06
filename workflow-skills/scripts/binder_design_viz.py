@@ -83,7 +83,24 @@ def save_for_pub(fig, path, dpi=300, include_raster=True):
 
 def load_design_metrics(results_dir: Path) -> pd.DataFrame:
     """Load design metrics from results directory."""
-    # Try different possible file names
+    results_dir = Path(results_dir)
+
+    # Priority 1: BindCraft output format - check designs subdirectory
+    bindcraft_files = [
+        results_dir / "designs" / "final_design_stats.csv",
+        results_dir / "designs" / "mpnn_design_stats.csv",
+        results_dir / "final_design_stats.csv",
+        results_dir / "mpnn_design_stats.csv",
+    ]
+
+    for csv_path in bindcraft_files:
+        if csv_path.exists():
+            df = pd.read_csv(csv_path)
+            df = normalize_bindcraft_columns(df)
+            print(f"Loaded BindCraft metrics from {csv_path} ({len(df)} designs)")
+            return df
+
+    # Priority 2: Generic metrics files
     possible_names = [
         "design_metrics.csv",
         "metrics.csv",
@@ -95,21 +112,138 @@ def load_design_metrics(results_dir: Path) -> pd.DataFrame:
         csv_path = results_dir / name
         if csv_path.exists():
             df = pd.read_csv(csv_path)
+            df = normalize_column_names(df)
             print(f"Loaded metrics from {csv_path}")
             return df
 
     # Try to find in subdirectories
     for subdir in results_dir.iterdir():
         if subdir.is_dir():
-            for name in possible_names:
+            for name in possible_names + ["final_design_stats.csv", "mpnn_design_stats.csv"]:
                 csv_path = subdir / name
                 if csv_path.exists():
                     df = pd.read_csv(csv_path)
+                    if 'Average_pLDDT' in df.columns or 'Average_i_pAE' in df.columns:
+                        df = normalize_bindcraft_columns(df)
+                    else:
+                        df = normalize_column_names(df)
                     print(f"Loaded metrics from {csv_path}")
                     return df
 
     print("No metrics file found, generating mock data for demonstration")
     return generate_mock_data()
+
+
+def normalize_bindcraft_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize BindCraft column names to standard format."""
+    # BindCraft uses Average_pLDDT, Average_i_pAE, etc.
+    column_mapping = {
+        'Design': 'design_name',
+        'Rank': 'rank',
+        'Average_pLDDT': 'plddt',
+        'Average_pTM': 'ptm',
+        'Average_i_pTM': 'i_ptm',
+        'Average_pAE': 'pae',
+        'Average_i_pAE': 'i_pae',
+        'Average_i_pLDDT': 'i_plddt',
+        'Average_ss_pLDDT': 'ss_plddt',
+        'Average_dG': 'dG',
+        'Average_dSASA': 'dSASA',
+        'Average_ShapeComplementarity': 'shape_complementarity',
+        'Average_n_InterfaceResidues': 'n_interface_residues',
+        'Average_n_InterfaceHbonds': 'n_interface_hbonds',
+        'Length': 'length',
+        'Seed': 'seed',
+        'MPNN_score': 'mpnn_score',
+        'MPNN_seq_recovery': 'mpnn_seq_recovery',
+        # Also handle trajectory stats format (no Average_ prefix)
+        'pLDDT': 'plddt',
+        'pTM': 'ptm',
+        'i_pTM': 'i_ptm',
+        'i_pAE': 'i_pae',
+        'i_pLDDT': 'i_plddt',
+        'ss_pLDDT': 'ss_plddt',
+    }
+
+    df = df.copy()
+
+    # Rename columns
+    for old_name, new_name in column_mapping.items():
+        if old_name in df.columns and new_name not in df.columns:
+            df[new_name] = df[old_name]
+
+    # Ensure design_name exists
+    if 'design_name' not in df.columns and 'Design' in df.columns:
+        df['design_name'] = df['Design']
+
+    # Scale pLDDT values if they're in 0-1 range (convert to 0-100)
+    if 'plddt' in df.columns and df['plddt'].max() <= 1:
+        df['plddt'] = df['plddt'] * 100
+    if 'i_plddt' in df.columns and df['i_plddt'].max() <= 1:
+        df['i_plddt'] = df['i_plddt'] * 100
+
+    # Scale pAE values if they're in 0-1 range (BindCraft uses 0-1 scale)
+    # Typical pAE values are 0-30, so if max <= 1, multiply by 30
+    if 'pae' in df.columns and df['pae'].max() <= 1:
+        df['pae'] = df['pae'] * 30  # Scale to typical pAE range
+    if 'i_pae' in df.columns and df['i_pae'].max() <= 1:
+        df['i_pae'] = df['i_pae'] * 30  # Scale to typical pAE range
+
+    return df
+
+
+def normalize_column_names(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize generic column names to standard format."""
+    df = df.copy()
+
+    # Common variations
+    column_mapping = {
+        'design': 'design_name',
+        'name': 'design_name',
+        'pLDDT': 'plddt',
+        'PLDDT': 'plddt',
+        'pAE': 'pae',
+        'PAE': 'pae',
+        'interface_pae': 'i_pae',
+        'interface_plddt': 'i_plddt',
+        'interface_ptm': 'i_ptm',
+        'pTM': 'ptm',
+        'PTM': 'ptm',
+    }
+
+    for old_name, new_name in column_mapping.items():
+        if old_name in df.columns and new_name not in df.columns:
+            df[new_name] = df[old_name]
+
+    return df
+
+
+def simplify_design_name(name: str) -> str:
+    """Simplify BindCraft design names for display.
+
+    Examples:
+        'Binder_l130_s549001_mpnn1' -> 's549001_m1'
+        'Binder_l130_s21676_mpnn6' -> 's21676_m6'
+        'design_001' -> '1'
+    """
+    if name.startswith('Binder_'):
+        # BindCraft format: Binder_l130_s549001_mpnn1
+        parts = name.split('_')
+        seed = None
+        mpnn = None
+        for p in parts:
+            if p.startswith('s') and p[1:].isdigit():
+                seed = p
+            elif p.startswith('mpnn'):
+                mpnn = 'm' + p[4:]
+        if seed and mpnn:
+            return f"{seed}_{mpnn}"
+        elif seed:
+            return seed
+        return name.replace('Binder_', '').replace('_', '\n')
+    elif name.startswith('design_'):
+        return name.replace('design_', '').lstrip('0') or '0'
+    return name
 
 
 def generate_mock_data(n_designs=8) -> pd.DataFrame:
@@ -227,8 +361,8 @@ def plot_plddt_comparison(df: pd.DataFrame, output_path: str = None):
     ax.set_xticks(x_pos)
 
     # Simplify labels
-    labels = [name.replace('design_', '').lstrip('0') for name in df_sorted['design_name']]
-    ax.set_xticklabels(labels, fontsize=9)
+    labels = [simplify_design_name(name) for name in df_sorted['design_name']]
+    ax.set_xticklabels(labels, fontsize=8, rotation=45, ha='right')
 
     ax.set_ylim(0, 100)
     ax.yaxis.grid(True, linestyle='--', alpha=0.4)
@@ -278,8 +412,8 @@ def plot_interface_pae(df: pd.DataFrame, output_path: str = None):
     ax.set_xlabel('Design', fontsize=10)
     ax.set_xticks(x_pos)
 
-    labels = [name.replace('design_', '').lstrip('0') for name in df_sorted['design_name']]
-    ax.set_xticklabels(labels, fontsize=9)
+    labels = [simplify_design_name(name) for name in df_sorted['design_name']]
+    ax.set_xticklabels(labels, fontsize=8, rotation=45, ha='right')
 
     ax.yaxis.grid(True, linestyle='--', alpha=0.4)
     ax.legend(loc='upper right', fontsize=8)
@@ -342,7 +476,7 @@ def plot_metrics_table(df: pd.DataFrame, output_path: str = None):
             cell = table[(i+1, j)]
             val = row[col]
             if col == 'design_name':
-                text = val.replace('design_', '').lstrip('0')
+                text = simplify_design_name(val)
             elif col == 'score':
                 text = f'{val:.2f}'
             elif col in ['plddt', 'i_plddt']:
@@ -365,7 +499,7 @@ def plot_metrics_table(df: pd.DataFrame, output_path: str = None):
         cell.set_height(0.1)
 
     # Add best design annotation
-    best_design = df_sorted.iloc[0]['design_name'].replace('design_', '').lstrip('0')
+    best_design = simplify_design_name(df_sorted.iloc[0]['design_name'])
     best_score = df_sorted.iloc[0]['score']
     ax.text(0.5, 0.01, f'Best: Design {best_design} (score={best_score:.2f})',
             ha='center', va='bottom', transform=ax.transAxes, fontsize=9, fontweight='bold')
@@ -410,7 +544,7 @@ def plot_quality_scatter(df: pd.DataFrame, output_path: str = None):
 
     # Add design labels
     for i, row in df.iterrows():
-        label = row['design_name'].replace('design_', '').lstrip('0')
+        label = simplify_design_name(row['design_name'])
         ax.annotate(label, (row['plddt'], row[pae_col]),
                    fontsize=7, alpha=0.7,
                    xytext=(3, 3), textcoords='offset points')
@@ -467,7 +601,7 @@ def plot_design_ranking(df: pd.DataFrame, output_path: str = None):
     labels = []
     for i, (_, row) in enumerate(df_sorted.iterrows()):
         rank = n_designs - i
-        name = row['design_name'].replace('design_', '').lstrip('0')
+        name = simplify_design_name(row['design_name'])
         labels.append(f"#{rank}: {name}")
     ax.set_yticklabels(labels, fontsize=9)
 
@@ -798,7 +932,7 @@ def _plot_plddt_comparison_ax(ax, df):
     ax.set_ylabel('pLDDT', fontsize=9)
     ax.set_xlabel('Design', fontsize=9)
     ax.set_xticks(x_pos)
-    labels = [name.replace('design_', '').lstrip('0') for name in df_sorted['design_name']]
+    labels = [simplify_design_name(name) for name in df_sorted['design_name']]
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylim(0, 100)
     ax.yaxis.grid(True, linestyle='--', alpha=0.4)
@@ -826,7 +960,7 @@ def _plot_interface_pae_ax(ax, df):
     ax.set_ylabel('pAE (lower is better)', fontsize=9)
     ax.set_xlabel('Design', fontsize=9)
     ax.set_xticks(x_pos)
-    labels = [name.replace('design_', '').lstrip('0') for name in df_sorted['design_name']]
+    labels = [simplify_design_name(name) for name in df_sorted['design_name']]
     ax.set_xticklabels(labels, fontsize=8)
     ax.yaxis.grid(True, linestyle='--', alpha=0.4)
 
@@ -879,7 +1013,7 @@ def _plot_design_ranking_ax(ax, df):
     labels = []
     for i, (_, row) in enumerate(df_sorted.iterrows()):
         rank = n_designs - i
-        name = row['design_name'].replace('design_', '').lstrip('0')
+        name = simplify_design_name(row['design_name'])
         labels.append(f"#{rank}: {name}")
     ax.set_yticklabels(labels, fontsize=8)
 
@@ -923,7 +1057,7 @@ def _plot_metrics_table_ax(ax, df):
             cell = table[(i+1, j)]
             val = row[col]
             if col == 'design_name':
-                text = val.replace('design_', '').lstrip('0')
+                text = simplify_design_name(val)
             elif col == 'score':
                 text = f'{val:.2f}'
             elif col in ['plddt', 'i_plddt']:
@@ -1120,10 +1254,10 @@ def display_results(results_dir: str, show_all: bool = True, block: bool = True)
         print(f"Total designs: {len(df)}")
         print(f"\nTop 3 designs by composite score:")
         for i, (_, row) in enumerate(df_sorted.head(3).iterrows()):
-            name = row['design_name'].replace('design_', '').lstrip('0')
+            name = simplify_design_name(row['design_name'])
             plddt = row.get('plddt', 'N/A')
             pae = row.get('i_pae', row.get('pae', 'N/A'))
-            print(f"  {i+1}. Design {name}: pLDDT={plddt:.1f}, pAE={pae:.1f}, score={row['score']:.2f}")
+            print(f"  {i+1}. {name}: pLDDT={plddt:.1f}, pAE={pae:.1f}, score={row['score']:.2f}")
         print("="*60)
 
     return figures
