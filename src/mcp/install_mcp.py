@@ -343,8 +343,9 @@ def uninstall_mcp_cmd(mcp_name: str, cli: str = "claude", remove_files: bool = F
             print(f"🗑️  Removing installation files...")
             if not mcp_manager.uninstall_mcp(mcp_name, remove_files=True):
                 return False
-
-    print(f"✅ Successfully uninstalled '{mcp_name}'")
+        print(f"✅ Successfully uninstalled '{mcp_name}'")
+    else:
+        print(f"✅ Successfully unregistered '{mcp_name}'")
     return True
 
 

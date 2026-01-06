@@ -7,13 +7,11 @@ Provides unified access to skill management functionality through subcommands:
 - skill status: Show installed status of skills
 - skill info: Show detailed information about a skill
 - skill install: Install a skill and its required MCPs
-- skill execute: Guide through skill execution
 - skill uninstall: Uninstall a skill and cleanup MCPs
 - skill create: Create a new skill interactively
 """
 
 import sys
-import textwrap
 from pathlib import Path
 from typing import List, Tuple
 
@@ -183,66 +181,6 @@ def install_command(skill_name: str):
     success = manager.install_skill_and_mcps(skill_name)
     if not success:
         sys.exit(1)
-
-
-@cli.command(name="execute")
-@click.argument('skill_name')
-def execute_command(skill_name: str):
-    """
-    Guide through the execution of an installed skill.
-
-    Displays step-by-step prompts that you can copy and paste
-    into your conversation with the assistant.
-
-    Examples:
-
-      # Execute the fitness_modeling skill:
-      skill execute fitness_modeling
-    """
-    manager = SkillManager()
-    skill = manager.get_skill(skill_name)
-
-    if not skill:
-        click.echo(f"Skill '{skill_name}' not found.", err=True)
-        sys.exit(1)
-
-    # Check if required MCPs are available
-    required_mcps = skill.get_required_mcps()
-    if required_mcps:
-        click.echo(f"\n🔍 Checking required MCPs for '{skill_name}'...")
-        available, missing = check_required_mcps(required_mcps)
-
-        if missing:
-            click.echo(f"\n❌ Missing required MCPs ({len(missing)}):")
-            for mcp in missing:
-                click.echo(f"    - {mcp}")
-            click.echo(f"\n💡 Please install the skill first:")
-            click.echo(f"    pskill install {skill_name}")
-            click.echo(f"\n   Or install MCPs manually:")
-            click.echo(f"    pmcp install {' '.join(missing)}")
-            sys.exit(1)
-
-        click.echo(f"✅ All {len(available)} required MCPs are available")
-
-    click.echo(f"\n▶️  Executing Skill: {skill.name}")
-    click.echo("=" * 70)
-    click.echo("This will guide you through the steps defined in the skill file.")
-    click.echo("Copy and paste the prompts into your conversation with the assistant.")
-    click.echo("=" * 70)
-
-    steps = skill.get_execution_steps()
-    if not steps:
-        click.echo("\nNo executable steps (prompts) found in this skill.")
-        return
-
-    for i, step in enumerate(steps, 1):
-        click.echo(f"\n--- Step {i}: {step['title']} ---")
-        click.echo("\n📋 Prompt to copy:")
-        prompt_block = textwrap.indent(step['prompt'], "    ")
-        click.echo(prompt_block)
-
-        if i < len(steps):
-            click.prompt("\nPress Enter to continue to the next step", default="", show_default=False)
 
 
 @cli.command(name="uninstall")

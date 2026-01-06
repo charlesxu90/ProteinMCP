@@ -4,11 +4,12 @@ Manages workflow skills, including loading, installation, and uninstallation.
 """
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import yaml
 
 from ..mcp.install_mcp import install_mcp_cmd, uninstall_mcp_cmd
+from ..mcp.mcp_manager import MCPManager
 from .skill import Skill
 
 
@@ -89,9 +90,45 @@ class SkillManager:
         """
         return self.load_available_skills().get(skill_name)
 
+    def _check_mcp_status(self, mcp_names: List[str], cli: str = "claude") -> Tuple[List[str], List[str]]:
+        """
+        Check which MCPs are already fully installed and which need installation.
+
+        Args:
+            mcp_names: List of MCP names to check
+            cli: CLI tool to check registration against
+
+        Returns:
+            Tuple of (already_installed, needs_installation)
+        """
+        from ..mcp.mcp import MCPStatus
+
+        mcp_manager = MCPManager()
+        already_installed = []
+        needs_installation = []
+
+        for mcp_name in mcp_names:
+            mcp = mcp_manager.get_mcp(mcp_name)
+            if mcp:
+                # Check if MCP is both installed and registered
+                status = mcp.get_status(cli)
+                if status == MCPStatus.BOTH:
+                    already_installed.append(mcp_name)
+                else:
+                    needs_installation.append(mcp_name)
+            else:
+                # MCP not found, will need to try installing
+                needs_installation.append(mcp_name)
+
+        return already_installed, needs_installation
+
     def install_skill_and_mcps(self, skill_name: str) -> bool:
         """
         Installs a skill and its required MCPs.
+
+        Only installs MCPs that are not already fully installed (both downloaded
+        and registered with Claude). This speeds up workflow installation by
+        skipping MCPs that are already ready to use.
 
         Args:
             skill_name: The name of the skill to install.
@@ -110,12 +147,25 @@ class SkillManager:
 
         required_mcps = skill.get_required_mcps()
         if required_mcps:
-            print(f"\nInstalling required MCPs: {', '.join(required_mcps)}")
-            for mcp_name in required_mcps:
-                print(f"\n--- Installing MCP: {mcp_name} ---")
-                if not install_mcp_cmd(mcp_name, cli="claude"):
-                    print(f"⚠️ Failed to install MCP '{mcp_name}'. Continuing...")
-            print("\n--- Finished MCP installation ---")
+            print(f"\n📊 Checking status of {len(required_mcps)} required MCPs...")
+            already_installed, needs_installation = self._check_mcp_status(required_mcps)
+
+            # Report already installed MCPs
+            if already_installed:
+                print(f"\n✅ Already installed ({len(already_installed)}):")
+                for mcp_name in already_installed:
+                    print(f"    • {mcp_name}")
+
+            # Install only the MCPs that need installation
+            if needs_installation:
+                print(f"\n📦 Installing {len(needs_installation)} MCPs: {', '.join(needs_installation)}")
+                for mcp_name in needs_installation:
+                    print(f"\n--- Installing MCP: {mcp_name} ---")
+                    if not install_mcp_cmd(mcp_name, cli="claude"):
+                        print(f"⚠️ Failed to install MCP '{mcp_name}'. Continuing...")
+                print("\n--- Finished MCP installation ---")
+            else:
+                print("\n✅ All required MCPs are already installed!")
         else:
             print("No required MCPs found for this skill.")
 
@@ -143,11 +193,11 @@ class SkillManager:
         # Use required_mcps for cleanup (same MCPs that were installed)
         cleanup_mcps = skill.get_required_mcps()
         if cleanup_mcps:
-            print(f"\nCleaning up associated MCPs: {', '.join(cleanup_mcps)}")
+            print(f"\nUnregistering associated MCPs: {', '.join(cleanup_mcps)}")
             for mcp_name in cleanup_mcps:
-                print(f"\n--- Uninstalling MCP: {mcp_name} ---")
+                print(f"\n--- Unregistering MCP: {mcp_name} ---")
                 if not uninstall_mcp_cmd(mcp_name, cli="claude"):
-                    print(f"⚠️ Failed to uninstall MCP '{mcp_name}'.")
+                    print(f"⚠️ Failed to unregister MCP '{mcp_name}'.")
             print("\n--- Finished MCP cleanup ---")
         else:
             print("No MCPs specified for cleanup in this skill.")

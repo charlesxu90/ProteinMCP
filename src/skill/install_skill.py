@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-Skill Installation and Execution Tool
+Skill Installation Tool
 
 This tool manages workflow skills for Claude Code, allowing you to list,
-install, execute, and uninstall complex workflows.
+install, and uninstall complex workflows.
 
 Usage:
     pskill avail              # Show all available skills
     pskill status             # Show installed status of skills
     pskill info <skill_name>  # Show details about a skill
     pskill install <skill_name> # Install a skill and its MCPs
-    pskill execute <skill_name> # Guide through skill execution
     pskill uninstall <skill_name> # Uninstall skill and cleanup MCPs
 """
 
