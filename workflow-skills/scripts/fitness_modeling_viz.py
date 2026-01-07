@@ -604,8 +604,12 @@ def create_separate_figures(results_dir: str, output_prefix: str = None):
     """
     results_dir = Path(results_dir)
 
+    # Create figures subdirectory
+    figures_dir = results_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
     if output_prefix is None:
-        output_prefix = str(results_dir / "fitness_modeling")
+        output_prefix = str(figures_dir / "fitness_modeling")
 
     # Set publication-quality plot context
     set_pub_plot_context(context="talk")
@@ -656,7 +660,38 @@ def create_separate_figures(results_dir: str, output_prefix: str = None):
     saved_files.append(f"{output_prefix}_execution_timeline.png")
     plt.close(fig4)
 
-    print(f"\nGenerated {len(saved_files)} separate figures:")
+    # Create merged 2x2 summary figure
+    from PIL import Image
+    fig_merged, axes = plt.subplots(2, 2, figsize=(8, 8))
+    axes = axes.flatten()
+
+    figure_names = [
+        f"{output_prefix}_backbone_comparison.png",
+        f"{output_prefix}_predicted_vs_observed.png",
+        f"{output_prefix}_head_model_table.png",
+        f"{output_prefix}_execution_timeline.png",
+    ]
+
+    for i, fig_path in enumerate(figure_names):
+        if Path(fig_path).exists():
+            img = Image.open(fig_path)
+            axes[i].imshow(img)
+            axes[i].axis('off')
+        else:
+            axes[i].text(0.5, 0.5, "Not found", ha='center', va='center')
+            axes[i].axis('off')
+
+    plt.tight_layout()
+
+    # Save merged figure
+    summary_path = f"{output_prefix}_summary"
+    fig_merged.savefig(summary_path + ".png", dpi=150, bbox_inches='tight')
+    fig_merged.savefig(summary_path + ".pdf", dpi=300, bbox_inches='tight')
+    saved_files.append(summary_path + ".png")
+    print(f"Saved merged figure: {summary_path}.png and {summary_path}.pdf")
+    plt.close(fig_merged)
+
+    print(f"\nGenerated {len(saved_files)} figures:")
     for f in saved_files:
         print(f"  - {f}")
 
@@ -678,8 +713,12 @@ def create_four_panel_figure(results_dir: str, output_prefix: str = None):
     """
     results_dir = Path(results_dir)
 
+    # Create figures subdirectory
+    figures_dir = results_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
     if output_prefix is None:
-        output_prefix = str(results_dir / "fitness_modeling_summary")
+        output_prefix = str(figures_dir / "fitness_modeling_summary")
 
     # Set publication-quality plot context
     set_pub_plot_context(context="talk")
@@ -902,6 +941,8 @@ def main():
                         help='Output prefix (default: results_dir/fitness_modeling)')
     parser.add_argument('--combined', '-c', action='store_true',
                         help='Create combined 2x2 figure instead of separate figures')
+    parser.add_argument('--display', '-d', action='store_true',
+                        help='Display summary figures after generation')
 
     args = parser.parse_args()
 
@@ -910,6 +951,8 @@ def main():
         output_file = create_four_panel_figure(args.results_dir, args.output)
         if output_file:
             print(f"\nVisualization complete: {output_file}")
+            if args.display:
+                display_results(args.results_dir)
         else:
             print("\nVisualization failed")
             exit(1)
@@ -918,6 +961,8 @@ def main():
         output_files = create_separate_figures(args.results_dir, args.output)
         if output_files:
             print(f"\nVisualization complete!")
+            if args.display:
+                display_results(args.results_dir)
         else:
             print("\nVisualization failed")
             exit(1)
@@ -949,6 +994,7 @@ def display_results(results_dir: str, show_all: bool = True, block: bool = True)
     from pathlib import Path
 
     results_dir = Path(results_dir)
+    figures_dir = results_dir / "figures"
 
     # Check if we're in an interactive notebook environment
     in_notebook = False
@@ -971,12 +1017,23 @@ def display_results(results_dir: str, show_all: bool = True, block: bool = True)
     if not show_all:
         figure_files = figure_files[:1]  # Only backbone comparison
 
+    def find_figure(fig_name):
+        """Find figure in figures_dir or results_dir (backward compatibility)."""
+        png_path = figures_dir / f"fitness_modeling_{fig_name}.png"
+        if png_path.exists():
+            return png_path
+        # Fallback to results_dir for backward compatibility
+        alt_path = results_dir / f"fitness_modeling_{fig_name}.png"
+        if alt_path.exists():
+            return alt_path
+        return None
+
     if in_notebook:
         # Display in notebook using IPython
         from IPython.display import display, Image as IPImage
         for fig_name, title in figure_files:
-            png_path = results_dir / f"fitness_modeling_{fig_name}.png"
-            if png_path.exists():
+            png_path = find_figure(fig_name)
+            if png_path:
                 print(f"\n{title}:")
                 display(IPImage(filename=str(png_path)))
                 figures[fig_name] = str(png_path)
@@ -1009,8 +1066,8 @@ def display_results(results_dir: str, show_all: bool = True, block: bool = True)
             axes = axes.flatten()
 
         for i, (fig_name, title) in enumerate(figure_files):
-            png_path = results_dir / f"fitness_modeling_{fig_name}.png"
-            if png_path.exists():
+            png_path = find_figure(fig_name)
+            if png_path:
                 img = Image.open(png_path)
                 axes[i].imshow(img)
                 axes[i].axis('off')

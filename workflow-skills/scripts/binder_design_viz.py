@@ -48,10 +48,10 @@ THRESHOLDS = {
     'pTM': 0.8,       # Higher is better
 }
 
-# Figure size
-FIGSIZE = (6, 5)
-FIGSIZE_WIDE = (8, 5)
-FIGSIZE_TALL = (6, 6)
+# Figure size for individual figures (5x4 for better proportions)
+FIGSIZE = (5, 4)
+FIGSIZE_WIDE = (5, 4)
+FIGSIZE_TALL = (5, 4)
 
 
 def prettify_ax(ax):
@@ -84,28 +84,75 @@ def save_for_pub(fig, path, dpi=300, include_raster=True):
         fig.savefig(path + ".png", dpi=dpi, bbox_inches='tight', transparent=True)
 
 
-def load_design_data(results_dir: Path) -> pd.DataFrame:
+def load_design_data(results_dir: Path, include_rejected: bool = False) -> pd.DataFrame:
     """Load design data from results directory.
 
-    Tries multiple CSV files in order of preference:
-    1. final_design_stats.csv
-    2. mpnn_design_stats.csv
-    3. trajectory_stats.csv
-    """
-    for csv_name in ['final_design_stats.csv', 'mpnn_design_stats.csv', 'trajectory_stats.csv']:
-        csv_path = results_dir / 'designs' / csv_name
-        if csv_path.exists():
-            df = pd.read_csv(csv_path)
-            print(f"Loaded {len(df)} designs from {csv_path}")
-            return df
+    Args:
+        results_dir: Path to results directory
+        include_rejected: If True, load all designs and mark accepted/rejected status
 
-    # Try root directory
-    for csv_name in ['final_design_stats.csv', 'mpnn_design_stats.csv']:
-        csv_path = results_dir / csv_name
-        if csv_path.exists():
-            df = pd.read_csv(csv_path)
-            print(f"Loaded {len(df)} designs from {csv_path}")
-            return df
+    Tries multiple CSV files in order of preference:
+    1. final_design_stats.csv (accepted only)
+    2. mpnn_design_stats.csv (all MPNN designs)
+    3. trajectory_stats.csv
+
+    When include_rejected=True, loads mpnn_design_stats.csv and marks designs
+    that are NOT in final_design_stats.csv as 'Rejected'.
+    """
+    # Define search paths
+    search_paths = [
+        (results_dir / 'designs', results_dir / 'designs'),
+        (results_dir, results_dir),
+    ]
+
+    if include_rejected:
+        # Load all MPNN designs and identify accepted vs rejected
+        mpnn_df = None
+        final_df = None
+
+        for base_path, _ in search_paths:
+            mpnn_path = base_path / 'mpnn_design_stats.csv'
+            final_path = base_path / 'final_design_stats.csv'
+
+            if mpnn_path.exists() and mpnn_df is None:
+                mpnn_df = pd.read_csv(mpnn_path)
+                print(f"Loaded {len(mpnn_df)} MPNN designs from {mpnn_path}")
+
+            if final_path.exists() and final_df is None:
+                final_df = pd.read_csv(final_path)
+                print(f"Loaded {len(final_df)} accepted designs from {final_path}")
+
+        if mpnn_df is not None:
+            # Get design name column
+            design_col = 'Design' if 'Design' in mpnn_df.columns else 'design'
+
+            if final_df is not None and design_col in final_df.columns:
+                # Mark accepted vs rejected
+                accepted_designs = set(final_df[design_col].values)
+                mpnn_df['Status'] = mpnn_df[design_col].apply(
+                    lambda x: 'Accepted' if x in accepted_designs else 'Rejected'
+                )
+                n_accepted = (mpnn_df['Status'] == 'Accepted').sum()
+                n_rejected = (mpnn_df['Status'] == 'Rejected').sum()
+                print(f"Status: {n_accepted} Accepted, {n_rejected} Rejected")
+            else:
+                # No final stats, mark all as Unknown
+                mpnn_df['Status'] = 'Unknown'
+
+            return mpnn_df
+
+        # Fall back to regular loading if mpnn_design_stats not found
+        print("Warning: mpnn_design_stats.csv not found, falling back to regular loading")
+
+    # Regular loading (accepted only)
+    for csv_name in ['final_design_stats.csv', 'mpnn_design_stats.csv', 'trajectory_stats.csv']:
+        for base_path, _ in search_paths:
+            csv_path = base_path / csv_name
+            if csv_path.exists():
+                df = pd.read_csv(csv_path)
+                df['Status'] = 'Accepted'  # Default status
+                print(f"Loaded {len(df)} designs from {csv_path}")
+                return df
 
     raise FileNotFoundError(f"No design stats CSV found in {results_dir}")
 
@@ -121,6 +168,12 @@ def extract_metrics(df: pd.DataFrame) -> pd.DataFrame:
         metrics['Design'] = df['design']
     else:
         metrics['Design'] = [f'design_{i:03d}' for i in range(1, len(df) + 1)]
+
+    # Preserve Status column if present
+    if 'Status' in df.columns:
+        metrics['Status'] = df['Status']
+    else:
+        metrics['Status'] = 'Accepted'  # Default
 
     # pLDDT
     for col in ['Average_pLDDT', 'pLDDT', 'average_pLDDT']:
@@ -193,35 +246,71 @@ def calculate_composite_score(metrics: pd.DataFrame) -> np.ndarray:
 def plot_composite_score_distribution(metrics: pd.DataFrame, output_path: str = None):
     """
     Plot 1: Composite score distribution histogram.
+    Shows stacked histogram for accepted/rejected if status is available.
     """
     fig, ax = simple_ax(figsize=FIGSIZE)
 
     scores = calculate_composite_score(metrics)
-    mean_score = np.mean(scores)
+    status = metrics['Status'].values if 'Status' in metrics.columns else ['Accepted'] * len(metrics)
+    has_rejected = 'Rejected' in status
 
-    # Create histogram
     bins = np.linspace(0, 1, 11)
-    counts, bin_edges, patches = ax.hist(scores, bins=bins, color=CAT_PALETTE[0],
-                                          alpha=0.8, edgecolor='white', linewidth=1)
 
-    # Add count labels on bars
-    for count, patch in zip(counts, patches):
-        if count > 0:
-            x = patch.get_x() + patch.get_width() / 2
-            y = patch.get_height()
-            ax.text(x, y + 0.1, f'{int(count)}', ha='center', va='bottom', fontsize=10)
+    if has_rejected:
+        # Separate accepted and rejected scores
+        accepted_mask = np.array(status) == 'Accepted'
+        rejected_mask = np.array(status) == 'Rejected'
 
-    # Add threshold and mean lines
-    ax.axvline(x=0.6, color='green', linestyle='--', linewidth=2, label='Good threshold')
-    ax.axvline(x=mean_score, color='red', linestyle='-', linewidth=2, label=f'Mean ({mean_score:.2f})')
+        accepted_scores = scores[accepted_mask]
+        rejected_scores = scores[rejected_mask]
+
+        # Create stacked histogram
+        ax.hist([rejected_scores, accepted_scores], bins=bins, stacked=True,
+                color=['#d73027', '#1a9850'], alpha=0.8, edgecolor='white', linewidth=1,
+                label=['Rejected', 'Accepted'])
+
+        # Calculate means
+        mean_all = np.mean(scores)
+        mean_accepted = np.mean(accepted_scores) if len(accepted_scores) > 0 else 0
+        mean_rejected = np.mean(rejected_scores) if len(rejected_scores) > 0 else 0
+
+        # Add mean lines
+        ax.axvline(x=mean_accepted, color='darkgreen', linestyle='-', linewidth=2,
+                   label=f'Mean Accepted ({mean_accepted:.2f})')
+        ax.axvline(x=mean_rejected, color='darkred', linestyle=':', linewidth=2,
+                   label=f'Mean Rejected ({mean_rejected:.2f})')
+
+        # Add summary text
+        summary = f"Accepted: {len(accepted_scores)} | Rejected: {len(rejected_scores)}"
+        ax.text(0.98, 0.98, summary, transform=ax.transAxes, fontsize=10,
+                ha='right', va='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
+
+    else:
+        # Original single histogram
+        mean_score = np.mean(scores)
+        counts, bin_edges, patches = ax.hist(scores, bins=bins, color=CAT_PALETTE[0],
+                                              alpha=0.8, edgecolor='white', linewidth=1)
+
+        # Add count labels on bars
+        for count, patch in zip(counts, patches):
+            if count > 0:
+                x = patch.get_x() + patch.get_width() / 2
+                y = patch.get_height()
+                ax.text(x, y + 0.1, f'{int(count)}', ha='center', va='bottom', fontsize=10)
+
+        # Add mean line
+        ax.axvline(x=mean_score, color='red', linestyle='-', linewidth=2, label=f'Mean ({mean_score:.2f})')
+
+    # Add threshold line
+    ax.axvline(x=0.6, color='gray', linestyle='--', linewidth=2, label='Good threshold')
 
     # Add formula box
     formula = "Composite Score = 0.3×pLDDT(norm) + 0.3×pAE(inv,norm)\n+ 0.2×Interface(inv,norm) + 0.2×pTM"
-    ax.text(0.5, 0.15, formula, transform=ax.transAxes, fontsize=9,
+    ax.text(0.5, 0.02, formula, transform=ax.transAxes, fontsize=9,
             ha='center', va='bottom', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
 
-    ax.set_xlabel('Composite Quality Score (0.0-1.0)', fontsize=11)
-    ax.set_ylabel('Number of Designs (0-6)', fontsize=11)
+    ax.set_xlabel('Composite Quality Score (0.0-1.0)', fontsize=13)
+    ax.set_ylabel('Number of Designs', fontsize=13)
     ax.set_xlim(0, 1)
     ax.legend(loc='upper left', fontsize=9)
 
@@ -237,67 +326,34 @@ def plot_composite_score_distribution(metrics: pd.DataFrame, output_path: str = 
 def plot_quality_assessment(metrics: pd.DataFrame, output_path: str = None):
     """
     Plot 2: Quality assessment scatter plot (pLDDT vs Interface Score).
-    Colored by pAE, size by pTM.
+    All designs colored by composite score with uniform small dot size.
     """
     fig, ax = simple_ax(figsize=FIGSIZE_WIDE)
 
     # Get data
     plddt = metrics['pLDDT'].values if 'pLDDT' in metrics.columns else np.zeros(len(metrics))
     interface = metrics['Interface'].values if 'Interface' in metrics.columns else np.zeros(len(metrics))
-    pae = metrics['pAE'].values if 'pAE' in metrics.columns else np.ones(len(metrics)) * 5
-    ptm = metrics['pTM'].values if 'pTM' in metrics.columns else np.ones(len(metrics)) * 0.5
 
-    # Calculate composite score for coloring
+    # Calculate composite score
     composite = calculate_composite_score(metrics)
 
-    # Create size based on pAE (lower pAE = larger marker)
-    sizes = 100 + (10 - pae) * 50  # Scale sizes
-    sizes = np.clip(sizes, 50, 400)
+    # Small uniform dot size for clean appearance
+    dot_size = 60
 
-    # Color by composite score
-    scatter = ax.scatter(interface, plddt, c=composite, s=sizes, cmap=RYG_CMAP,
-                        alpha=0.8, edgecolors='white', linewidth=1, vmin=0, vmax=1)
+    # Plot all designs colored by composite score
+    scatter = ax.scatter(interface, plddt, c=composite, s=dot_size, cmap=RYG_CMAP,
+                        alpha=0.85, edgecolors='white', linewidth=0.8, vmin=0, vmax=1)
 
-    # Add labels for designs
-    for i, (x, y) in enumerate(zip(interface, plddt)):
-        design_name = metrics['Design'].iloc[i] if 'Design' in metrics.columns else f'{i+1:03d}'
-        # Shorten name
-        short_name = design_name.split('_')[-1] if '_' in str(design_name) else str(design_name)
-        ax.annotate(short_name, (x, y), xytext=(5, 5), textcoords='offset points', fontsize=8)
-
-    # Mark best design
-    best_idx = np.argmax(composite)
-    ax.annotate('Best', (interface[best_idx], plddt[best_idx]),
-                xytext=(10, -10), textcoords='offset points',
-                fontsize=10, fontweight='bold', color='darkgreen')
+    # Add colorbar
+    cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
+    cbar.set_label('Quality Score', fontsize=12)
 
     # Add threshold lines
     ax.axhline(y=THRESHOLDS['pLDDT'], color='gray', linestyle='--', linewidth=1.5, alpha=0.7)
     ax.axvline(x=THRESHOLDS['Interface'], color='gray', linestyle='--', linewidth=1.5, alpha=0.7)
 
-    # Shade good regions
-    ax.fill_between([ax.get_xlim()[0], THRESHOLDS['Interface']], THRESHOLDS['pLDDT'], 100,
-                    color='green', alpha=0.1, label='Good region')
-
-    # Add text labels for regions
-    ax.text(0.02, 0.98, 'Good Structure', transform=ax.transAxes, fontsize=9,
-            ha='left', va='top', style='italic', color='gray')
-    ax.text(0.98, 0.5, 'Good\nInterface', transform=ax.transAxes, fontsize=9,
-            ha='right', va='center', style='italic', color='gray', rotation=90)
-
-    # Colorbar
-    cbar = plt.colorbar(scatter, ax=ax, shrink=0.8, label='Quality Score')
-
-    # Legend for sizes
-    legend_elements = [
-        plt.scatter([], [], s=100, c='gray', alpha=0.5, label='2Å (pAE)'),
-        plt.scatter([], [], s=200, c='gray', alpha=0.5, label='5Å (pAE)'),
-        plt.scatter([], [], s=300, c='gray', alpha=0.5, label='8Å (pAE)'),
-    ]
-    ax.legend(handles=legend_elements, loc='lower right', fontsize=8, title='pAE')
-
-    ax.set_xlabel('Interface Score (REU)', fontsize=11)
-    ax.set_ylabel('pLDDT Score', fontsize=11)
+    ax.set_xlabel('Interface Score (REU)', fontsize=13)
+    ax.set_ylabel('pLDDT Score', fontsize=13)
 
     plt.tight_layout()
 
@@ -313,9 +369,7 @@ def plot_normalized_heatmap(metrics: pd.DataFrame, output_path: str = None):
     Plot 3: Normalized metrics heatmap.
     Shows pLDDT, pAE(inv), Interface(inv), pTM for each design.
     """
-    fig, ax = plt.subplots(figsize=FIGSIZE_WIDE)
-
-    # Prepare data
+    # Prepare data first to determine dimensions
     n_designs = len(metrics)
     design_labels = [str(i+1).zfill(3) for i in range(n_designs)]
 
@@ -342,12 +396,20 @@ def plot_normalized_heatmap(metrics: pd.DataFrame, output_path: str = None):
 
     if 'pTM' in metrics.columns:
         data.append(metrics['pTM'].values)
-        row_labels.append('pTM\n(higher is better)')
+        row_labels.append('pTM')
 
     data = np.array(data)
+    n_rows = len(row_labels)
 
-    # Create heatmap
-    im = ax.imshow(data, cmap=RYG_CMAP, aspect='auto', vmin=0, vmax=1)
+    # Calculate figure size to make heatmap region square
+    # Each cell should be square, so width/height ratio = n_designs/n_rows
+    cell_size = 0.6  # Size of each cell in inches
+    fig_width = n_designs * cell_size + 2.5  # Extra space for labels and colorbar
+    fig_height = n_rows * cell_size + 1.5  # Extra space for labels
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+
+    # Create heatmap with square cells
+    im = ax.imshow(data, cmap=RYG_CMAP, aspect='equal', vmin=0, vmax=1)
 
     # Add text annotations
     for i in range(len(row_labels)):
@@ -377,9 +439,9 @@ def plot_normalized_heatmap(metrics: pd.DataFrame, output_path: str = None):
 
 def plot_metrics_statistics_table(metrics: pd.DataFrame, output_path: str = None):
     """
-    Plot 4: Metrics statistics table (Mean, Std, Min, Max, Pass Rate).
+    Plot 4: Metrics statistics table (Mean, Std, Min, Max).
     """
-    fig, ax = plt.subplots(figsize=(7, 3))
+    fig, ax = plt.subplots(figsize=(6, 3))
     ax.axis('off')
 
     # Calculate statistics
@@ -394,22 +456,14 @@ def plot_metrics_statistics_table(metrics: pd.DataFrame, output_path: str = None
             min_val = np.min(values)
             max_val = np.max(values)
 
-            # Calculate pass rate
-            threshold = THRESHOLDS.get(metric, 0)
-            if metric in ['pLDDT', 'pTM']:
-                pass_count = np.sum(values >= threshold)
-            else:  # pAE and Interface (lower is better)
-                pass_count = np.sum(values <= threshold)
-            pass_rate = f"{100*pass_count/len(values):.0f}% ({pass_count}/{len(values)})"
-
             stats_data.append([metric, f'{mean_val:.1f}', f'{std_val:.1f}',
-                              f'{min_val:.1f}', f'{max_val:.1f}', pass_rate])
+                              f'{min_val:.1f}', f'{max_val:.1f}'])
 
-    # Create table
-    col_labels = ['Metric', 'Mean', 'Std', 'Min', 'Max', 'Pass Rate']
+    # Create table without pass rate
+    col_labels = ['Metric', 'Mean', 'Std', 'Min', 'Max']
     table = ax.table(cellText=stats_data, colLabels=col_labels,
                      loc='center', cellLoc='center',
-                     colWidths=[0.15, 0.12, 0.12, 0.12, 0.12, 0.18])
+                     colWidths=[0.18, 0.15, 0.15, 0.15, 0.15])
 
     # Style table
     table.auto_set_font_size(False)
@@ -438,7 +492,7 @@ def plot_metrics_statistics_table(metrics: pd.DataFrame, output_path: str = None
 
 def plot_quality_boxplot(metrics: pd.DataFrame, output_path: str = None):
     """
-    Plot 5: Quality statistics boxplot with threshold lines.
+    Plot 5: Quality statistics boxplot with threshold lines and outliers.
     """
     fig, axes = plt.subplots(1, 4, figsize=(10, 4))
 
@@ -453,18 +507,19 @@ def plot_quality_boxplot(metrics: pd.DataFrame, output_path: str = None):
         if metric in metrics.columns:
             data = metrics[metric].values
 
-            # Create boxplot
-            bp = ax.boxplot(data, patch_artist=True, widths=0.6)
+            # Create boxplot with outliers shown (showfliers=True is default)
+            bp = ax.boxplot(data, patch_artist=True, widths=0.6, showfliers=True,
+                           flierprops=dict(marker='o', markerfacecolor='red', markersize=6,
+                                          markeredgecolor='darkred', alpha=0.7))
             bp['boxes'][0].set_facecolor(CAT_PALETTE[0])
             bp['boxes'][0].set_alpha(0.7)
 
             # Add threshold line
             ax.axhline(y=threshold, color='green', linestyle='--', linewidth=2, alpha=0.8)
 
-            # Style
+            # Style - only show metric name on x-axis, no y-axis label
             ax.set_xlabel(label, fontsize=11)
-            ax.set_ylabel(label, fontsize=11)
-            ax.set_xticklabels([label])
+            ax.set_xticklabels([''])  # Empty x-tick label since xlabel shows metric
             prettify_ax(ax)
         else:
             ax.text(0.5, 0.5, f'No {metric} data', ha='center', va='center', transform=ax.transAxes)
@@ -490,22 +545,16 @@ def plot_sasa_vs_binding_energy(metrics: pd.DataFrame, output_path: str = None):
     binding_energy = metrics['BindingEnergy'].values if 'BindingEnergy' in metrics.columns else metrics['Interface'].values
     plddt = metrics['pLDDT'].values if 'pLDDT' in metrics.columns else np.ones(len(metrics)) * 80
 
-    # Create scatter plot
+    # Create scatter plot with smaller dots
     scatter = ax.scatter(sasa, binding_energy, c=plddt, cmap='plasma',
-                        s=100, alpha=0.8, edgecolors='white', linewidth=1)
-
-    # Add design labels
-    for i, (x, y) in enumerate(zip(sasa, binding_energy)):
-        design_name = metrics['Design'].iloc[i] if 'Design' in metrics.columns else f'{i+1:03d}'
-        short_name = design_name.split('_')[-1] if '_' in str(design_name) else str(design_name)[-3:]
-        ax.annotate(short_name, (x, y), xytext=(5, 5), textcoords='offset points', fontsize=9)
+                        s=60, alpha=0.85, edgecolors='white', linewidth=0.8)
 
     # Colorbar
     cbar = plt.colorbar(scatter, ax=ax, shrink=0.8)
-    cbar.set_label('pLDDT', fontsize=10)
+    cbar.set_label('pLDDT', fontsize=12)
 
-    ax.set_xlabel('Interface Buried SASA (μ)', fontsize=11)
-    ax.set_ylabel('Binding Energy (REU)', fontsize=11)
+    ax.set_xlabel('Interface SASA', fontsize=13)
+    ax.set_ylabel('Binding Energy (REU)', fontsize=13)
 
     plt.tight_layout()
 
@@ -518,46 +567,61 @@ def plot_sasa_vs_binding_energy(metrics: pd.DataFrame, output_path: str = None):
 
 def plot_top5_designs_table(metrics: pd.DataFrame, output_path: str = None):
     """
-    Plot 7: Top 5 designs table.
+    Plot 7: Top 5 designs table with Accepted/Rejected status.
+    Ranks by: 1) Status (Accepted first), 2) i_pTM (interface pTM, key binding metric).
     """
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(10, 4))
     ax.axis('off')
 
-    # Calculate composite scores and rank
-    composite = calculate_composite_score(metrics)
+    # Get metrics for ranking
+    status = metrics['Status'].values if 'Status' in metrics.columns else ['Accepted'] * len(metrics)
+    plddt = metrics['pLDDT'].values if 'pLDDT' in metrics.columns else np.zeros(len(metrics))
+    interface = metrics['Interface'].values if 'Interface' in metrics.columns else np.zeros(len(metrics))
+
+    # Create ranking score: Status first (Accepted=0, Rejected=1), then by pLDDT+Interface ensemble
+    status_score = np.array([0 if s == 'Accepted' else 1 for s in status])
+
+    # Calculate ensemble rank within each status group (higher pLDDT better, lower interface better)
+    plddt_rank = np.argsort(np.argsort(-plddt))  # Rank 0 = highest pLDDT
+    interface_rank = np.argsort(np.argsort(interface))  # Rank 0 = lowest (best) interface
+    ensemble_rank = (plddt_rank + interface_rank) / 2
+
+    # Combined rank: status * 1000 + ensemble_rank (ensures accepted designs come first)
+    combined_rank = status_score * 1000 + ensemble_rank
+
     n_designs = min(5, len(metrics))  # Top 5 or all if fewer
-    ranked_indices = np.argsort(composite)[::-1][:n_designs]
+    ranked_indices = np.argsort(combined_rank)[:n_designs]
 
     # Prepare table data
     table_data = []
     colors = []
     for rank, idx in enumerate(ranked_indices, 1):
         design = metrics['Design'].iloc[idx] if 'Design' in metrics.columns else f'design_{idx+1:03d}'
-        interface = metrics['Interface'].iloc[idx] if 'Interface' in metrics.columns else 0
-        plddt = metrics['pLDDT'].iloc[idx] if 'pLDDT' in metrics.columns else 0
-        pae = metrics['pAE'].iloc[idx] if 'pAE' in metrics.columns else 0
+        interface_val = metrics['Interface'].iloc[idx] if 'Interface' in metrics.columns else 0
+        plddt_val = metrics['pLDDT'].iloc[idx] if 'pLDDT' in metrics.columns else 0
+        pae_val = metrics['pAE'].iloc[idx] if 'pAE' in metrics.columns else 0
+        ptm_val = metrics['pTM'].iloc[idx] if 'pTM' in metrics.columns else 0
 
-        # Determine status based on metrics
-        if plddt >= 85 and pae <= 3:
-            status = 'Excellent'
-            row_color = ['#90EE90'] * 6  # Light green
-        elif plddt >= 75:
-            status = 'Good'
-            row_color = ['#98FB98'] * 6  # Pale green
+        # Get actual Accepted/Rejected status from data
+        design_status = status[idx]
+
+        # Color based on status
+        if design_status == 'Accepted':
+            row_color = ['#90EE90'] * 7  # Light green for accepted
         else:
-            status = 'Acceptable'
-            row_color = ['#FFE4B5'] * 6  # Moccasin
+            row_color = ['#FFB6C1'] * 7  # Light red/pink for rejected
 
-        table_data.append([rank, design, f'{interface:.1f}', f'{plddt:.1f}', f'{pae:.1f}', status])
+        table_data.append([rank, design, f'{plddt_val:.1f}', f'{interface_val:.1f}',
+                          f'{pae_val:.2f}', f'{ptm_val:.2f}', design_status])
         colors.append(row_color)
 
-    # Create table
-    col_labels = ['Rank', 'Design', 'Interface', 'pLDDT', 'pAE', 'Status']
+    # Create table with all metrics
+    col_labels = ['#', 'Design', 'pLDDT', 'Interface', 'pAE', 'pTM', 'Status']
 
     table = ax.table(cellText=table_data, colLabels=col_labels,
                      loc='center', cellLoc='center',
                      cellColours=colors,
-                     colWidths=[0.08, 0.25, 0.13, 0.1, 0.08, 0.15])
+                     colWidths=[0.06, 0.28, 0.10, 0.12, 0.10, 0.10, 0.12])
 
     # Style table
     table.auto_set_font_size(False)
@@ -640,8 +704,8 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
     Returns:
         matplotlib.figure.Figure: The merged figure
     """
-    # Create figure with 2 rows x 4 columns
-    fig = plt.figure(figsize=(20, 10))
+    # Create figure with 2 rows x 4 columns (16x8 inches for better proportions)
+    fig = plt.figure(figsize=(16, 8))
 
     # Panel titles
     panel_titles = [
@@ -658,34 +722,47 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
     # --- Panel A: Composite Score Distribution ---
     ax1 = fig.add_subplot(2, 4, 1)
     scores = calculate_composite_score(metrics)
-    mean_score = np.mean(scores)
+    status = metrics['Status'].values if 'Status' in metrics.columns else ['Accepted'] * len(metrics)
+    has_rejected = 'Rejected' in status
     bins = np.linspace(0, 1, 11)
-    counts, bin_edges, patches = ax1.hist(scores, bins=bins, color=CAT_PALETTE[0],
-                                          alpha=0.8, edgecolor='white', linewidth=1)
-    for count, patch in zip(counts, patches):
-        if count > 0:
-            x = patch.get_x() + patch.get_width() / 2
-            y = patch.get_height()
-            ax1.text(x, y + 0.1, f'{int(count)}', ha='center', va='bottom', fontsize=8)
-    ax1.axvline(x=0.6, color='green', linestyle='--', linewidth=1.5, label='Good threshold')
-    ax1.axvline(x=mean_score, color='red', linestyle='-', linewidth=1.5, label=f'Mean ({mean_score:.2f})')
+
+    if has_rejected:
+        # Stacked histogram for accepted/rejected
+        accepted_mask = np.array(status) == 'Accepted'
+        rejected_mask = np.array(status) == 'Rejected'
+        accepted_scores = scores[accepted_mask]
+        rejected_scores = scores[rejected_mask]
+        ax1.hist([rejected_scores, accepted_scores], bins=bins, stacked=True,
+                color=['#d73027', '#1a9850'], alpha=0.8, edgecolor='white', linewidth=1,
+                label=['Rejected', 'Accepted'])
+        mean_accepted = np.mean(accepted_scores) if len(accepted_scores) > 0 else 0
+        mean_rejected = np.mean(rejected_scores) if len(rejected_scores) > 0 else 0
+        ax1.axvline(x=mean_accepted, color='darkgreen', linestyle='-', linewidth=1.5,
+                   label=f'Acc. ({mean_accepted:.2f})')
+        ax1.axvline(x=mean_rejected, color='darkred', linestyle=':', linewidth=1.5,
+                   label=f'Rej. ({mean_rejected:.2f})')
+    else:
+        mean_score = np.mean(scores)
+        ax1.hist(scores, bins=bins, color=CAT_PALETTE[0], alpha=0.8, edgecolor='white', linewidth=1)
+        ax1.axvline(x=mean_score, color='red', linestyle='-', linewidth=1.5, label=f'Mean ({mean_score:.2f})')
+
+    ax1.axvline(x=0.6, color='gray', linestyle='--', linewidth=1.5, label='Threshold')
     ax1.set_xlabel('Composite Quality Score', fontsize=9)
     ax1.set_ylabel('Number of Designs', fontsize=9)
     ax1.set_xlim(0, 1)
-    ax1.legend(loc='upper left', fontsize=7)
+    ax1.legend(loc='upper left', fontsize=6)
     ax1.set_title(panel_titles[0], fontsize=10, fontweight='bold', loc='left')
     prettify_ax(ax1)
 
-    # --- Panel B: Quality Assessment ---
+    # --- Panel B: Quality Assessment (small uniform dots) ---
     ax2 = fig.add_subplot(2, 4, 2)
     plddt = metrics['pLDDT'].values if 'pLDDT' in metrics.columns else np.zeros(len(metrics))
     interface = metrics['Interface'].values if 'Interface' in metrics.columns else np.zeros(len(metrics))
     composite = calculate_composite_score(metrics)
-    pae = metrics['pAE'].values if 'pAE' in metrics.columns else np.ones(len(metrics)) * 5
-    sizes = 50 + (10 - pae) * 30
-    sizes = np.clip(sizes, 30, 250)
-    scatter2 = ax2.scatter(interface, plddt, c=composite, s=sizes, cmap=RYG_CMAP,
-                          alpha=0.8, edgecolors='white', linewidth=0.5, vmin=0, vmax=1)
+    # Small uniform dot size for clean appearance
+    dot_size = 40
+    scatter2 = ax2.scatter(interface, plddt, c=composite, s=dot_size, cmap=RYG_CMAP,
+                          alpha=0.85, edgecolors='white', linewidth=0.5, vmin=0, vmax=1)
     ax2.axhline(y=THRESHOLDS['pLDDT'], color='gray', linestyle='--', linewidth=1, alpha=0.7)
     ax2.axvline(x=THRESHOLDS['Interface'], color='gray', linestyle='--', linewidth=1, alpha=0.7)
     ax2.set_xlabel('Interface Score (REU)', fontsize=9)
@@ -729,7 +806,7 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
     ax3.set_yticklabels(row_labels, fontsize=8)
     ax3.set_title(panel_titles[2], fontsize=10, fontweight='bold', loc='left')
 
-    # --- Panel D: Metrics Statistics Table ---
+    # --- Panel D: Metrics Statistics Table (no pass rate) ---
     ax4 = fig.add_subplot(2, 4, 4)
     ax4.axis('off')
     stats_data = []
@@ -741,18 +818,12 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
             std_val = np.std(values)
             min_val = np.min(values)
             max_val = np.max(values)
-            threshold = THRESHOLDS.get(metric, 0)
-            if metric in ['pLDDT', 'pTM']:
-                pass_count = np.sum(values >= threshold)
-            else:
-                pass_count = np.sum(values <= threshold)
-            pass_rate = f"{100*pass_count/len(values):.0f}%"
             stats_data.append([metric, f'{mean_val:.1f}', f'{std_val:.1f}',
-                              f'{min_val:.1f}', f'{max_val:.1f}', pass_rate])
-    col_labels = ['Metric', 'Mean', 'Std', 'Min', 'Max', 'Pass']
+                              f'{min_val:.1f}', f'{max_val:.1f}'])
+    col_labels = ['Metric', 'Mean', 'Std', 'Min', 'Max']
     table4 = ax4.table(cellText=stats_data, colLabels=col_labels,
                        loc='center', cellLoc='center',
-                       colWidths=[0.18, 0.14, 0.14, 0.14, 0.14, 0.14])
+                       colWidths=[0.20, 0.16, 0.16, 0.16, 0.16])
     table4.auto_set_font_size(False)
     table4.set_fontsize(9)
     table4.scale(1.0, 1.6)
@@ -761,7 +832,7 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
         table4[(0, j)].set_text_props(color='white', fontweight='bold')
     ax4.set_title(panel_titles[3], fontsize=10, fontweight='bold', loc='left')
 
-    # --- Panel E: Quality Boxplot ---
+    # --- Panel E: Quality Boxplot (with outliers) ---
     ax5 = fig.add_subplot(2, 4, 5)
     metric_data = []
     metric_labels = []
@@ -770,13 +841,14 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
             metric_data.append(metrics[metric].values)
             metric_labels.append(metric)
     if metric_data:
-        bp = ax5.boxplot(metric_data, patch_artist=True)
+        bp = ax5.boxplot(metric_data, patch_artist=True, showfliers=True,
+                        flierprops=dict(marker='o', markerfacecolor='red', markersize=4,
+                                       markeredgecolor='darkred', alpha=0.7))
         colors = [CAT_PALETTE[i % len(CAT_PALETTE)] for i in range(len(metric_data))]
         for patch, color in zip(bp['boxes'], colors):
             patch.set_facecolor(color)
             patch.set_alpha(0.7)
         ax5.set_xticklabels(metric_labels, fontsize=8)
-        ax5.set_ylabel('Value', fontsize=9)
     ax5.set_title(panel_titles[4], fontsize=10, fontweight='bold', loc='left')
     prettify_ax(ax5)
 
@@ -792,12 +864,21 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
     ax6.set_title(panel_titles[5], fontsize=10, fontweight='bold', loc='left')
     prettify_ax(ax6)
 
-    # --- Panel G: Top 5 Designs Table ---
+    # --- Panel G: Top 5 Designs Table (Status first, then pLDDT+Interface ensemble) ---
     ax7 = fig.add_subplot(2, 4, 7)
     ax7.axis('off')
-    composite = calculate_composite_score(metrics)
+    # Get metrics for ranking
+    status_arr = metrics['Status'].values if 'Status' in metrics.columns else ['Accepted'] * len(metrics)
+    plddt_vals = metrics['pLDDT'].values if 'pLDDT' in metrics.columns else np.zeros(len(metrics))
+    interface_vals = metrics['Interface'].values if 'Interface' in metrics.columns else np.zeros(len(metrics))
+    # Create ranking: Status first (Accepted=0, Rejected=1), then ensemble rank
+    status_score = np.array([0 if s == 'Accepted' else 1 for s in status_arr])
+    plddt_rank = np.argsort(np.argsort(-plddt_vals))
+    interface_rank = np.argsort(np.argsort(interface_vals))
+    ensemble_rank = (plddt_rank + interface_rank) / 2
+    combined_rank = status_score * 1000 + ensemble_rank
     n_top = min(5, len(metrics))
-    ranked_indices = np.argsort(composite)[::-1][:n_top]
+    ranked_indices = np.argsort(combined_rank)[:n_top]
     table_data = []
     colors = []
     for rank, idx in enumerate(ranked_indices, 1):
@@ -805,19 +886,16 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
         short_name = str(design).split('_')[-1] if '_' in str(design) else str(design)[-10:]
         interface = metrics['Interface'].iloc[idx] if 'Interface' in metrics.columns else 0
         plddt = metrics['pLDDT'].iloc[idx] if 'pLDDT' in metrics.columns else 0
-        pae = metrics['pAE'].iloc[idx] if 'pAE' in metrics.columns else 0
-        if plddt >= 85 and pae <= 3:
-            status = 'Excellent'
-            row_color = ['#90EE90'] * 5
-        elif plddt >= 75:
-            status = 'Good'
-            row_color = ['#98FB98'] * 5
+        # Get actual Accepted/Rejected status from data
+        status = status_arr[idx]
+        # Color based on status
+        if status == 'Accepted':
+            row_color = ['#90EE90'] * 5  # Light green for accepted
         else:
-            status = 'Acceptable'
-            row_color = ['#FFE4B5'] * 5
-        table_data.append([rank, short_name, f'{interface:.1f}', f'{plddt:.1f}', status])
+            row_color = ['#FFB6C1'] * 5  # Light red/pink for rejected
+        table_data.append([rank, short_name, f'{plddt:.1f}', f'{interface:.1f}', status])
         colors.append(row_color)
-    col_labels = ['#', 'Design', 'dG', 'pLDDT', 'Status']
+    col_labels = ['#', 'Design', 'pLDDT', 'dG', 'Status']
     table7 = ax7.table(cellText=table_data, colLabels=col_labels,
                        loc='center', cellLoc='center', cellColours=colors,
                        colWidths=[0.08, 0.3, 0.15, 0.15, 0.2])
@@ -848,17 +926,19 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
         ax8.set_yticklabels(available_cols, fontsize=8)
     ax8.set_title(panel_titles[7], fontsize=10, fontweight='bold', loc='left')
 
-    plt.tight_layout()
+    # Adjust spacing between panels
+    plt.subplots_adjust(left=0.05, right=0.98, top=0.95, bottom=0.08, wspace=0.25, hspace=0.3)
 
     if output_path:
-        fig.savefig(output_path + ".png", dpi=150, bbox_inches='tight')
-        fig.savefig(output_path + ".pdf", dpi=300, bbox_inches='tight')
+        fig.savefig(output_path + ".png", dpi=200, bbox_inches='tight', facecolor='white')
+        fig.savefig(output_path + ".pdf", dpi=300, bbox_inches='tight', facecolor='white')
         print(f"Saved merged figure: {output_path}.png and {output_path}.pdf")
 
     return fig
 
 
-def create_all_figures(results_dir: str, output_prefix: str = None, merged: bool = True) -> List[str]:
+def create_all_figures(results_dir: str, output_prefix: str = None, merged: bool = True,
+                       include_rejected: bool = False) -> List[str]:
     """
     Create all eight visualization figures.
 
@@ -866,20 +946,25 @@ def create_all_figures(results_dir: str, output_prefix: str = None, merged: bool
         results_dir: Path to results directory
         output_prefix: Path prefix for saving (without extension)
         merged: If True, also generate a merged figure with all 8 panels
+        include_rejected: If True, include rejected designs in visualizations
 
     Returns:
         list: Paths to saved figures
     """
     results_dir = Path(results_dir)
 
+    # Create figures subdirectory
+    figures_dir = results_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
     if output_prefix is None:
-        output_prefix = str(results_dir / "binder_design")
+        output_prefix = str(figures_dir / "binder_design")
 
     # Set publication-quality plot context
     set_pub_plot_context(context="talk")
 
     # Load data
-    df = load_design_data(results_dir)
+    df = load_design_data(results_dir, include_rejected=include_rejected)
     metrics = extract_metrics(df)
 
     if len(metrics) == 0:
@@ -1040,22 +1125,125 @@ def display_results(results_dir: str, show_all: bool = True, block: bool = True)
     return figures
 
 
+def show_summary_figure(results_dir: str, output_prefix: str = None, block: bool = True) -> plt.Figure:
+    """
+    Display the merged summary figure interactively.
+
+    This function shows the generated summary figure either inline (Jupyter/IPython)
+    or in a GUI window (terminal/script).
+
+    Args:
+        results_dir: Path to results directory containing the generated figures
+        output_prefix: Output prefix used when generating figures (default: results_dir/binder_design)
+        block: If True (default), block until figure window is closed. If False, continue execution.
+
+    Returns:
+        matplotlib.figure.Figure: The figure object for further customization
+
+    Usage:
+        # From terminal/script:
+        python -c "from binder_design_viz import show_summary_figure; show_summary_figure('/path/to/results')"
+
+        # In Jupyter notebook:
+        from binder_design_viz import show_summary_figure
+        fig = show_summary_figure("/path/to/results")
+
+        # After create_all_figures:
+        create_all_figures("/path/to/results")
+        show_summary_figure("/path/to/results")
+    """
+    results_dir = Path(results_dir)
+    figures_dir = results_dir / "figures"
+
+    if output_prefix is None:
+        output_prefix = str(figures_dir / "binder_design")
+
+    summary_path = Path(f"{output_prefix}_summary.png")
+
+    # Also check in results_dir for backward compatibility
+    if not summary_path.exists():
+        alt_path = results_dir / "binder_design_summary.png"
+        if alt_path.exists():
+            summary_path = alt_path
+
+    if not summary_path.exists():
+        print(f"Summary figure not found at {summary_path}")
+        print("Run create_all_figures() first to generate the figures.")
+        return None
+
+    # Check if we're in an interactive notebook environment
+    in_notebook = False
+    try:
+        from IPython import get_ipython
+        ipython = get_ipython()
+        if ipython is not None and 'IPKernelApp' in ipython.config:
+            in_notebook = True
+    except (ImportError, AttributeError):
+        pass
+
+    if in_notebook:
+        # Display in notebook using IPython
+        from IPython.display import display, Image as IPImage
+        print("Binder Design Summary:")
+        display(IPImage(filename=str(summary_path)))
+        return None
+    else:
+        # Display in GUI window for terminal/script usage
+        import matplotlib
+        # Switch to an interactive backend for GUI display
+        try:
+            matplotlib.use('TkAgg')
+        except:
+            try:
+                matplotlib.use('Qt5Agg')
+            except:
+                pass  # Fall back to default
+
+        import matplotlib.pyplot as plt
+        from PIL import Image
+
+        # Enable interactive mode
+        plt.ion()
+
+        # Load and display the summary image
+        img = Image.open(summary_path)
+
+        fig, ax = plt.subplots(figsize=(16, 8))
+        ax.imshow(img)
+        ax.axis('off')
+        ax.set_title('Binder Design Summary', fontsize=14, fontweight='bold')
+
+        plt.tight_layout()
+        plt.show(block=block)
+
+        return fig
+
+
 def main():
     parser = argparse.ArgumentParser(description='Generate binder design visualization')
     parser.add_argument('results_dir', type=str, help='Path to results directory')
     parser.add_argument('--output', '-o', type=str, default=None,
                         help='Output prefix (default: results_dir/binder_design)')
     parser.add_argument('--display', '-d', action='store_true',
-                        help='Display results after generation')
+                        help='Display summary figure after generation')
+    parser.add_argument('--accepted-only', '-a', action='store_true',
+                        help='Only show accepted designs (default: include all designs)')
 
     args = parser.parse_args()
 
-    output_files = create_all_figures(args.results_dir, args.output)
+    include_rejected = not args.accepted_only
+
+    output_files = create_all_figures(args.results_dir, args.output,
+                                      include_rejected=include_rejected)
 
     if output_files:
         print(f"\nVisualization complete!")
+        if include_rejected:
+            print("(Including both accepted and rejected designs)")
+        else:
+            print("(Showing accepted designs only)")
         if args.display:
-            display_results(args.results_dir)
+            show_summary_figure(args.results_dir, args.output)
     else:
         print("\nVisualization failed")
         exit(1)
