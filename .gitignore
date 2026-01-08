@@ -14,3 +14,5 @@ examples/
 public/
 mcp.status
 .pytest_cache/
+tool_mcps
+tool_mcps/
