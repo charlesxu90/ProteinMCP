@@ -2,6 +2,45 @@
 
 ## MCP servers developed in ProteinMCP
 
+### Structure Prediction
+* [AlphaFold2 MCP](https://github.com/Biomolecular-Design-Nexus/alphafold2_mcp): protein structure prediction, supporting complex and batch predictions.
+* [AlphaFold3 MCP](https://github.com/Biomolecular-Design-Nexus/alphafold3_mcp): protein structure prediction, supporting batch prediction.
+* [Boltz MCP](https://github.com/Biomolecular-Design-Nexus/boltz_mcp): Boltz2 for protein structure and affinity prediction.
+* [Chai-1 MCP](https://github.com/Biomolecular-Design-Nexus/chai1_mcp): Chai-1 for protein structure prediction.
+* [ESMFold MCP](https://github.com/Biomolecular-Design-Nexus/esmfold_mcp): ESMFold for protein structure prediction.
+
+### Protein Design
+* [ProteinMPNN MCP](https://github.com/Biomolecular-Design-Nexus/proteinmpnn_mcp): ProteinMPNN for protein design (inverse folding).
+* [LigandMPNN MCP](https://github.com/Biomolecular-Design-Nexus/ligandmpnn_mcp): LigandMPNN for ligand-aware scaffold-based sequence generation (inverse folding).
+* [RFdiffusion2 MCP](https://github.com/Biomolecular-Design-Nexus/rfdiffusion2_mcp): RFdiffusion2 for protein structure generation (backbone).
+* [Rosetta MCP](https://github.com/Biomolecular-Design-Nexus/rosetta_mcp): Rosetta molecular modeling and protein design suite.
+
+### Binder Design
+* [BindCraft MCP](https://github.com/Biomolecular-Design-Nexus/bindcraft_mcp): BindCraft for protein binder design.
+* [BoltzGen MCP](https://github.com/Biomolecular-Design-Nexus/boltzgen_mcp): BoltzGen for protein binder design.
+
+### Molecular Dynamics
+* [AMBER MCP](https://github.com/Biomolecular-Design-Nexus/amber_mcp): AMBER for MD simulations and analysis.
+* [GROMACS MCP](https://github.com/Biomolecular-Design-Nexus/gromacs_mcp): GROMACS 2025.4 for molecular dynamics simulations.
+
+### Fitness Modeling & Mutation Prediction
+* [ESM MCP](https://github.com/Biomolecular-Design-Nexus/esm_mcp): ESM for protein embedding and fitness modeling.
+* [EV+Onehot MCP](https://github.com/Biomolecular-Design-Nexus/ev_onehot_mcp): protein fitness prediction combining evolutionary coupling and one-hot encoding.
+* [MutCompute MCP](https://github.com/Biomolecular-Design-Nexus/mutcompute_mcp): MutCompute for protein mutation effect prediction.
+* [PLMC MCP](https://github.com/Biomolecular-Design-Nexus/plmc_mcp): evolutionary coupling analysis using PLMC for protein fitness prediction.
+* [ProtTrans MCP](https://github.com/Biomolecular-Design-Nexus/prottrans_mcp): ProtTrans for protein embeddings and fitness modeling prediction.
+
+### Sequence Analysis
+* [MMseqs2 MCP](https://github.com/Biomolecular-Design-Nexus/mmseqs2_mcp): sequence search, clustering, and MSA generation using MMseqs2.
+* [MSA MCP](https://github.com/Biomolecular-Design-Nexus/msa_mcp): generate Multiple Sequence Alignments (MSA) using ColabFold server.
+* [InterPro MCP](https://github.com/Biomolecular-Design-Nexus/interpro_mcp): InterProScan for protein domain and functional analysis.
+
+### Immunology (MHC Binding Prediction)
+* [NetMHCpan MCP](https://github.com/Biomolecular-Design-Nexus/netmhcpan_mcp): NetMHCpan-4.2 for MHC Class I binding prediction.
+* [NetMHCIIpan MCP](https://github.com/Biomolecular-Design-Nexus/netmhc2pan_mcp): NetMHCIIpan-4.3 for MHC Class II binding prediction.
+
+### Other Tools
+* [Protein-Sol MCP](https://github.com/Biomolecular-Design-Nexus/protein_sol_mcp): Protein-Sol for protein solubility prediction.
 
 ## Public MCP servers
 ### [Augmented Nature](https://github.com/Augmented-Nature)
