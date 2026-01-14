@@ -16,6 +16,30 @@ pip install -e .
 
 Please find the 38 supported MCPS in [the MCP list](./tool-mcps/README.md).
 
+## Quick Start:
+```shell
+# Install a workflow
+pskill install fitness_modeling
+
+claude
+> /fitness-model 
+  ⎿  Read workflow-skills/scripts/timing_helper.py (167 lines)
+  ⎿  Read workflow-skills/scripts/fitness_modeling_viz.py (1107 lines)
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+←  ☐ Protein name  ☐ Data location  ☐ Output dir  ☐ Backbones  ✔ Submit  →
+
+What is the name of your protein (used for naming output files)?
+
+❯ 1. TEVp_S219V
+     Example protein from case3_fitness_modeling
+  2. Custom name
+     I'll provide my own protein name
+  3. Type something.
+
+> 1 # choose 1 for all selections and submit.
+```
+
 ## Usage:
 
 ### MCP usage
