@@ -513,7 +513,7 @@ def plot_top5_designs_table(metrics: pd.DataFrame, output_path: str = None):
     Plot 7: Top 5 designs table with metrics.
     Ranks by: 1) Status (Passed first), 2) quality_score or final_rank.
     """
-    fig, ax = plt.subplots(figsize=(10, 4))
+    fig, ax = plt.subplots(figsize=(6, 4))
     ax.axis('off')
 
     # Get metrics for ranking
@@ -606,7 +606,7 @@ def plot_metrics_correlation(metrics: pd.DataFrame, output_path: str = None):
     corr_matrix = metrics[available_cols].corr()
 
     # Create heatmap
-    im = ax.imshow(corr_matrix.values, cmap='RdYlGn', vmin=-1, vmax=1, aspect='auto')
+    im = ax.imshow(corr_matrix.values, cmap='RdYlGn', vmin=-1, vmax=1, aspect='equal')
 
     # Add text annotations
     for i in range(len(available_cols)):
@@ -618,7 +618,7 @@ def plot_metrics_correlation(metrics: pd.DataFrame, output_path: str = None):
 
     # Set ticks
     ax.set_xticks(np.arange(len(available_cols)))
-    ax.set_xticklabels(available_cols, fontsize=11)
+    ax.set_xticklabels(available_cols, fontsize=11, rotation=45, ha='right')
     ax.set_yticks(np.arange(len(available_cols)))
     ax.set_yticklabels(available_cols, fontsize=11)
 
@@ -845,7 +845,7 @@ def create_merged_figure(metrics: pd.DataFrame, output_path: str = None) -> plt.
                 ax8.text(j, i, f'{val:.2f}', ha='center', va='center', fontsize=9,
                         fontweight='bold', color=color)
         ax8.set_xticks(np.arange(len(available_cols)))
-        ax8.set_xticklabels(available_cols, fontsize=8)
+        ax8.set_xticklabels(available_cols, fontsize=8, rotation=45, ha='right')
         ax8.set_yticks(np.arange(len(available_cols)))
         ax8.set_yticklabels(available_cols, fontsize=8)
     ax8.set_title(panel_titles[7], fontsize=10, fontweight='bold', loc='left')

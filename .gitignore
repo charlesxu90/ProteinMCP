@@ -10,7 +10,6 @@ tmp/
 env/
 .claude/
 .gemini/
-examples/
 public/
 mcp.status
 .pytest_cache/

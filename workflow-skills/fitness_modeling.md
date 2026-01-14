@@ -88,17 +88,8 @@ The workflow uses a Python helper to record step timing. At the start of each st
 
 **Command-line usage:**
 ```bash
-# Start timing a step
-python @workflow-skills/scripts/timing_helper.py start -d {RESULTS_DIR} -s MSA
-
-# End timing a step
-python @workflow-skills/scripts/timing_helper.py end -d {RESULTS_DIR} -s MSA
-
 # Get timing summary
 python @workflow-skills/scripts/timing_helper.py summary -d {RESULTS_DIR}
-
-# Reset timeline (start fresh)
-python @workflow-skills/scripts/timing_helper.py reset -d {RESULTS_DIR}
 ```
 
 **Python import usage:**
@@ -106,87 +97,6 @@ python @workflow-skills/scripts/timing_helper.py reset -d {RESULTS_DIR}
 import sys
 sys.path.append("@workflow-skills/scripts")
 from timing_helper import record_step_start, record_step_end, get_timing_summary
-```
-
-**Timing Helper Code:**
-```python
-import json
-import time
-from pathlib import Path
-from datetime import datetime
-
-def get_timeline_path(results_dir):
-    """Get path to execution_timeline.json"""
-    return Path(results_dir) / "execution_timeline.json"
-
-def load_timeline(results_dir):
-    """Load existing timeline or create empty one"""
-    timeline_path = get_timeline_path(results_dir)
-    if timeline_path.exists():
-        with open(timeline_path) as f:
-            return json.load(f)
-    return []
-
-def save_timeline(results_dir, timeline):
-    """Save timeline to JSON file"""
-    timeline_path = get_timeline_path(results_dir)
-    with open(timeline_path, 'w') as f:
-        json.dump(timeline, f, indent=2)
-
-def record_step_start(results_dir, step_name):
-    """Record the start time of a step"""
-    timeline = load_timeline(results_dir)
-    # Remove any existing incomplete entry for this step
-    timeline = [s for s in timeline if s.get('name') != step_name]
-    timeline.append({
-        'name': step_name,
-        'start_time': time.time(),
-        'start_datetime': datetime.now().isoformat(),
-        'status': 'running'
-    })
-    save_timeline(results_dir, timeline)
-    print(f"[TIMING] Started step: {step_name}")
-
-def record_step_end(results_dir, step_name):
-    """Record the end time of a step and calculate duration"""
-    timeline = load_timeline(results_dir)
-    for step in timeline:
-        if step.get('name') == step_name and step.get('status') == 'running':
-            end_time = time.time()
-            start_time = step['start_time']
-            duration_minutes = (end_time - start_time) / 60
-            step['end_time'] = end_time
-            step['end_datetime'] = datetime.now().isoformat()
-            step['duration'] = round(duration_minutes, 2)
-            step['status'] = 'completed'
-            # Calculate relative start time from first step
-            first_start = min(s.get('start_time', float('inf')) for s in timeline)
-            step['start'] = round((start_time - first_start) / 60, 2)
-            break
-    save_timeline(results_dir, timeline)
-    print(f"[TIMING] Completed step: {step_name} ({step.get('duration', 0):.2f} min)")
-
-def get_timing_summary(results_dir):
-    """Get a summary of all step timings"""
-    timeline = load_timeline(results_dir)
-    total_time = sum(s.get('duration', 0) for s in timeline if s.get('status') == 'completed')
-    print(f"\n=== Execution Timeline Summary ===")
-    for step in timeline:
-        if step.get('status') == 'completed':
-            print(f"  {step['name']}: {step['duration']:.2f} min (started at +{step['start']:.2f} min)")
-    print(f"  Total: {total_time:.2f} min")
-    return timeline
-```
-
-**Usage in each step:**
-```python
-# At the START of each step:
-record_step_start("{RESULTS_DIR}", "StepName")
-
-# ... execute the step ...
-
-# At the END of each step:
-record_step_end("{RESULTS_DIR}", "StepName")
 ```
 
 ---
@@ -582,20 +492,6 @@ sys.path.insert(0, '@workflow-skills/scripts')
 from fitness_modeling_viz import display_results
 display_results('{RESULTS_DIR}')
 "
-```
-
-**Implementation - In Jupyter Notebook:**
-
-```python
-import sys
-sys.path.append("@workflow-skills/scripts")
-from fitness_modeling_viz import display_results
-
-# Display all 4 figures with summary
-display_results("{RESULTS_DIR}")
-
-# Or display only the backbone comparison
-display_results("{RESULTS_DIR}", show_all=False)
 ```
 
 **Parameters:**

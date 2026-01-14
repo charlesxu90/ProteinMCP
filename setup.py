@@ -39,7 +39,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/charlesxu90/proteinmcp",
-    packages=find_packages(),
+    packages=["proteinmcp", "proteinmcp.mcp", "proteinmcp.skill"],
     package_dir={"proteinmcp": "src"},
     include_package_data=True,
     package_data={
@@ -65,10 +65,10 @@ setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'proteinmcp=src.mcp_cli:main',
-            'pmcp=src.mcp_cli:main',
-            'proteinskill=src.skill_cli:main',
-            'pskill=src.skill_cli:main',
+            'proteinmcp=proteinmcp.mcp_cli:main',
+            'pmcp=proteinmcp.mcp_cli:main',
+            'proteinskill=proteinmcp.skill_cli:main',
+            'pskill=proteinmcp.skill_cli:main',
         ],
     },
     extras_require={

@@ -1,12 +1,6 @@
-# ProteinMCP: a Tool Universe for Autonomous Protein Design
+# ProteinMCP: An Agentic AI Framework for Autonomous Protein Engineering
 
-## TODO list
-[x] Support easy MCP creation 
-[x] Support easy MCP installation
-[x] Create common MCP servers for protein design tasks
-[ ] Support Claude code and Gemini-cli in usage
-[ ] Demo tasks: 1) protein sequence analysis; 2) protein structure analysis; 3) train fitness models; 4) binder design; 5) antibody design.
-
+![ProteinMCP overview](./figures/ProteinMCP.png)
 ## Install:
 ```shell
 mamba env create -f environment.yml
@@ -16,14 +10,11 @@ pip install -r requirements.txt
 # Install claude code
 npm install -g @anthropic-ai/claude-code
 
-# Install gemini-cli (optional)
-npm install -g @google/gemini-cli
-
 pip install -e .
 ```
 ## Supported MCPS:
 
-Please find the supported MCPS in [the MCP list](./tool-mcps/README.md).
+Please find the 38 supported MCPS in [the MCP list](./tool-mcps/README.md).
 
 ## Usage:
 ```shell
