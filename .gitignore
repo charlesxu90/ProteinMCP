@@ -6,12 +6,12 @@ __pycache__/
 *.egg-info/
 .vscode/
 *_mcp/
+*_mcp
 tmp/
 env/
 .claude/
 .gemini/
 public/
+public
 mcp.status
 .pytest_cache/
-tool_mcps
-tool_mcps/
