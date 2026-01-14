@@ -29,7 +29,24 @@ LOGO = """\033[31m
 \033[0m"""
 
 
-@click.group(invoke_without_command=True)
+class LogoGroup(click.Group):
+    """Custom Click Group that displays logo before help text and commands."""
+
+    def format_help(self, ctx, formatter):
+        """Override to display logo before help."""
+        click.echo(LOGO)
+        super().format_help(ctx, formatter)
+
+    def invoke(self, ctx):
+        """Override to display logo before running subcommands."""
+        # Only show logo if not showing help (help is handled by format_help)
+        if not ctx.protected_args or '--help' not in ctx.protected_args:
+            if ctx.invoked_subcommand is not None:
+                click.echo(LOGO)
+        return super().invoke(ctx)
+
+
+@click.group(cls=LogoGroup, invoke_without_command=True)
 @click.version_option(version="0.1.0", prog_name="proteinmcp")
 @click.pass_context
 def cli(ctx):
@@ -39,9 +56,6 @@ def cli(ctx):
     A comprehensive toolkit for creating, installing, and managing MCP servers
     for protein engineering, analysis, and prediction.
     """
-    # Display logo whenever proteinmcp is called
-    click.echo(LOGO)
-
     # Show help when no command is given
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())

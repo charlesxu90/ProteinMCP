@@ -21,6 +21,32 @@ from .skill.skill_manager import SkillManager
 from .skill.create_skill import SkillCreator, interactive_add_step
 from .mcp.mcp_manager import MCPManager
 
+# Logo for ProteinMCP
+LOGO = """\033[31m
+  ____            _       _       __  __  ____ ____
+ |  _ \\ _ __ ___ | |_ ___(_)_ __ |  \\/  |/ ___| _  \\
+ | |_) | '__/ _ \\| __/ _ \\ | '_ \\| |\\/| | |   | |_) |
+ |  __/| | | (_) | ||  __/ | | | | |  | | |___|  __/
+ |_|   |_|  \\___/ \\__\\___|_|_| |_|_|  |_|\\____|_|
+\033[0m"""
+
+
+class LogoGroup(click.Group):
+    """Custom Click Group that displays logo before help text and commands."""
+
+    def format_help(self, ctx, formatter):
+        """Override to display logo before help."""
+        click.echo(LOGO)
+        super().format_help(ctx, formatter)
+
+    def invoke(self, ctx):
+        """Override to display logo before running subcommands."""
+        # Only show logo if not showing help (help is handled by format_help)
+        if not ctx.protected_args or '--help' not in ctx.protected_args:
+            if ctx.invoked_subcommand is not None:
+                click.echo(LOGO)
+        return super().invoke(ctx)
+
 
 def check_required_mcps(required_mcps: List[str], cli: str = "claude") -> Tuple[List[str], List[str]]:
     """
@@ -47,7 +73,7 @@ def check_required_mcps(required_mcps: List[str], cli: str = "claude") -> Tuple[
     return available, missing
 
 
-@click.group(invoke_without_command=True)
+@click.group(cls=LogoGroup, invoke_without_command=True)
 @click.version_option(version="0.1.0", prog_name="skill")
 @click.pass_context
 def cli(ctx):
@@ -57,6 +83,7 @@ def cli(ctx):
     A toolkit for installing and managing workflow skills that combine
     multiple MCP servers into cohesive protein engineering workflows.
     """
+    # Show help when no command is given
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
