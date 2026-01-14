@@ -32,12 +32,13 @@ claude
 What is the name of your protein (used for naming output files)?
 
 ❯ 1. TEVp_S219V
-     Example protein from case3_fitness_modeling
+     Example protein from case1_fitness_modeling
   2. Custom name
      I'll provide my own protein name
   3. Type something.
 
-> 1 # choose 1 for all selections and submit.
+> 1 
+# choose your preferred configs and submit.
 ```
 
 ## Usage:
