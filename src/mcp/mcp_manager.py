@@ -865,6 +865,12 @@ class MCPManager:
             if (mcp_dir / "tsconfig.json").exists():
                 setup_commands.append("npm run build")
 
+        # Detect setup_script (quick_setup.sh)
+        setup_script = None
+        quick_setup_path = mcp_dir / "quick_setup.sh"
+        if quick_setup_path.exists():
+            setup_script = "quick_setup.sh"
+
         return {
             "name": name,
             "description": description,
@@ -873,6 +879,7 @@ class MCPManager:
             "server_command": server_command,
             "server_args": server_args,
             "setup_commands": setup_commands,
+            "setup_script": setup_script,
             "env_vars": env_vars,
             "dependencies": dependencies,
             "path": str(mcp_dir),

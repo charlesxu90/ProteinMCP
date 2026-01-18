@@ -104,6 +104,7 @@ class MCP:
         source: Source organization
         runtime: Runtime type (python, node, uvx, npx, binary)
         setup_commands: Commands to run after cloning
+        setup_script: Shell script for setup (e.g., quick_setup.sh)
         server_command: Command to start the server
         server_args: Arguments for the server command
         env_vars: Environment variables needed
@@ -117,6 +118,7 @@ class MCP:
     source: str = "Community"
     runtime: str = "python"
     setup_commands: List[str] = field(default_factory=list)
+    setup_script: Optional[str] = None
     server_command: str = ""
     server_args: List[str] = field(default_factory=list)
     env_vars: Dict[str, str] = field(default_factory=dict)
@@ -294,9 +296,8 @@ class MCP:
                 # Invalidate cache since installation state may have changed
                 self.invalidate_status_cache()
 
-                # Run setup commands
-                if self.setup_commands:
-                    return self._run_setup_commands()
+                # Run setup (script or commands)
+                return self._run_setup()
 
                 return True
 
@@ -359,11 +360,8 @@ class MCP:
             # Invalidate cache since installation state changed
             self.invalidate_status_cache()
 
-            # Run setup commands
-            if self.setup_commands:
-                return self._run_setup_commands()
-
-            return True
+            # Run setup (script or commands)
+            return self._run_setup()
 
         except FileNotFoundError:
             print("❌ Git not found. Please install git first.")
@@ -415,6 +413,52 @@ class MCP:
 
         return True
 
+    def _run_setup_script(self) -> bool:
+        """
+        Run the setup_script (e.g., quick_setup.sh) if available.
+
+        Returns:
+            True if successful or no script exists, False on failure
+        """
+        if not self.path or not self.setup_script:
+            return False
+
+        cwd = resolve_path(self.path)
+        script_path = cwd / self.setup_script
+
+        if not script_path.exists():
+            print(f"⚠️  Setup script not found: {script_path}")
+            return False
+
+        print(f"📦 Running setup script: {self.setup_script}")
+
+        try:
+            # Make the script executable
+            import os
+            os.chmod(script_path, 0o755)
+
+            # Run the setup script
+            result = subprocess.run(
+                ["bash", str(script_path)],
+                cwd=str(cwd),
+                capture_output=False,  # Show output in real-time
+                timeout=1800  # 30 minutes timeout for complex setups
+            )
+
+            if result.returncode != 0:
+                print(f"⚠️  Setup script failed with exit code: {result.returncode}")
+                return False
+
+            print(f"✅ Setup script completed successfully")
+            return True
+
+        except subprocess.TimeoutExpired:
+            print(f"⚠️  Setup script timed out (exceeded 30 minutes)")
+            return False
+        except Exception as e:
+            print(f"⚠️  Setup script error: {e}")
+            return False
+
     def _run_setup_commands(self) -> bool:
         """Run setup commands after installation"""
         if not self.path:
@@ -450,6 +494,31 @@ class MCP:
                 print(f"⚠️  Setup command error: {e}")
                 return False
 
+        return True
+
+    def _run_setup(self) -> bool:
+        """
+        Run setup using setup_script if available, otherwise fall back to setup_commands.
+
+        Returns:
+            True if successful, False otherwise
+        """
+        # First, try to run setup_script (e.g., quick_setup.sh)
+        if self.setup_script:
+            cwd = resolve_path(self.path) if self.path else None
+            if cwd and (cwd / self.setup_script).exists():
+                print(f"🔧 Found setup script: {self.setup_script}")
+                if self._run_setup_script():
+                    return True
+                else:
+                    print("⚠️  Setup script failed, falling back to setup commands...")
+
+        # Fall back to setup_commands
+        if self.setup_commands:
+            return self._run_setup_commands()
+
+        # No setup needed
+        print("ℹ️  No setup script or commands configured")
         return True
 
     # -------------------------------------------------------------------------
