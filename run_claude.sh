@@ -36,3 +36,7 @@
 
 
 # pmcp create --github-url https://github.com/bio-mcp/bio-mcp-amber --mcp-dir tool-mcps/amber_mcp --use-case-filter 'Protein MD simulations with Amber, QM/MM of enzyme-substrate complex with amber'
+
+pmcp create --local-repo-path tool-mcps/amber_mcp/repo/pmemd24_src/ --mcp-dir tool-mcps/amber_mcp --use-case-filter 'Protein MD simulations with Amber, QM/MM of enzyme-substrate complex with amber'
+
+pmcp create --local-repo-path tool-mcps/ambertools_mcp/repo/ambertools25_src/ --mcp-dir tool-mcps/ambertools_mcp --use-case-filter 'Protein MD simulations preparation with AmberTools, QM/MM of enzyme-substrate complex preparation for amber'

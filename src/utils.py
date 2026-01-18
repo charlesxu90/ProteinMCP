@@ -354,7 +354,7 @@ def run_claude_with_streaming(prompt_content: str, output_file: Path, cwd: Path,
     """
     Run Claude AI with real-time output display and full logging
     
-    Uses Claude Code CLI (logged-in Pro account) - no API key required.
+    Uses Claude Code CLI (logged-in Claude account) - no API key required.
     This function ALWAYS uses Claude Code CLI, never the API.
     Shows Claude's thinking, analysis, and responses in real-time in terminal, saves full output to JSON file.
     
@@ -369,9 +369,9 @@ def run_claude_with_streaming(prompt_content: str, output_file: Path, cwd: Path,
     """
     import json
     
-    # Always use Claude Code CLI (Pro account), ignore any API key
-    click.echo("  🤖 Using Claude Code CLI (logged-in Pro account)")
-    click.echo("  💡 Note: Using your Pro account subscription, NOT API credits")
+    # Always use Claude Code CLI (Claude account), ignore any API key
+    click.echo("  🤖 Using Claude Code CLI (logged-in Claude account)")
+    click.echo("  💡 Note: Using your Claude account subscription, NOT API credits")
     click.echo("  " + "-" * 58)
     
     # Check if claude CLI is available
