@@ -110,6 +110,7 @@ class MCP:
         env_vars: Environment variables needed
         dependencies: System dependencies required
         path: Local installation path (if installed)
+        python_version: Python version requirement (e.g., "3.10")
     """
 
     name: str
@@ -124,6 +125,7 @@ class MCP:
     env_vars: Dict[str, str] = field(default_factory=dict)
     dependencies: List[str] = field(default_factory=list)
     path: Optional[str] = None
+    python_version: Optional[str] = None
 
     def __post_init__(self):
         """Validate and normalize runtime type"""
