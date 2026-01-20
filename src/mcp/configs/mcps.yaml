@@ -1,46 +1,337 @@
 mcps:
-  ambertools25_src_mcp:
-    dependencies: []
-    description: '> Molecular dynamics simulation tools and protein structure analysis
-      for Claude Code and compatible ...'
-    env_vars: {}
-    path: /mnt/data/done_projects/2026/ProteinMCP/ProteinMCP/tool-mcps/ambertools_mcp
+  ligandmpnn_mcp:
+    description: '> LigandMPNN MCP server for ligand-aware scaffold-based sequence generation (inverse folding)'
+    path: tool-mcps/ligandmpnn_mcp
     runtime: python
-    server_args:
-    - src/server.py
     server_command: python
-    setup_commands:
-    - '(command -v mamba >/dev/null 2>&1 && mamba env create -p ./env python=3.10
-      -y) || (command -v conda >/dev/null 2>&1 && conda env create -p ./env python=3.10
-      -y) || (echo "Warning: Neither mamba nor conda found, creating venv instead"
-      && python3 -m venv ./env)'
-    - ./env/bin/pip install numpy==1.26.4 pandas==2.2.2 scipy==1.13.0
-    - ./env/bin/pip install fastmcp loguru --ignore-installed
-    - ./env/bin/pip install click tqdm
-    - '(command -v mamba >/dev/null 2>&1 && mamba install -p ./env -c conda-forge
-      ambertools -y) || (command -v conda >/dev/null 2>&1 && conda install -p ./env
-      -c conda-forge ambertools -y) || echo "Warning: Could not install ambertools
-      via conda, skipping"'
-    setup_script: quick_setup.sh
-    source: Tool
-    url: ''
-  pmemd24_src_mcp:
-    dependencies: []
-    description: '> Model Context Protocol server for AmberTools molecular dynamics
-      simulation and analysis workflows'
+    server_args:
+      - src/server.py
+    python_version: "3.11"
     env_vars: {}
-    path: /mnt/data/done_projects/2026/ProteinMCP/ProteinMCP/tool-mcps/amber_mcp
-    runtime: python
-    server_args:
-    - src/server.py
-    server_command: python
-    setup_commands:
-    - '(command -v mamba >/dev/null 2>&1 && mamba create -p ./env python=3.10 -y)
-      || (command -v conda >/dev/null 2>&1 && conda create -p ./env python=3.10 -y)
-      || (echo "Warning: Neither mamba nor conda found, creating venv instead" &&
-      python3 -m venv ./env)'
-    - ./env/bin/pip install -r requirements.txt
-    - ./env/bin/pip install --ignore-installed fastmcp loguru
-    setup_script: quick_setup.sh
+    dependencies: []
     source: Tool
-    url: ''
+    url: https://github.com/Biomolecular-Design-Nexus/ligandmpnn_mcp
+    setup_script: quick_setup.sh
+
+  proteinmpnn_mcp:
+    description: '> ProteinMPNN MCP server for protein design (inverse folding)'
+    path: tool-mcps/proteinmpnn_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/proteinmpnn_mcp
+    setup_script: quick_setup.sh
+
+  rfdiffusion2_mcp:
+    description: '> RFdiffusion2 MCP server for protein structure generation (backbone)'
+    path: tool-mcps/rfdiffusion2_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.11"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/rfdiffusion2_mcp
+    setup_script: quick_setup.sh
+
+  alphafold3_mcp:
+    description: '> AlphaFold3 MCP server for protein structure prediction, supporting batch prediction'
+    path: tool-mcps/alphafold3_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.11"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/alphafold3_mcp
+    setup_script: quick_setup.sh
+
+  alphafold2_mcp:
+    description: '> AlphaFold2 MCP server for protein structure prediction, supporting complex and batch predictions'
+    path: tool-mcps/alphafold2_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/alphafold2_mcp
+    setup_script: quick_setup.sh
+
+  amber_mcp:
+    description: '> AMBER MCP server for MD simulations and analysis'
+    path: tool-mcps/amber_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.11"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/amber_mcp
+    setup_script: quick_setup.sh
+
+  interpro_mcp:
+    description: '> InterProScan MCP server for protein domain and functional analysis'
+    path: tool-mcps/interpro_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/interpro_mcp
+    setup_script: quick_setup.sh
+
+  boltz_mcp:
+    description: '> Boltz2 MCP server for protein structure and affinity prediction'
+    path: tool-mcps/boltz_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/boltz_mcp
+    setup_script: quick_setup.sh
+
+  boltzgen_mcp:
+    description: '> BoltzGen MCP server for protein binder design'
+    path: tool-mcps/boltzgen_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.12"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/boltzgen_mcp
+    setup_script: quick_setup.sh
+
+  chai1_mcp:
+    description: '> Chai-1 MCP server for protein structure prediction'
+    path: tool-mcps/chai1_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/chai1_mcp
+    setup_script: quick_setup.sh
+
+  esm_mcp:
+    description: '> ESM MCP server for protein embedding and fitness modeling'
+    path: tool-mcps/esm_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/esm_mcp
+    setup_script: quick_setup.sh
+
+  esmfold_mcp:
+    description: '> ESMFold MCP server for protein structure prediction'
+    path: tool-mcps/esmfold_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/esmfold_mcp
+    setup_script: quick_setup.sh
+
+  ev_onehot_mcp:
+    description: 'Protein fitness prediction combining evolutionary coupling and one-hot encoding'
+    path: tool-mcps/ev_onehot_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/ev_onehot_mcp.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/ev_onehot_mcp
+    setup_script: quick_setup.sh
+
+  gromacs_mcp:
+    description: '> GROMACS 2025.4 molecular dynamics simulations via MCP'
+    path: tool-mcps/gromacs_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/gromacs_mcp
+    setup_script: quick_setup.sh
+
+  rosetta_mcp:
+    description: '> Model Control Protocol (MCP) server for Rosetta molecular modeling and protein design suite'
+    path: tool-mcps/rosetta_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/rosetta_mcp
+    setup_script: quick_setup.sh
+
+  mmseqs2_mcp:
+    description: 'Sequence search, clustering, and MSA generation using MMseqs2'
+    path: tool-mcps/mmseqs2_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/mmseqs2_mcp.py
+    python_version: "3.10"
+    env_vars:
+      MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/mmseqs2_mcp
+    setup_script: quick_setup.sh
+
+  msa_mcp:
+    description: 'Generate Multiple Sequence Alignments (MSA) using ColabFold server'
+    path: tool-mcps/msa_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/msa_mcp.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/msa_mcp
+    setup_script: quick_setup.sh
+
+  mutcompute_mcp:
+    description: '> MutCompute MCP server for protein mutation effect prediction'
+    path: tool-mcps/mutcompute_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/mutcompute_mcp
+    setup_script: quick_setup.sh
+
+  netMHCIIpan_mcp:
+    description: '> NetMHCIIpan-4.3 MCP Server for MHC Class II binding prediction'
+    path: tool-mcps/netmhc2pan_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/netmhc2pan_mcp
+    setup_script: quick_setup.sh
+
+  netMHCpan_mcp:
+    description: '> MCP server for NetMHCpan-4.2 - MHC Class I binding prediction'
+    path: tool-mcps/netmhcpan_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/netmhcpan_mcp
+    setup_script: quick_setup.sh
+
+  plmc_mcp:
+    description: 'Evolutionary coupling analysis using PLMC for protein fitness prediction'
+    path: tool-mcps/plmc_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/plmc_mcp.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/plmc_mcp
+    setup_script: quick_setup.sh
+
+  protein-sol_mcp:
+    description: '> Protein-Sol MCP server for protein solubility prediction'
+    path: tool-mcps/protein_sol_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/server.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/protein_sol_mcp
+    setup_script: quick_setup.sh
+
+  prottrans_mcp:
+    description: 'ProtTrans MCP server for protein embeddings and fitness modeling prediction'
+    path: tool-mcps/prottrans_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/prottrans_mcp.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/prottrans_mcp
+    setup_script: quick_setup.sh
+
+  bindcraft_mcp:
+    description: '> BindCraft MCP server for protein binder design'
+    path: tool-mcps/bindcraft_mcp
+    runtime: python
+    server_command: python
+    server_args:
+      - src/bindcraft_mcp.py
+    python_version: "3.10"
+    env_vars: {}
+    dependencies: []
+    source: Tool
+    url: https://github.com/Biomolecular-Design-Nexus/bindcraft_mcp
+    setup_script: quick_setup.sh
