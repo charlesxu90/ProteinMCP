@@ -10,7 +10,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/ligandmpnn_mcp
+    url: https://github.com/MacMolNex/ligandmpnn_mcp
     setup_script: quick_setup.sh
 
   proteinmpnn_mcp:
@@ -24,7 +24,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/proteinmpnn_mcp
+    url: https://github.com/MacMolNex/proteinmpnn_mcp
     setup_script: quick_setup.sh
 
   rfdiffusion2_mcp:
@@ -38,7 +38,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/rfdiffusion2_mcp
+    url: https://github.com/MacMolNex/rfdiffusion2_mcp
     setup_script: quick_setup.sh
 
   alphafold3_mcp:
@@ -52,7 +52,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/alphafold3_mcp
+    url: https://github.com/MacMolNex/alphafold3_mcp
     setup_script: quick_setup.sh
 
   alphafold2_mcp:
@@ -66,7 +66,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/alphafold2_mcp
+    url: https://github.com/MacMolNex/alphafold2_mcp
     setup_script: quick_setup.sh
 
   amber_mcp:
@@ -80,7 +80,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/amber_mcp
+    url: https://github.com/MacMolNex/amber_mcp
     setup_script: quick_setup.sh
 
   interpro_mcp:
@@ -94,7 +94,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/interpro_mcp
+    url: https://github.com/MacMolNex/interpro_mcp
     setup_script: quick_setup.sh
 
   boltz_mcp:
@@ -108,7 +108,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/boltz_mcp
+    url: https://github.com/MacMolNex/boltz_mcp
     setup_script: quick_setup.sh
 
   boltzgen_mcp:
@@ -122,7 +122,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/boltzgen_mcp
+    url: https://github.com/MacMolNex/boltzgen_mcp
     setup_script: quick_setup.sh
 
   chai1_mcp:
@@ -136,7 +136,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/chai1_mcp
+    url: https://github.com/MacMolNex/chai1_mcp
     setup_script: quick_setup.sh
 
   esm_mcp:
@@ -150,7 +150,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/esm_mcp
+    url: https://github.com/MacMolNex/esm_mcp
     setup_script: quick_setup.sh
 
   esmfold_mcp:
@@ -164,7 +164,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/esmfold_mcp
+    url: https://github.com/MacMolNex/esmfold_mcp
     setup_script: quick_setup.sh
 
   ev_onehot_mcp:
@@ -173,12 +173,12 @@ mcps:
     runtime: python
     server_command: python
     server_args:
-      - src/ev_onehot_mcp.py
+      - src/server.py
     python_version: "3.10"
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/ev_onehot_mcp
+    url: https://github.com/MacMolNex/ev_onehot_mcp
     setup_script: quick_setup.sh
 
   gromacs_mcp:
@@ -192,7 +192,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/gromacs_mcp
+    url: https://github.com/MacMolNex/gromacs_mcp
     setup_script: quick_setup.sh
 
   rosetta_mcp:
@@ -206,7 +206,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/rosetta_mcp
+    url: https://github.com/MacMolNex/rosetta_mcp
     setup_script: quick_setup.sh
 
   mmseqs2_mcp:
@@ -215,13 +215,13 @@ mcps:
     runtime: python
     server_command: python
     server_args:
-      - src/mmseqs2_mcp.py
+      - src/server.py
     python_version: "3.10"
     env_vars:
       MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/mmseqs2_mcp
+    url: https://github.com/MacMolNex/mmseqs2_mcp
     setup_script: quick_setup.sh
 
   msa_mcp:
@@ -230,12 +230,12 @@ mcps:
     runtime: python
     server_command: python
     server_args:
-      - src/msa_mcp.py
+      - src/server.py
     python_version: "3.10"
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/msa_mcp
+    url: https://github.com/MacMolNex/msa_mcp
     setup_script: quick_setup.sh
 
   mutcompute_mcp:
@@ -249,7 +249,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/mutcompute_mcp
+    url: https://github.com/MacMolNex/mutcompute_mcp
     setup_script: quick_setup.sh
 
   netMHCIIpan_mcp:
@@ -263,7 +263,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/netmhc2pan_mcp
+    url: https://github.com/MacMolNex/netmhc2pan_mcp
     setup_script: quick_setup.sh
 
   netMHCpan_mcp:
@@ -277,7 +277,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/netmhcpan_mcp
+    url: https://github.com/MacMolNex/netmhcpan_mcp
     setup_script: quick_setup.sh
 
   plmc_mcp:
@@ -286,12 +286,12 @@ mcps:
     runtime: python
     server_command: python
     server_args:
-      - src/plmc_mcp.py
+      - src/server.py
     python_version: "3.10"
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/plmc_mcp
+    url: https://github.com/MacMolNex/plmc_mcp
     setup_script: quick_setup.sh
 
   protein-sol_mcp:
@@ -305,7 +305,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/protein_sol_mcp
+    url: https://github.com/MacMolNex/protein_sol_mcp
     setup_script: quick_setup.sh
 
   prottrans_mcp:
@@ -314,12 +314,12 @@ mcps:
     runtime: python
     server_command: python
     server_args:
-      - src/prottrans_mcp.py
+      - src/server.py
     python_version: "3.10"
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/prottrans_mcp
+    url: https://github.com/MacMolNex/prottrans_mcp
     setup_script: quick_setup.sh
 
   bindcraft_mcp:
@@ -328,10 +328,10 @@ mcps:
     runtime: python
     server_command: python
     server_args:
-      - src/bindcraft_mcp.py
+      - src/server.py
     python_version: "3.10"
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/Biomolecular-Design-Nexus/bindcraft_mcp
+    url: https://github.com/MacMolNex/bindcraft_mcp
     setup_script: quick_setup.sh

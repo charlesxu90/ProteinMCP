@@ -131,13 +131,61 @@ class SkillManager:
 
         return already_installed, needs_installation
 
+    def _install_mcps_parallel(self, mcp_names: List[str], cli: str = "claude") -> None:
+        """
+        Install MCPs in parallel (setup phase), then register sequentially.
+
+        Phase 1: Parallel download + setup (I/O-bound, safe to parallelize since
+                 each MCP installs to its own directory under tool-mcps/<name>).
+        Phase 2: Sequential registration (calls CLI commands, may prompt for input).
+
+        Args:
+            mcp_names: List of MCP names to install
+            cli: CLI tool to register with
+        """
+        import concurrent.futures
+
+        mcp_manager = MCPManager()
+
+        # Phase 1: Parallel download + setup
+        def install_one(name: str):
+            mcp = mcp_manager.get_mcp(name)
+            if not mcp:
+                return name, False, f"MCP '{name}' not found"
+            try:
+                if not mcp.install(capture_output=True):
+                    return name, False, "Install/setup failed"
+                return name, True, "OK"
+            except Exception as e:
+                return name, False, str(e)
+
+        print(f"\n⚡ Installing {len(mcp_names)} MCPs in parallel...")
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(mcp_names)) as executor:
+            futures = {executor.submit(install_one, n): n for n in mcp_names}
+            for future in concurrent.futures.as_completed(futures):
+                name, success, msg = future.result()
+                results[name] = success
+                status = "✅" if success else "❌"
+                print(f"  {status} {name}: {msg}")
+
+        # Phase 2: Sequential registration (may call input() if already registered)
+        for name in mcp_names:
+            if results.get(name):
+                print(f"\n🔧 Registering {name}...")
+                mcp = mcp_manager.get_mcp(name)
+                if mcp:
+                    mcp.register(cli=cli)
+            else:
+                print(f"\n⏭️  Skipping registration for {name} (install failed)")
+
     def install_skill_and_mcps(self, skill_name: str) -> bool:
         """
         Installs a skill and its required MCPs.
 
         Only installs MCPs that are not already fully installed (both downloaded
-        and registered with Claude). This speeds up workflow installation by
-        skipping MCPs that are already ready to use.
+        and registered with Claude). When multiple MCPs need installation, they
+        are installed in parallel to reduce wall-clock time.
 
         Args:
             skill_name: The name of the skill to install.
@@ -167,9 +215,13 @@ class SkillManager:
 
             # Install only the MCPs that need installation
             if needs_installation:
-                print(f"\n📦 Installing {len(needs_installation)} MCPs: {', '.join(needs_installation)}")
-                for mcp_name in needs_installation:
-                    print(f"\n--- Installing MCP: {mcp_name} ---")
+                if len(needs_installation) > 1:
+                    # Parallel installation for multiple MCPs
+                    self._install_mcps_parallel(needs_installation, cli="claude")
+                else:
+                    # Single MCP — install sequentially
+                    mcp_name = needs_installation[0]
+                    print(f"\n📦 Installing MCP: {mcp_name}")
                     if not install_mcp_cmd(mcp_name, cli="claude"):
                         print(f"⚠️ Failed to install MCP '{mcp_name}'. Continuing...")
                 print("\n--- Finished MCP installation ---")

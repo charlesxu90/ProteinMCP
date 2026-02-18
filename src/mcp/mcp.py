@@ -260,12 +260,13 @@ class MCP:
     # Installation Methods
     # -------------------------------------------------------------------------
 
-    def install(self, force: bool = False) -> bool:
+    def install(self, force: bool = False, capture_output: bool = False) -> bool:
         """
         Install MCP to local machine.
 
         Args:
             force: If True, re-install even if already installed
+            capture_output: If True, capture setup script output (for parallel execution)
 
         Returns:
             True if successful, False otherwise
@@ -299,9 +300,7 @@ class MCP:
                 self.invalidate_status_cache()
 
                 # Run setup (script or commands)
-                return self._run_setup()
-
-                return True
+                return self._run_setup(capture_output=capture_output)
 
             # If local path doesn't exist but URL is provided, fall through to clone
             elif self.url:
@@ -363,7 +362,7 @@ class MCP:
             self.invalidate_status_cache()
 
             # Run setup (script or commands)
-            return self._run_setup()
+            return self._run_setup(capture_output=capture_output)
 
         except FileNotFoundError:
             print("❌ Git not found. Please install git first.")
@@ -415,9 +414,13 @@ class MCP:
 
         return True
 
-    def _run_setup_script(self) -> bool:
+    def _run_setup_script(self, capture_output: bool = False) -> bool:
         """
         Run the setup_script (e.g., quick_setup.sh) if available.
+
+        Args:
+            capture_output: If True, capture output instead of streaming (for parallel execution).
+                           Captured output is printed at the end to avoid interleaving.
 
         Returns:
             True if successful or no script exists, False on failure
@@ -439,13 +442,31 @@ class MCP:
             import os
             os.chmod(script_path, 0o755)
 
-            # Run the setup script
-            result = subprocess.run(
-                ["bash", str(script_path)],
-                cwd=str(cwd),
-                capture_output=False,  # Show output in real-time
-                timeout=1800  # 30 minutes timeout for complex setups
-            )
+            if capture_output:
+                # Thread-safe: capture output and print at the end
+                result = subprocess.run(
+                    ["bash", str(script_path)],
+                    cwd=str(cwd),
+                    capture_output=True,
+                    text=True,
+                    timeout=1800  # 30 minutes timeout for complex setups
+                )
+
+                # Print captured output with MCP name prefix for clarity
+                if result.stdout:
+                    for line in result.stdout.splitlines():
+                        print(f"  [{self.name}] {line}")
+                if result.stderr:
+                    for line in result.stderr.splitlines():
+                        print(f"  [{self.name}] {line}")
+            else:
+                # Real-time output (default for sequential execution)
+                result = subprocess.run(
+                    ["bash", str(script_path)],
+                    cwd=str(cwd),
+                    capture_output=False,
+                    timeout=1800  # 30 minutes timeout for complex setups
+                )
 
             if result.returncode != 0:
                 print(f"⚠️  Setup script failed with exit code: {result.returncode}")
@@ -498,9 +519,12 @@ class MCP:
 
         return True
 
-    def _run_setup(self) -> bool:
+    def _run_setup(self, capture_output: bool = False) -> bool:
         """
         Run setup using setup_script if available, otherwise fall back to setup_commands.
+
+        Args:
+            capture_output: If True, capture output instead of streaming (for parallel execution).
 
         Returns:
             True if successful, False otherwise
@@ -510,7 +534,7 @@ class MCP:
             cwd = resolve_path(self.path) if self.path else None
             if cwd and (cwd / self.setup_script).exists():
                 print(f"🔧 Found setup script: {self.setup_script}")
-                if self._run_setup_script():
+                if self._run_setup_script(capture_output=capture_output):
                     return True
                 else:
                     print("⚠️  Setup script failed, falling back to setup commands...")
@@ -797,7 +821,7 @@ class MCP:
 
         for env in env_candidates:
             if env.exists():
-                return str(env.resolve())
+                return str(env)
 
         # Fall back to system python
         return "python"
