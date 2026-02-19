@@ -273,17 +273,14 @@ mcps:
 
   plmc_mcp:
     description: 'Evolutionary coupling analysis using PLMC for protein fitness prediction'
-    path: tool-mcps/plmc_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
+    runtime: docker
+    docker_image: ghcr.io/macromnex/plmc_mcp:latest
+    docker_args: ["--gpus", "all", "--ipc=host"]
+    docker_volumes: []
     env_vars: {}
     dependencies: []
     source: Tool
     url: https://github.com/MacromNex/plmc_mcp
-    setup_script: quick_setup.sh
 
   protein-sol_mcp:
     description: '> Protein-Sol MCP server for protein solubility prediction'
