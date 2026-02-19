@@ -291,6 +291,15 @@ def show_info(mcp_name: str) -> None:
     print(f"  Installed: {'✅' if mcp.is_installed() else '❌'}")
     print(f"  Registered (Claude): {'✅' if mcp.is_registered('claude') else '❌'}")
 
+    if mcp.docker_image:
+        print(f"  Docker Image: {mcp.docker_image}")
+
+    if mcp.docker_args:
+        print(f"  Docker Args: {' '.join(mcp.docker_args)}")
+
+    if mcp.docker_volumes:
+        print(f"  Docker Volumes: {', '.join(mcp.docker_volumes)}")
+
     if mcp.server_command:
         print(f"  Server Command: {mcp.server_command}")
 

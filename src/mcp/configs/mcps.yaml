@@ -10,7 +10,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/ligandmpnn_mcp
+    url: https://github.com/MacromNex/ligandmpnn_mcp
     setup_script: quick_setup.sh
 
   proteinmpnn_mcp:
@@ -24,7 +24,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/proteinmpnn_mcp
+    url: https://github.com/MacromNex/proteinmpnn_mcp
     setup_script: quick_setup.sh
 
   rfdiffusion2_mcp:
@@ -38,7 +38,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/rfdiffusion2_mcp
+    url: https://github.com/MacromNex/rfdiffusion2_mcp
     setup_script: quick_setup.sh
 
   alphafold3_mcp:
@@ -52,7 +52,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/alphafold3_mcp
+    url: https://github.com/MacromNex/alphafold3_mcp
     setup_script: quick_setup.sh
 
   alphafold2_mcp:
@@ -66,7 +66,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/alphafold2_mcp
+    url: https://github.com/MacromNex/alphafold2_mcp
     setup_script: quick_setup.sh
 
   amber_mcp:
@@ -80,7 +80,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/amber_mcp
+    url: https://github.com/MacromNex/amber_mcp
     setup_script: quick_setup.sh
 
   interpro_mcp:
@@ -94,7 +94,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/interpro_mcp
+    url: https://github.com/MacromNex/interpro_mcp
     setup_script: quick_setup.sh
 
   boltz_mcp:
@@ -108,22 +108,19 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/boltz_mcp
+    url: https://github.com/MacromNex/boltz_mcp
     setup_script: quick_setup.sh
 
   boltzgen_mcp:
     description: '> BoltzGen MCP server for protein binder design'
-    path: tool-mcps/boltzgen_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.12"
+    runtime: docker
+    docker_image: ghcr.io/macromnex/boltzgen_mcp:latest
+    docker_args: ["--gpus", "all", "--ipc=host"]
+    docker_volumes: []
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/boltzgen_mcp
-    setup_script: quick_setup.sh
+    url: https://github.com/MacromNex/boltzgen_mcp
 
   chai1_mcp:
     description: '> Chai-1 MCP server for protein structure prediction'
@@ -136,22 +133,19 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/chai1_mcp
+    url: https://github.com/MacromNex/chai1_mcp
     setup_script: quick_setup.sh
 
   esm_mcp:
     description: '> ESM MCP server for protein embedding and fitness modeling'
-    path: tool-mcps/esm_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
+    runtime: docker
+    docker_image: ghcr.io/macromnex/esm_mcp:latest
+    docker_args: ["--gpus", "all", "--ipc=host"]
+    docker_volumes: []
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/esm_mcp
-    setup_script: quick_setup.sh
+    url: https://github.com/MacromNex/esm_mcp
 
   esmfold_mcp:
     description: '> ESMFold MCP server for protein structure prediction'
@@ -164,22 +158,19 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/esmfold_mcp
+    url: https://github.com/MacromNex/esmfold_mcp
     setup_script: quick_setup.sh
 
   ev_onehot_mcp:
     description: 'Protein fitness prediction combining evolutionary coupling and one-hot encoding'
-    path: tool-mcps/ev_onehot_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
+    runtime: docker
+    docker_image: ghcr.io/macromnex/ev_onehot_mcp:latest
+    docker_args: ["--gpus", "all", "--ipc=host"]
+    docker_volumes: []
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/ev_onehot_mcp
-    setup_script: quick_setup.sh
+    url: https://github.com/MacromNex/ev_onehot_mcp
 
   gromacs_mcp:
     description: '> GROMACS 2025.4 molecular dynamics simulations via MCP'
@@ -192,7 +183,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/gromacs_mcp
+    url: https://github.com/MacromNex/gromacs_mcp
     setup_script: quick_setup.sh
 
   rosetta_mcp:
@@ -206,7 +197,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/rosetta_mcp
+    url: https://github.com/MacromNex/rosetta_mcp
     setup_script: quick_setup.sh
 
   mmseqs2_mcp:
@@ -221,7 +212,7 @@ mcps:
       MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/mmseqs2_mcp
+    url: https://github.com/MacromNex/mmseqs2_mcp
     setup_script: quick_setup.sh
 
   msa_mcp:
@@ -235,7 +226,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/msa_mcp
+    url: https://github.com/MacromNex/msa_mcp
     setup_script: quick_setup.sh
 
   mutcompute_mcp:
@@ -249,7 +240,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/mutcompute_mcp
+    url: https://github.com/MacromNex/mutcompute_mcp
     setup_script: quick_setup.sh
 
   netMHCIIpan_mcp:
@@ -263,7 +254,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/netmhc2pan_mcp
+    url: https://github.com/MacromNex/netmhc2pan_mcp
     setup_script: quick_setup.sh
 
   netMHCpan_mcp:
@@ -277,7 +268,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/netmhcpan_mcp
+    url: https://github.com/MacromNex/netmhcpan_mcp
     setup_script: quick_setup.sh
 
   plmc_mcp:
@@ -291,7 +282,7 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/plmc_mcp
+    url: https://github.com/MacromNex/plmc_mcp
     setup_script: quick_setup.sh
 
   protein-sol_mcp:
@@ -305,33 +296,27 @@ mcps:
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/protein_sol_mcp
+    url: https://github.com/MacromNex/protein_sol_mcp
     setup_script: quick_setup.sh
 
   prottrans_mcp:
     description: 'ProtTrans MCP server for protein embeddings and fitness modeling prediction'
-    path: tool-mcps/prottrans_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
+    runtime: docker
+    docker_image: ghcr.io/macromnex/prottrans_mcp:latest
+    docker_args: ["--gpus", "all", "--ipc=host"]
+    docker_volumes: []
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/prottrans_mcp
-    setup_script: quick_setup.sh
+    url: https://github.com/MacromNex/prottrans_mcp
 
   bindcraft_mcp:
     description: '> BindCraft MCP server for protein binder design'
-    path: tool-mcps/bindcraft_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
+    runtime: docker
+    docker_image: ghcr.io/macromnex/bindcraft_mcp:latest
+    docker_args: ["--gpus", "all", "--ipc=host"]
+    docker_volumes: []
     env_vars: {}
     dependencies: []
     source: Tool
-    url: https://github.com/MacMolNex/bindcraft_mcp
-    setup_script: quick_setup.sh
+    url: https://github.com/MacromNex/bindcraft_mcp
