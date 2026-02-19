@@ -72,6 +72,7 @@ class MCPRuntime(Enum):
     UVX = "uvx"
     NPX = "npx"
     BINARY = "binary"
+    DOCKER = "docker"
 
 
 class MCPScope(Enum):
@@ -126,6 +127,9 @@ class MCP:
     dependencies: List[str] = field(default_factory=list)
     path: Optional[str] = None
     python_version: Optional[str] = None
+    docker_image: Optional[str] = None
+    docker_args: List[str] = field(default_factory=list)
+    docker_volumes: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         """Validate and normalize runtime type"""
@@ -149,6 +153,18 @@ class MCP:
         if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value]:
             # Package-based MCPs don't need local installation
             return True
+
+        if self.runtime == MCPRuntime.DOCKER.value:
+            if not self.docker_image:
+                return False
+            try:
+                result = subprocess.run(
+                    ["docker", "image", "inspect", self.docker_image],
+                    capture_output=True, text=True, timeout=10
+                )
+                return result.returncode == 0
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                return False
 
         # Check in public MCPs directory
         if self.url:
@@ -283,9 +299,11 @@ class MCP:
         # Package-based MCPs don't need installation
         if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value]:
             print(f"✅ MCP '{self.name}' is a {self.runtime} package (no installation needed)")
-            # Invalidate cache since installation state may have changed
             self.invalidate_status_cache()
             return True
+
+        if self.runtime == MCPRuntime.DOCKER.value:
+            return self._pull_docker_image()
 
         # Handle local tool MCPs (check if already present in tool-mcps directory)
         if self.path:
@@ -388,8 +406,8 @@ class MCP:
             print(f"⚠️  MCP '{self.name}' is not installed")
             return True
 
-        # Package-based MCPs don't have local files
-        if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value]:
+        # Package-based and Docker MCPs don't have local files
+        if self.runtime in [MCPRuntime.UVX.value, MCPRuntime.NPX.value, MCPRuntime.DOCKER.value]:
             print(f"✅ MCP '{self.name}' is a {self.runtime} package (no files to remove)")
             self.path = None
             # Invalidate cache since uninstall state changed
@@ -413,6 +431,31 @@ class MCP:
                 return False
 
         return True
+
+    def _pull_docker_image(self) -> bool:
+        """Pull Docker image for Docker-based MCP."""
+        if not self.docker_image:
+            print(f"❌ No docker_image specified for '{self.name}'")
+            return False
+
+        print(f"🐳 Pulling Docker image: {self.docker_image}")
+        try:
+            result = subprocess.run(
+                ["docker", "pull", self.docker_image],
+                capture_output=False, timeout=600
+            )
+            if result.returncode != 0:
+                print(f"❌ Docker pull failed")
+                return False
+            print(f"✅ Successfully pulled {self.docker_image}")
+            self.invalidate_status_cache()
+            return True
+        except FileNotFoundError:
+            print("❌ Docker not found. Please install Docker first.")
+            return False
+        except subprocess.TimeoutExpired:
+            print("❌ Docker pull timed out (exceeded 10 minutes)")
+            return False
 
     def _run_setup_script(self, capture_output: bool = False) -> bool:
         """
@@ -587,6 +630,8 @@ class MCP:
             return self._register_uvx(cli, clean_name)
         elif self.runtime == MCPRuntime.NPX.value:
             return self._register_npx(cli, clean_name)
+        elif self.runtime == MCPRuntime.DOCKER.value:
+            return self._register_docker(cli, clean_name)
         elif self.runtime == MCPRuntime.NODE.value:
             return self._register_node(cli, clean_name)
         else:  # Python
@@ -669,6 +714,36 @@ class MCP:
         cmd.append("--")
         cmd.append("npx")
         cmd.extend(self.server_args)
+
+        return self._run_register_command(cmd, cli, clean_name)
+
+    def _register_docker(self, cli: str, clean_name: str) -> bool:
+        """Register Docker-based MCP"""
+        import os
+
+        if not self.docker_image:
+            print(f"❌ No docker_image specified for '{clean_name}'")
+            return False
+
+        cmd = [cli, "mcp", "add", clean_name]
+
+        # Add environment variables
+        for key, value in self.env_vars.items():
+            cmd.extend(["--env", f"{key}={value}"])
+
+        cmd.append("--")
+        cmd.extend(["docker", "run", "-i", "--rm"])
+        cmd.extend(self.docker_args)
+
+        # Mount current working directory into container at the same path
+        cwd = os.getcwd()
+        cmd.extend(["-v", f"{cwd}:{cwd}"])
+
+        # Mount any additional configured volumes
+        for vol in self.docker_volumes:
+            cmd.extend(["-v", vol])
+
+        cmd.append(self.docker_image)
 
         return self._run_register_command(cmd, cli, clean_name)
 
