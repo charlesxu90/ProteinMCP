@@ -102,6 +102,7 @@ class SkillManager:
     def _check_mcp_status(self, mcp_names: List[str], cli: str = "claude") -> Tuple[List[str], List[str]]:
         """
         Check which MCPs are already fully installed and which need installation.
+        Checks are run in parallel to speed up status queries (each involves subprocess calls).
 
         Args:
             mcp_names: List of MCP names to check
@@ -110,24 +111,29 @@ class SkillManager:
         Returns:
             Tuple of (already_installed, needs_installation)
         """
+        import concurrent.futures
         from ..mcp.mcp import MCPStatus
 
         mcp_manager = MCPManager()
+
+        def check_one(mcp_name: str) -> Tuple[str, bool]:
+            mcp = mcp_manager.get_mcp(mcp_name)
+            if mcp:
+                status = mcp.get_status(cli)
+                return mcp_name, status == MCPStatus.BOTH
+            return mcp_name, False
+
         already_installed = []
         needs_installation = []
 
-        for mcp_name in mcp_names:
-            mcp = mcp_manager.get_mcp(mcp_name)
-            if mcp:
-                # Check if MCP is both installed and registered
-                status = mcp.get_status(cli)
-                if status == MCPStatus.BOTH:
-                    already_installed.append(mcp_name)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(mcp_names)) as executor:
+            futures = {executor.submit(check_one, n): n for n in mcp_names}
+            for future in concurrent.futures.as_completed(futures):
+                name, is_ready = future.result()
+                if is_ready:
+                    already_installed.append(name)
                 else:
-                    needs_installation.append(mcp_name)
-            else:
-                # MCP not found, will need to try installing
-                needs_installation.append(mcp_name)
+                    needs_installation.append(name)
 
         return already_installed, needs_installation
 

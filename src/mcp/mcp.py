@@ -303,7 +303,7 @@ class MCP:
             return True
 
         if self.runtime == MCPRuntime.DOCKER.value:
-            return self._pull_docker_image()
+            return self._pull_docker_image(capture_output=capture_output)
 
         # Handle local tool MCPs (check if already present in tool-mcps directory)
         if self.path:
@@ -432,8 +432,12 @@ class MCP:
 
         return True
 
-    def _pull_docker_image(self) -> bool:
-        """Pull Docker image for Docker-based MCP."""
+    def _pull_docker_image(self, capture_output: bool = False) -> bool:
+        """Pull Docker image for Docker-based MCP.
+
+        Args:
+            capture_output: If True, capture output instead of streaming (for parallel execution).
+        """
         if not self.docker_image:
             print(f"❌ No docker_image specified for '{self.name}'")
             return False
@@ -442,11 +446,16 @@ class MCP:
         try:
             result = subprocess.run(
                 ["docker", "pull", self.docker_image],
-                capture_output=False, timeout=600
+                capture_output=capture_output, text=True, timeout=600
             )
             if result.returncode != 0:
-                print(f"❌ Docker pull failed")
+                if capture_output and result.stderr:
+                    print(f"  [{self.name}] {result.stderr.strip()}")
+                print(f"❌ Docker pull failed for {self.docker_image}")
                 return False
+            if capture_output and result.stdout:
+                for line in result.stdout.strip().splitlines():
+                    print(f"  [{self.name}] {line}")
             print(f"✅ Successfully pulled {self.docker_image}")
             self.invalidate_status_cache()
             return True
