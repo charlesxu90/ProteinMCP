@@ -41,13 +41,17 @@ What is the name of your protein (used for naming output files)?
 # choose your preferred configs and submit.
 ```
 
-## Run in Google Colab
+## Jupyter Notebooks
 
-Run the full fitness modeling workflow directly in your browser — no local setup required:
+As an alternative to skills, standalone Jupyter notebooks are available for each workflow. **We recommend using skills for the best experience**, but notebooks can be useful for step-by-step exploration or environments where Claude Code CLI is not available.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/charlesxu90/ProteinMCP/blob/main/notebooks/ProteinMCP_Fitness_Modeling.ipynb)
+| Notebook | Workflow | Description |
+|----------|----------|-------------|
+| [fitness_modeling.ipynb](./notebooks/fitness_modeling.ipynb) | Fitness Prediction | MSA, PLMC, EV+OneHot, ESM, ProtTrans, and visualization |
+| [binder_design.ipynb](./notebooks/binder_design.ipynb) | Binder Design | De novo binder design with BindCraft (RFdiffusion + ProteinMPNN + AF2) |
+| [nanobody_design.ipynb](./notebooks/nanobody_design.ipynb) | Nanobody Design | Nanobody CDR loop design with BoltzGen |
 
-The notebook installs all dependencies (Conda, ProteinMCP, Claude Code, MCP servers) and walks through every step: MSA generation, PLMC, EV+OneHot, ESM, ProtTrans, and final visualization. Just provide an `ANTHROPIC_API_KEY` and click **Run All**.
+Each notebook installs all dependencies, registers the required MCP servers, and walks through the full workflow. Just provide an `ANTHROPIC_API_KEY` and run the cells.
 
 ## Usage:
 
