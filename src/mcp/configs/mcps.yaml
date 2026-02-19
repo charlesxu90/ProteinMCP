@@ -1,319 +1,392 @@
 mcps:
-  ligandmpnn_mcp:
-    description: '> LigandMPNN MCP server for ligand-aware scaffold-based sequence generation (inverse folding)'
-    path: tool-mcps/ligandmpnn_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.11"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/ligandmpnn_mcp
-    setup_script: quick_setup.sh
-
-  proteinmpnn_mcp:
-    description: '> ProteinMPNN MCP server for protein design (inverse folding)'
-    path: tool-mcps/proteinmpnn_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/proteinmpnn_mcp
-    setup_script: quick_setup.sh
-
-  rfdiffusion2_mcp:
-    description: '> RFdiffusion2 MCP server for protein structure generation (backbone)'
-    path: tool-mcps/rfdiffusion2_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.11"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/rfdiffusion2_mcp
-    setup_script: quick_setup.sh
-
-  alphafold3_mcp:
-    description: '> AlphaFold3 MCP server for protein structure prediction, supporting batch prediction'
-    path: tool-mcps/alphafold3_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.11"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/alphafold3_mcp
-    setup_script: quick_setup.sh
-
   alphafold2_mcp:
-    description: '> AlphaFold2 MCP server for protein structure prediction, supporting complex and batch predictions'
-    path: tool-mcps/alphafold2_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
     dependencies: []
+    description: '> AlphaFold2 MCP server for protein structure prediction, supporting
+      complex and batch predictions'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/alphafold2_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
     source: Tool
     url: https://github.com/MacromNex/alphafold2_mcp
-    setup_script: quick_setup.sh
-
-  amber_mcp:
-    description: '> AMBER MCP server for MD simulations and analysis'
-    path: tool-mcps/amber_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.11"
-    env_vars: {}
+  alphafold3_mcp:
     dependencies: []
+    description: '> AlphaFold3 MCP server for protein structure prediction, supporting
+      batch prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/alphafold3_mcp
+    python_version: '3.11'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/alphafold3_mcp
+  amber_mcp:
+    dependencies: []
+    description: '> AMBER MCP server for MD simulations and analysis'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/amber_mcp
+    python_version: '3.11'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
     source: Tool
     url: https://github.com/MacromNex/amber_mcp
-    setup_script: quick_setup.sh
-
-  interpro_mcp:
-    description: '> InterProScan MCP server for protein domain and functional analysis'
-    path: tool-mcps/interpro_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/interpro_mcp
-    setup_script: quick_setup.sh
-
-  boltz_mcp:
-    description: '> Boltz2 MCP server for protein structure and affinity prediction'
-    path: tool-mcps/boltz_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/boltz_mcp
-    setup_script: quick_setup.sh
-
-  boltzgen_mcp:
-    description: '> BoltzGen MCP server for protein binder design'
-    runtime: docker
-    docker_image: ghcr.io/macromnex/boltzgen_mcp:latest
-    docker_args: ["--gpus", "all", "--ipc=host"]
-    docker_volumes: []
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/boltzgen_mcp
-
-  chai1_mcp:
-    description: '> Chai-1 MCP server for protein structure prediction'
-    path: tool-mcps/chai1_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/chai1_mcp
-    setup_script: quick_setup.sh
-
-  esm_mcp:
-    description: '> ESM MCP server for protein embedding and fitness modeling'
-    runtime: docker
-    docker_image: ghcr.io/macromnex/esm_mcp:latest
-    docker_args: ["--gpus", "all", "--ipc=host"]
-    docker_volumes: []
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/esm_mcp
-
-  esmfold_mcp:
-    description: '> ESMFold MCP server for protein structure prediction'
-    path: tool-mcps/esmfold_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/esmfold_mcp
-    setup_script: quick_setup.sh
-
-  ev_onehot_mcp:
-    description: 'Protein fitness prediction combining evolutionary coupling and one-hot encoding'
-    runtime: docker
-    docker_image: ghcr.io/macromnex/ev_onehot_mcp:latest
-    docker_args: ["--gpus", "all", "--ipc=host"]
-    docker_volumes: []
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/ev_onehot_mcp
-
-  gromacs_mcp:
-    description: '> GROMACS 2025.4 molecular dynamics simulations via MCP'
-    path: tool-mcps/gromacs_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/gromacs_mcp
-    setup_script: quick_setup.sh
-
-  rosetta_mcp:
-    description: '> Model Control Protocol (MCP) server for Rosetta molecular modeling and protein design suite'
-    path: tool-mcps/rosetta_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/rosetta_mcp
-    setup_script: quick_setup.sh
-
-  mmseqs2_mcp:
-    description: 'Sequence search, clustering, and MSA generation using MMseqs2'
-    path: tool-mcps/mmseqs2_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars:
-      MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/mmseqs2_mcp
-    setup_script: quick_setup.sh
-
-  msa_mcp:
-    description: 'Generate Multiple Sequence Alignments (MSA) using ColabFold server'
-    path: tool-mcps/msa_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/msa_mcp
-    setup_script: quick_setup.sh
-
-  mutcompute_mcp:
-    description: '> MutCompute MCP server for protein mutation effect prediction'
-    path: tool-mcps/mutcompute_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/mutcompute_mcp
-    setup_script: quick_setup.sh
-
-  netMHCIIpan_mcp:
-    description: '> NetMHCIIpan-4.3 MCP Server for MHC Class II binding prediction'
-    path: tool-mcps/netmhc2pan_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/netmhc2pan_mcp
-    setup_script: quick_setup.sh
-
-  netMHCpan_mcp:
-    description: '> MCP server for NetMHCpan-4.2 - MHC Class I binding prediction'
-    path: tool-mcps/netmhcpan_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/netmhcpan_mcp
-    setup_script: quick_setup.sh
-
-  plmc_mcp:
-    description: 'Evolutionary coupling analysis using PLMC for protein fitness prediction'
-    runtime: docker
-    docker_image: ghcr.io/macromnex/plmc_mcp:latest
-    docker_args: ["--gpus", "all", "--ipc=host"]
-    docker_volumes: []
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/plmc_mcp
-
-  protein-sol_mcp:
-    description: '> Protein-Sol MCP server for protein solubility prediction'
-    path: tool-mcps/protein_sol_mcp
-    runtime: python
-    server_command: python
-    server_args:
-      - src/server.py
-    python_version: "3.10"
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/protein_sol_mcp
-    setup_script: quick_setup.sh
-
-  prottrans_mcp:
-    description: 'ProtTrans MCP server for protein embeddings and fitness modeling prediction'
-    runtime: docker
-    docker_image: ghcr.io/macromnex/prottrans_mcp:latest
-    docker_args: ["--gpus", "all", "--ipc=host"]
-    docker_volumes: []
-    env_vars: {}
-    dependencies: []
-    source: Tool
-    url: https://github.com/MacromNex/prottrans_mcp
-
   bindcraft_mcp:
+    dependencies: []
     description: '> BindCraft MCP server for protein binder design'
-    runtime: docker
+    docker_args:
+    - --gpus
+    - all
+    - --ipc=host
     docker_image: ghcr.io/macromnex/bindcraft_mcp:latest
-    docker_args: ["--gpus", "all", "--ipc=host"]
     docker_volumes: []
     env_vars: {}
-    dependencies: []
+    runtime: docker
+    server_args: []
+    server_command: ''
+    setup_commands: []
     source: Tool
     url: https://github.com/MacromNex/bindcraft_mcp
+  boltz_mcp:
+    dependencies: []
+    description: '> Boltz2 MCP server for protein structure and affinity prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/boltz_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/boltz_mcp
+  boltzgen_mcp:
+    dependencies: []
+    description: '> BoltzGen MCP server for protein binder design'
+    docker_args:
+    - --gpus
+    - all
+    - --ipc=host
+    docker_image: ghcr.io/macromnex/boltzgen_mcp:latest
+    docker_volumes: []
+    env_vars: {}
+    runtime: docker
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Tool
+    url: https://github.com/MacromNex/boltzgen_mcp
+  chai1_mcp:
+    dependencies: []
+    description: '> Chai-1 MCP server for protein structure prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/chai1_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/chai1_mcp
+  esm_mcp:
+    dependencies: []
+    description: '> ESM MCP server for protein embedding and fitness modeling'
+    docker_args:
+    - --gpus
+    - all
+    - --ipc=host
+    docker_image: ghcr.io/macromnex/esm_mcp:latest
+    docker_volumes: []
+    env_vars: {}
+    runtime: docker
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Tool
+    url: https://github.com/MacromNex/esm_mcp
+  esmfold_mcp:
+    dependencies: []
+    description: '> ESMFold MCP server for protein structure prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/esmfold_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/esmfold_mcp
+  ev_onehot_mcp:
+    dependencies: []
+    description: Protein fitness prediction combining evolutionary coupling and one-hot
+      encoding
+    docker_args:
+    - --gpus
+    - all
+    - --ipc=host
+    docker_image: ghcr.io/macromnex/ev_onehot_mcp:latest
+    docker_volumes: []
+    env_vars: {}
+    runtime: docker
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Tool
+    url: https://github.com/MacromNex/ev_onehot_mcp
+  gromacs_mcp:
+    dependencies: []
+    description: '> GROMACS 2025.4 molecular dynamics simulations via MCP'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/gromacs_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/gromacs_mcp
+  interpro_mcp:
+    dependencies: []
+    description: '> InterProScan MCP server for protein domain and functional analysis'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/interpro_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/interpro_mcp
+  ligandmpnn_mcp:
+    dependencies: []
+    description: '> LigandMPNN MCP server for ligand-aware scaffold-based sequence
+      generation (inverse folding)'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/ligandmpnn_mcp
+    python_version: '3.11'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/ligandmpnn_mcp
+  mmseqs2_mcp:
+    dependencies: []
+    description: Sequence search, clustering, and MSA generation using MMseqs2
+    docker_args: []
+    docker_volumes: []
+    env_vars:
+      MMSEQS2_DB_PATH: /mnt/data/data_repository/bio-seq/protein/uniref100/uniref100.fasta.db_padded
+    path: tool-mcps/mmseqs2_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/mmseqs2_mcp
+  msa_mcp:
+    dependencies: []
+    description: Generate Multiple Sequence Alignments (MSA) using ColabFold server
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/msa_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/msa_mcp
+  mutcompute_mcp:
+    dependencies: []
+    description: '> MutCompute MCP server for protein mutation effect prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/mutcompute_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/mutcompute_mcp
+  netMHCIIpan_mcp:
+    dependencies: []
+    description: '> NetMHCIIpan-4.3 MCP Server for MHC Class II binding prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/netmhc2pan_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/netmhc2pan_mcp
+  netMHCpan_mcp:
+    dependencies: []
+    description: '> MCP server for NetMHCpan-4.2 - MHC Class I binding prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/netmhcpan_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/netmhcpan_mcp
+  plmc_mcp:
+    dependencies: []
+    description: Evolutionary coupling analysis using PLMC for protein fitness prediction
+    docker_args:
+    - --gpus
+    - all
+    - --ipc=host
+    docker_image: ghcr.io/macromnex/plmc_mcp:latest
+    docker_volumes: []
+    env_vars: {}
+    runtime: docker
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Tool
+    url: https://github.com/MacromNex/plmc_mcp
+  protein-sol_mcp:
+    dependencies: []
+    description: '> Protein-Sol MCP server for protein solubility prediction'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/protein_sol_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/protein_sol_mcp
+  proteinmpnn_mcp:
+    dependencies: []
+    description: '> ProteinMPNN MCP server for protein design (inverse folding)'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/proteinmpnn_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/proteinmpnn_mcp
+  prottrans_mcp:
+    dependencies: []
+    description: ProtTrans MCP server for protein embeddings and fitness modeling
+      prediction
+    docker_args:
+    - --gpus
+    - all
+    - --ipc=host
+    docker_image: ghcr.io/macromnex/prottrans_mcp:latest
+    docker_volumes: []
+    env_vars: {}
+    runtime: docker
+    server_args: []
+    server_command: ''
+    setup_commands: []
+    source: Tool
+    url: https://github.com/MacromNex/prottrans_mcp
+  rfdiffusion2_mcp:
+    dependencies: []
+    description: '> RFdiffusion2 MCP server for protein structure generation (backbone)'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/rfdiffusion2_mcp
+    python_version: '3.11'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/rfdiffusion2_mcp
+  rosetta_mcp:
+    dependencies: []
+    description: '> Model Control Protocol (MCP) server for Rosetta molecular modeling
+      and protein design suite'
+    docker_args: []
+    docker_volumes: []
+    env_vars: {}
+    path: tool-mcps/rosetta_mcp
+    python_version: '3.10'
+    runtime: python
+    server_args:
+    - src/server.py
+    server_command: python
+    setup_commands: []
+    setup_script: quick_setup.sh
+    source: Tool
+    url: https://github.com/MacromNex/rosetta_mcp
