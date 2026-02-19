@@ -293,7 +293,10 @@ class MCP:
 
         # Check if already installed
         if self.is_installed() and not force:
-            print(f"✅ MCP '{self.name}' is already installed at: {self.path}")
+            if self.runtime == MCPRuntime.DOCKER.value:
+                print(f"✅ MCP '{self.name}' Docker image already pulled: {self.docker_image}")
+            else:
+                print(f"✅ MCP '{self.name}' is already installed at: {self.path}")
             return True
 
         # Package-based MCPs don't need installation
