@@ -449,7 +449,7 @@ class MCP:
         try:
             result = subprocess.run(
                 ["docker", "pull", self.docker_image],
-                capture_output=capture_output, text=True, timeout=600
+                capture_output=capture_output, text=True, timeout=1800
             )
             if result.returncode != 0:
                 if capture_output and result.stderr:
@@ -466,7 +466,7 @@ class MCP:
             print("❌ Docker not found. Please install Docker first.")
             return False
         except subprocess.TimeoutExpired:
-            print("❌ Docker pull timed out (exceeded 10 minutes)")
+            print("❌ Docker pull timed out (exceeded 30 minutes)")
             return False
 
     def _run_setup_script(self, capture_output: bool = False) -> bool:

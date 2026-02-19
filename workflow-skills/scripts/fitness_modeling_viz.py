@@ -174,7 +174,7 @@ def plot_backbone_comparison(best_df: pd.DataFrame, output_path: str = None):
             labels.append('ProtT5-XL')
         else:
             labels.append(m)
-    ax.set_xticklabels(labels, fontsize=9)
+    ax.set_xticklabels(labels, fontsize=9, rotation=45, ha='right')
 
     plt.tight_layout()
 
@@ -802,7 +802,7 @@ def _plot_backbone_comparison_ax(ax, best_df):
             labels.append('ESM2\n3B')
         else:
             labels.append(m)
-    ax.set_xticklabels(labels, fontsize=9)
+    ax.set_xticklabels(labels, fontsize=9, rotation=45, ha='right')
 
 
 def _plot_predicted_vs_observed_ax(ax, results_dir, best_model_info, data_df):
