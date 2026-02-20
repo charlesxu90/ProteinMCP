@@ -48,7 +48,10 @@ CONFIG_FILE: null                                  # Custom config file (optiona
 **Directory Structure:**
 ```
 RESULTS_DIR/                     # All outputs go here
-├── config.json                  # Generated configuration
+├── config/                      # Generated configuration directory
+│   ├── target_settings.json     # BindCraft target settings
+│   ├── default_filters.json     # Default design filters
+│   └── default_4stage_multimer.json  # Default advanced settings
 ├── designs/                     # Designed binder structures
 │   ├── design_001.pdb          # Binder-target complex
 │   ├── design_002.pdb
@@ -64,16 +67,15 @@ RESULTS_DIR/                     # All outputs go here
 **Description**: Get information about available configuration files and their settings.
 
 **Prompt:**
-> Can you show me the available default configurations for BindCraft using the scripts_mcp server? I want to understand what settings are available.
+> Can you show me the available default configurations for BindCraft using the bindcraft_mcp server? I want to understand what settings are available for binder design.
 
 **Implementation Notes:**
-- Use `mcp__bindcraft_mcp__get_default_configs` tool
-- Returns available config files and their settings
-- Useful for understanding optimization parameters
+- Use `mcp__bindcraft_mcp__generate_config` tool with `analysis_type`: "basic" to see what settings are generated
+- Returns available config options and target analysis
 
 **Expected Output:**
-- List of config files with descriptions
-- Settings for each configuration type
+- List of config options with descriptions
+- Target protein analysis results
 
 ---
 
@@ -100,24 +102,27 @@ mkdir -p {RESULTS_DIR}/logs
 
 ## Step 3: Generate Configuration from Target PDB
 
-**Description**: Analyze the target PDB structure and generate an optimized configuration file.
+**Description**: Analyze the target PDB structure and generate an optimized configuration directory.
 
 **Prompt:**
-> Can you generate a BindCraft configuration for my target protein at {TARGET_PDB}? Target chain(s) {TARGET_CHAINS} and aim for a binder of length {BINDER_LENGTH}. Save the config to {RESULTS_DIR}/config.json.
+> Can you generate a BindCraft configuration for my target protein at {TARGET_PDB}? Target chain(s) {TARGET_CHAINS} and aim for a binder of length {BINDER_LENGTH}. Save the config to {RESULTS_DIR}/config/.
 > Please convert relative paths to absolute paths before calling the MCP server.
 
 **Implementation Notes:**
 - Use `mcp__bindcraft_mcp__generate_config` tool
 - Parameters:
   - `input_file`: Path to target PDB
-  - `output_file`: Path for config output
+  - `output_file`: Path for config output directory
   - `chains`: Target chains
   - `binder_length`: Desired binder length
   - `validate`: true (to validate the config)
   - `analysis_type`: "basic" or "detailed"
+- The tool creates a directory with `target_settings.json`, `default_filters.json`, etc.
 
 **Expected Output:**
-- `{RESULTS_DIR}/config.json` - Generated configuration file
+- `{RESULTS_DIR}/config/target_settings.json` - Generated target settings
+- `{RESULTS_DIR}/config/default_filters.json` - Design filters
+- `{RESULTS_DIR}/config/default_4stage_multimer.json` - Advanced settings
 - Validation results if enabled
 
 ---
@@ -127,26 +132,26 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Submit an asynchronous job for generating multiple binder designs.
 
 **Prompt:**
-> Can you submit an async binder design job for {TARGET_PDB} using BindCraft? Generate {NUM_DESIGNS} designs targeting chain(s) {TARGET_CHAINS} with binder length {BINDER_LENGTH}. Save results to {RESULTS_DIR}/designs/. Use the config file at {RESULTS_DIR}/config.json if available.
+> Can you submit an async binder design job for {TARGET_PDB} using BindCraft? Generate {NUM_DESIGNS} designs targeting chain(s) {TARGET_CHAINS} with binder length {BINDER_LENGTH}. Save results to {RESULTS_DIR}/designs/. Use the config file at {RESULTS_DIR}/config/target_settings.json if available.
 > Please convert relative paths to absolute paths before calling the MCP server.
 
 **Implementation Notes:**
-- Use `mcp__bindcraft_mcp__submit_async_design` tool
+- Use `mcp__bindcraft_mcp__bindcraft_submit` tool
 - Parameters:
-  - `input_file`: Path to target PDB
+  - `target_pdb`: Path to target PDB
   - `output_dir`: Output directory
-  - `config`: Config file path (optional)
+  - `settings_json`: Path to target_settings.json (optional)
   - `num_designs`: Number of designs
-  - `chains`: Target chains
-  - `binder_length`: Binder length
+  - `target_chains`: Target chains
+  - `binder_name`: Name prefix for designs
+  - `min_binder_length` / `max_binder_length`: Binder length range
   - `device`: GPU device
-  - `hotspot`: Optional hotspot residues
-  - `job_name`: Optional job name for tracking
-- Returns a job_id for tracking
+  - `hotspot_residues`: Optional hotspot residues
+- Returns a job_id and output_dir for tracking
 
 **Expected Output:**
-- Job submission confirmation with job_id
-- Use job_id for monitoring and retrieving results
+- Job submission confirmation with status='submitted'
+- Use output_dir for monitoring with `mcp__bindcraft_mcp__bindcraft_check_status`
 
 ---
 
@@ -155,61 +160,39 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Check the progress of running design jobs.
 
 **Prompt:**
-> Can you check the status of my BindCraft design job with ID {job_id}? Also show me the recent log output.
+> Can you check the status of my BindCraft design job? The output directory is {RESULTS_DIR}/designs/. Also show me the recent log output.
 
 **Implementation Notes:**
-- Use `mcp__bindcraft_mcp__get_job_status` to check job status
-- Use `mcp__bindcraft_mcp__get_job_log` to view logs
-- Alternative: Use `mcp__bindcraft_mcp__monitor_progress` for directory-based monitoring
-- Parameters for get_job_status:
-  - `job_id`: The job ID from submission
-- Parameters for get_job_log:
-  - `job_id`: The job ID
-  - `tail`: Number of lines (default 50)
+- Use `mcp__bindcraft_mcp__bindcraft_check_status` to check job status
+- Parameters:
+  - `output_dir`: Path to BindCraft output directory
+- Returns job status, number of completed trajectories, accepted/rejected designs, and CSV stats
 
 **Expected Output:**
-- Job status (pending, running, completed, failed)
-- Progress information
-- Recent log output
+- Job status (running, completed, failed, unknown)
+- Number of completed trajectories and accepted designs
+- Result summary when finished
 
 ---
 
-## Step 6: List All Jobs
-
-**Description**: View all submitted jobs and their statuses.
-
-**Prompt:**
-> Can you list all BindCraft jobs I've submitted? Show me their statuses.
-
-**Implementation Notes:**
-- Use `mcp__bindcraft_mcp__list_jobs` tool
-- Optional parameter:
-  - `status`: Filter by status (pending, running, completed, failed, cancelled)
-
-**Expected Output:**
-- List of all jobs with IDs, names, and statuses
-- Timestamps for job creation and completion
-
----
-
-## Step 7: Get Job Results
+## Step 6: Get Job Results
 
 **Description**: Retrieve the results of a completed design job.
 
 **Prompt:**
-> Can you get the results of my completed BindCraft job with ID {job_id}?
+> Can you check the results of my completed BindCraft job in {RESULTS_DIR}/designs/? List all output files and print any available design quality metrics.
 
 **Implementation Notes:**
-- Use `mcp__bindcraft_mcp__get_job_result` tool
+- Use `mcp__bindcraft_mcp__bindcraft_check_status` tool
 - Parameters:
-  - `job_id`: The job ID of a completed job
-- Only works for completed jobs
+  - `output_dir`: Path to BindCraft output directory
+- When job is complete, returns detailed summary with design statistics
 
 **Expected Output:**
 - Design results including:
   - Output file paths
-  - Design metrics and scores
-  - Any errors or warnings
+  - Design metrics and scores (pLDDT, pAE, interface scores)
+  - CSV statistics files available
 
 ---
 
@@ -226,10 +209,10 @@ Use the binder design visualization script:
 
 ```bash
 # Run the visualization script (using ev_onehot_mcp environment which has matplotlib)
-@tool-mcps/ev_onehot_mcp/env/bin/python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR}
+python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR}
 
 # Or with custom output prefix:
-@tool-mcps/ev_onehot_mcp/env/bin/python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR} --output {RESULTS_DIR}/custom_prefix
+python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR} --output {RESULTS_DIR}/custom_prefix
 ```
 
 **Note:** The `@` paths should be resolved to absolute paths:
@@ -360,7 +343,7 @@ display_results("{RESULTS_DIR}", show_all=False)
 7. **Async Job Not Found**
    - Job IDs may expire after completion
    - Check output directory for results
-   - Use list_jobs to verify job exists
+   - Use `mcp__bindcraft_mcp__bindcraft_check_status` with output_dir to verify
 
 8. **Settings File Format Errors (KeyError)**
    - BindCraft expects specific field names in target_settings.json

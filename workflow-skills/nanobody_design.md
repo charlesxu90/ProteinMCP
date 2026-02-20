@@ -118,14 +118,16 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Validate the BoltzGen configuration file before running the design.
 
 **Prompt:**
-> Can you validate the BoltzGen configuration at {RESULTS_DIR}/config.yaml using the boltzgen_mcp server?
-> Please convert the relative path to absolute path before calling the MCP server.
+> Can you validate the BoltzGen configuration at {RESULTS_DIR}/config.yaml? Check that the target CIF file exists and the YAML structure is correct.
+> Please convert the relative path to absolute path before executing.
 
 **Implementation Notes:**
-- Use `mcp__boltzgen_mcp__validate_config` tool
-- Parameters:
-  - `config_file`: Path to the config.yaml file
-  - `verbose`: true (for detailed validation output)
+- Read the config.yaml and verify:
+  - Target CIF file path exists
+  - Chain ID is valid
+  - YAML structure has correct `entities` format
+  - Scaffold YAML files exist (if specified)
+- Use Bash/Read tools to validate file existence and YAML syntax
 
 **Expected Output:**
 - Validation status (valid/invalid)
@@ -144,23 +146,22 @@ mkdir -p {RESULTS_DIR}/logs
 > Please convert the relative path to absolute path before calling the MCP server.
 
 **Implementation Notes:**
-- Use `mcp__boltzgen_mcp__submit_generic_boltzgen` tool
+- Use `mcp__boltzgen_mcp__boltzgen_submit` tool
 - Parameters:
-  - `config_file`: {RESULTS_DIR}/config.yaml
-  - `output_dir`: {RESULTS_DIR}/designs
+  - `config`: {RESULTS_DIR}/config.yaml
+  - `output`: {RESULTS_DIR}/designs
   - `protocol`: "nanobody-anything" (specialized for nanobody CDR design)
   - `num_designs`: {NUM_DESIGNS}
   - `budget`: {BUDGET}
-  - `cuda_device`: {CUDA_DEVICE} (optional)
-  - `job_name`: {JOB_NAME}
+- GPU is automatically assigned from the pool (no need to specify cuda_device)
 - The nanobody-anything protocol:
   - Filters cysteines from design
   - Optimized for single-domain antibodies (VHH)
   - Specialized for CDR loop design
 
 **Expected Output:**
-- Job ID for tracking the design process
-- Use this job_id for monitoring progress
+- Job submission with status='queued', job_id, and queue position
+- Use job_id or output_dir for monitoring progress
 
 ---
 
@@ -172,18 +173,16 @@ mkdir -p {RESULTS_DIR}/logs
 > Can you check the status of my BoltzGen nanobody design job with ID {job_id}? Also show me the recent log output.
 
 **Implementation Notes:**
-- Use `mcp__boltzgen_mcp__get_job_status` to check job status
-- Use `mcp__boltzgen_mcp__get_job_log` to view logs
-- Parameters for get_job_status:
-  - `job_id`: The job ID from submission
-- Parameters for get_job_log:
-  - `job_id`: The job ID
-  - `tail`: Number of lines (default 50)
+- Use `mcp__boltzgen_mcp__boltzgen_job_status` to check by job_id
+  - Parameters: `job_id` (from submission)
+- Or use `mcp__boltzgen_mcp__boltzgen_check_status` to check by output directory
+  - Parameters: `output_dir` ({RESULTS_DIR}/designs)
+- Use `mcp__boltzgen_mcp__boltzgen_queue_status` to see overall queue state
 
 **Expected Output:**
-- Job status (pending, running, completed, failed)
-- Progress information
-- Recent log output
+- Job status (running, completed, failed, unknown)
+- Number of generated designs (PDB files)
+- Result summary when finished
 
 ---
 
@@ -192,18 +191,18 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Retrieve the results of the completed nanobody design job.
 
 **Prompt:**
-> Can you get the results of my completed BoltzGen nanobody design job with ID {job_id}?
+> Can you get the results of my completed BoltzGen nanobody design job? Check the output at {RESULTS_DIR}/designs/ and list all generated PDB files and metrics.
 
 **Implementation Notes:**
-- Use `mcp__boltzgen_mcp__get_job_result` tool
+- Use `mcp__boltzgen_mcp__boltzgen_check_status` tool
 - Parameters:
-  - `job_id`: The job ID of a completed job
-- Only works for completed jobs
+  - `output_dir`: {RESULTS_DIR}/designs
+- Returns detailed summary when job is complete
 
 **Expected Output:**
 - List of generated PDB files
 - Design metrics and scores
-- Any errors or warnings
+- Job configuration and parameters
 
 ---
 

@@ -227,35 +227,15 @@ Use the ESM MCP server for deep learning embeddings.
 Before training, extract embeddings for all sequences in data.csv.
 
 **For ESM2-650M:**
-- Use `mcp__esm_mcp__extract_protein_embeddings` with:
-  - `input_file`: Path to FASTA file with sequences
-  - `output_dir`: {RESULTS_DIR}/esm2_t33_650M_UR50D
-  - `model`: "esm2_t33_650M_UR50D"
-  - `include_per_tok`: false (use mean representations)
+- Use `mcp__esm_mcp__esm_extract_embeddings_from_csv` with:
+  - `csv_path`: {RESULTS_DIR}/data.csv
+  - `model_name`: "esm2_t33_650M_UR50D"
+  - `seq_column`: "seq"
+  - `output_dir`: {RESULTS_DIR}/esm2_t33_650M_UR50D (optional, auto-detected)
 
-**Alternative (if MCP tool fails):** Run esm-extract directly:
-```bash
-# First create sequences.fasta from data.csv (extract unique sequences)
-# Then run:
-mkdir -p {RESULTS_DIR}/esm2_t33_650M_UR50D
-esm-extract esm2_t33_650M_UR50D {RESULTS_DIR}/sequences.fasta {RESULTS_DIR}/esm2_t33_650M_UR50D --repr_layers 33 --include mean
-```
+**For ESM2-3B:** Same tool with `model_name`: "esm2_t36_3B_UR50D"
 
-**Creating sequences.fasta from data.csv:**
-```python
-import pandas as pd
-from pathlib import Path
-
-csv_path = Path("{RESULTS_DIR}/data.csv")
-df = pd.read_csv(csv_path)
-unique_sequences = df['seq'].unique()
-seq_ids = [f"seq_{i}" for i in range(len(unique_sequences))]
-
-fasta_path = Path("{RESULTS_DIR}") / "sequences.fasta"
-with open(fasta_path, 'w') as f:
-    for seq_id, seq in zip(seq_ids, unique_sequences):
-        f.write(f">{seq_id}\n{seq}\n")
-```
+The Docker MCP handles FASTA extraction and embedding generation internally.
 
 ### 4.2 Train ESM2-650M Models
 
@@ -277,7 +257,7 @@ with open(fasta_path, 'w') as f:
 > Please convert the relative path to absolute path before calling the MCP servers.
 > Obtain the embeddings if they are not created.
 
-Same process but use `esm2_t36_3B_UR50D` as backbone and `--repr_layers 36`.
+Same process but use `esm2_t36_3B_UR50D` as backbone_model.
 
 **Expected Output per model:**
 - `{RESULTS_DIR}/{backbone}_{head}/training_summary.csv` - Training metrics with columns: backbone_model, head_model, mean_cv_spearman, std_cv_spearman
@@ -415,7 +395,7 @@ print(f"Saved {len(results)} model results to all_models_comparison.csv")
 ```bash
 # Use ev_onehot_mcp environment (has matplotlib, numpy, pandas, scipy)
 # Paths are relative to the ProteinMCP project root
-@tool-mcps/ev_onehot_mcp/env/bin/python @workflow-skills/scripts/fitness_modeling_viz.py {RESULTS_DIR}
+python @workflow-skills/scripts/fitness_modeling_viz.py {RESULTS_DIR}
 ```
 
 **Note:** The `@` paths should be resolved to absolute paths:
@@ -486,7 +466,7 @@ display_results('{RESULTS_DIR}')
 
 Or using the ev_onehot_mcp environment (guaranteed to have all dependencies):
 ```bash
-@tool-mcps/ev_onehot_mcp/env/bin/python -c "
+python -c "
 import sys
 sys.path.insert(0, '@workflow-skills/scripts')
 from fitness_modeling_viz import display_results
@@ -591,17 +571,15 @@ pmcp status
      cp {DATA_DIR}/wt.fasta {RESULTS_DIR}/
      ```
 
-4. **ESM MCP extract_protein_embeddings fails**
-   - Use esm-extract command directly via Bash:
-     ```bash
-     esm-extract esm2_t33_650M_UR50D sequences.fasta output_dir --repr_layers 33 --include mean
-     ```
-   - Ensure sequences.fasta is created from data.csv first
+4. **ESM MCP embedding extraction fails**
+   - Verify `esm_mcp` Docker image is pulled: `pmcp status`
+   - Re-install if needed: `pmcp install esm_mcp`
+   - Or build locally: `cd tool-mcps/esm_mcp && docker build -t esm_mcp:latest .`
 
 5. **Matplotlib not found for visualization**
-   - Use ev_onehot_mcp environment which has matplotlib installed:
+   - Install visualization dependencies:
      ```bash
-     /path/to/ev_onehot_mcp/env/bin/python visualization_script.py
+     pip install matplotlib seaborn scipy Pillow
      ```
 
 6. **Different CSV column names between models**
