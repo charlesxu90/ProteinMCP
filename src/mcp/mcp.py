@@ -745,6 +745,7 @@ class MCP:
 
         cmd.append("--")
         cmd.extend(["docker", "run", "-i", "--rm"])
+        cmd.extend(["--user", f"{os.getuid()}:{os.getgid()}"])
         cmd.extend(self.docker_args)
 
         # Mount current working directory into container at the same path
