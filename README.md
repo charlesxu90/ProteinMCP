@@ -61,7 +61,7 @@ Each notebook installs all dependencies, registers the required MCP servers, and
 pmcp avail
 
 # Show MCP details
-pmcp info msa
+pmcp info msa_mcp
 
 # Install an MCP
 pmcp install msa
