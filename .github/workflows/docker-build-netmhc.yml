@@ -13,65 +13,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  prepare-binaries:
-    runs-on: ubuntu-latest
-    outputs:
-      netmhcpan-cache-hit: ${{ steps.cache-netmhcpan.outputs.cache-hit }}
-      netmhc2pan-cache-hit: ${{ steps.cache-netmhc2pan.outputs.cache-hit }}
-    steps:
-      - uses: actions/checkout@v4
-
-      # Cache NetMHCpan binaries
-      - name: Cache NetMHCpan binaries
-        id: cache-netmhcpan
-        uses: actions/cache@v3
-        with:
-          path: tool-mcps/netmhcpan_mcp/repo/netMHCpan-4.2
-          key: netmhcpan-4.2-${{ hashFiles('tool-mcps/netmhcpan_mcp/repo/netMHCpan-4.2bstatic.Linux.tar.gz') }}
-          restore-keys: netmhcpan-4.2-
-
-      # Cache NetMHCIIpan binaries
-      - name: Cache NetMHCIIpan binaries
-        id: cache-netmhc2pan
-        uses: actions/cache@v3
-        with:
-          path: tool-mcps/netmhc2pan_mcp/repo/netMHCIIpan-4.3
-          key: netmhc2pan-4.3-${{ hashFiles('tool-mcps/netmhc2pan_mcp/repo/netMHCIIpan-4.3istatic.Linux.tar.gz') }}
-          restore-keys: netmhc2pan-4.3-
-
-      # Extract tarballs if needed (for first-time setup)
-      - name: Extract NetMHCpan if tarball exists
-        if: hashFiles('tool-mcps/netmhcpan_mcp/repo/netMHCpan-4.2bstatic.Linux.tar.gz') != ''
-        run: |
-          cd tool-mcps/netmhcpan_mcp/repo
-          tar -xzf netMHCpan-4.2bstatic.Linux.tar.gz || true
-          ls -la
-
-      - name: Extract NetMHCIIpan if tarball exists
-        if: hashFiles('tool-mcps/netmhc2pan_mcp/repo/netMHCIIpan-4.3istatic.Linux.tar.gz') != ''
-        run: |
-          cd tool-mcps/netmhc2pan_mcp/repo
-          tar -xzf netMHCIIpan-4.3istatic.Linux.tar.gz || true
-          ls -la
-
-      - name: Report binary status
-        run: |
-          echo "NetMHCpan binary present: $([ -d tool-mcps/netmhcpan_mcp/repo/netMHCpan-4.2 ] && echo 'YES' || echo 'NO')"
-          echo "NetMHCIIpan binary present: $([ -d tool-mcps/netmhc2pan_mcp/repo/netMHCIIpan-4.3 ] && echo 'YES' || echo 'NO')"
-
   build-netmhcpan:
-    needs: prepare-binaries
     runs-on: ubuntu-latest
     permissions:
       packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore cached binaries
+      # Cache downloaded NetMHCpan binaries for faster builds
+      # The Docker build will download from official source and cache locally
+      - name: Cache NetMHCpan binaries
         uses: actions/cache@v3
         with:
           path: tool-mcps/netmhcpan_mcp/repo/netMHCpan-4.2
-          key: netmhcpan-4.2-${{ hashFiles('tool-mcps/netmhcpan_mcp/repo/netMHCpan-4.2bstatic.Linux.tar.gz') }}
+          key: netmhcpan-4.2-v1
+          restore-keys: netmhcpan-4.2-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -86,18 +42,20 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-netmhc2pan:
-    needs: prepare-binaries
     runs-on: ubuntu-latest
     permissions:
       packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore cached binaries
+      # Cache downloaded NetMHCIIpan binaries for faster builds
+      # The Docker build will download from official source and cache locally
+      - name: Cache NetMHCIIpan binaries
         uses: actions/cache@v3
         with:
           path: tool-mcps/netmhc2pan_mcp/repo/netMHCIIpan-4.3
-          key: netmhc2pan-4.3-${{ hashFiles('tool-mcps/netmhc2pan_mcp/repo/netMHCIIpan-4.3istatic.Linux.tar.gz') }}
+          key: netmhc2pan-4.3-v1
+          restore-keys: netmhc2pan-4.3-
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
