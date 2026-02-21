@@ -226,6 +226,8 @@ Use the ESM MCP server for deep learning embeddings.
 
 Before training, extract embeddings for all sequences in data.csv.
 
+**IMPORTANT:** The correct tool name is `mcp__esm_mcp__esm_extract_embeddings_from_csv` (NOT `mcp__esm_mcp__extract_protein_embeddings`).
+
 **For ESM2-650M:**
 - Use `mcp__esm_mcp__esm_extract_embeddings_from_csv` with:
   - `csv_path`: {RESULTS_DIR}/data.csv
@@ -342,7 +344,7 @@ After training all models, create a comprehensive four-panel visualization showi
 
 ### 6.2 Results Collection Code
 
-**IMPORTANT:** Different model types have different CSV formats. Use this code to aggregate all results:
+**IMPORTANT:** Different model types have different CSV formats. Some models (notably ProtAlbert with small datasets) may produce NaN results — these must be filtered out or the visualization will fail. Use this code to aggregate all results:
 
 ```python
 import os
@@ -361,7 +363,7 @@ if os.path.exists(ev_metrics_path):
     results.append({'backbone': 'EV+OneHot', 'head': 'ridge', 'mean_cv_spearman': cv_mean, 'std_cv_spearman': cv_std})
 
 # ESM and ProtTrans models - training_summary.csv format
-for dir_name in os.listdir(results_dir):
+for dir_name in sorted(os.listdir(results_dir)):
     summary_file = os.path.join(results_dir, dir_name, "training_summary.csv")
     if os.path.exists(summary_file):
         df = pd.read_csv(summary_file)
@@ -374,14 +376,18 @@ for dir_name in os.listdir(results_dir):
             std_sp = df['cv_std'].values[0]
         else:
             continue
+        # Skip NaN results (ProtAlbert can produce NaN with small datasets)
+        if pd.isna(mean_sp):
+            print(f"Skipping {dir_name} (NaN CV results)")
+            continue
         # Parse backbone and head from directory name (format: backbone_head)
         parts = dir_name.rsplit('_', 1)
         if len(parts) == 2:
             backbone, head = parts
             results.append({'backbone': backbone, 'head': head, 'mean_cv_spearman': mean_sp, 'std_cv_spearman': std_sp})
 
-# Save combined results
-all_models_df = pd.DataFrame(results)
+# Save combined results sorted by performance
+all_models_df = pd.DataFrame(results).sort_values('mean_cv_spearman', ascending=False)
 all_models_df.to_csv(os.path.join(results_dir, "all_models_comparison.csv"), index=False)
 print(f"Saved {len(results)} model results to all_models_comparison.csv")
 ```
@@ -593,17 +599,23 @@ pmcp status
    - Try ESM2-650M instead of ESM2-3B
    - Run embeddings extraction separately
 
-8. **Low Spearman Correlation**
+8. **ProtAlbert Returns NaN Results**
+   - ProtAlbert produces 4096-dimensional embeddings which can cause numerical issues with small datasets (<500 samples)
+   - The PCA reduction to 60 components may produce degenerate fits
+   - This is expected behavior — ProtAlbert results will be automatically skipped during aggregation
+   - Consider using only ProtT5-XL for the ProtTrans backbone
+
+9. **Low Spearman Correlation**
    - Check data quality (remove outliers)
    - Ensure proper log-transformation of fitness
    - Try different head models
 
-9. **High Variance Across Folds**
-   - Increase dataset size
-   - Use SVR instead of XGBoost
-   - Consider ensemble methods
+10. **High Variance Across Folds**
+    - Increase dataset size
+    - Use SVR instead of XGBoost
+    - Consider ensemble methods
 
-10. **MCP Not Found**
+11. **MCP Not Found**
     - Ensure skill is installed: `pskill install fitness_modeling`
     - Check MCP status: `pmcp status`
     - Reinstall if needed: `pskill uninstall fitness_modeling && pskill install fitness_modeling`
