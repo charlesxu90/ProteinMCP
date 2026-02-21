@@ -22,3 +22,16 @@ skills:
     file_path: workflow-skills/nanobody_design.md
     required_mcps:
     - boltzgen_mcp
+  mcp_docker_debug:
+    description: Debug and fix Docker build failures in MCP repositories. Identifies
+      root causes (permissions, dependencies, compilation errors, network issues)
+      and implements fixes. Monitors GitHub Actions builds and verifies solutions.
+    file_path: workflow-skills/mcp_docker_debug.md
+    required_mcps: []
+  mcp_creation_validator:
+    description: Create new MCPs with validated Docker builds. Provides systematic
+      checklist for repository setup, Dockerfile creation, GitHub Actions workflows,
+      local testing, and final validation. Ensures consistent quality and successful
+      builds across all MCPs.
+    file_path: workflow-skills/mcp_creation_validator.md
+    required_mcps: []
