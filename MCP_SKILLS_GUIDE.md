@@ -282,6 +282,32 @@ Using mcp_creation_validator:
 
 ---
 
+## Directory Organization
+
+The MCP skills are organized separately from protein design workflows:
+
+```
+ProteinMCP/
+├── workflow-skills/              (Protein design workflows)
+│   ├── fitness_modeling.md       (ESM, ProtTrans, PLMC, EV+OneHot)
+│   ├── binder_design.md          (BindCraft)
+│   └── nanobody_design.md        (BoltzGen)
+│
+├── mcp-skills/                   (MCP development utilities)
+│   ├── README.md
+│   ├── mcp_docker_debug.md       (Debug Docker builds)
+│   └── mcp_creation_validator.md (Create new MCPs)
+│
+└── MCP_SKILLS_GUIDE.md           (This guide)
+```
+
+This separation allows:
+- Clear distinction between protein design workflows and MCP development
+- Easier navigation for MCP developers
+- Better organization of utilities vs. experiments
+
+---
+
 ## Integration with ProteinMCP
 
 After creating/fixing an MCP:
@@ -489,7 +515,7 @@ Patterns provided for:
 
 ## Resources
 
-- **Skills location**: `workflow-skills/mcp_docker_debug.md` and `mcp_creation_validator.md`
+- **Skills location**: `mcp-skills/mcp_docker_debug.md` and `mcp-skills/mcp_creation_validator.md`
 - **Configuration**: `src/skill/configs.yaml`
 - **Docker docs**: https://docs.docker.com
 - **GitHub Actions**: https://docs.github.com/en/actions
