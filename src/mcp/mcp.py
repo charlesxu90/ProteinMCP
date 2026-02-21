@@ -157,14 +157,11 @@ class MCP:
         if self.runtime == MCPRuntime.DOCKER.value:
             if not self.docker_image:
                 return False
-            try:
-                result = subprocess.run(
-                    ["docker", "image", "inspect", self.docker_image],
-                    capture_output=True, text=True, timeout=10
-                )
-                return result.returncode == 0
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                return False
+            # Prefer local image (e.g. bindcraft_mcp:latest) over registry image
+            local_image = self._get_local_docker_image()
+            if local_image and self._check_docker_image_exists(local_image):
+                return True
+            return self._check_docker_image_exists(self.docker_image)
 
         # Check in public MCPs directory
         if self.url:
@@ -435,8 +432,50 @@ class MCP:
 
         return True
 
+    def _get_local_docker_image(self) -> str | None:
+        """Derive local image name from the GHCR docker_image.
+
+        For example, 'ghcr.io/macromnex/bindcraft_mcp:latest' -> 'bindcraft_mcp:latest'.
+        Returns None if docker_image is not set or not a registry path.
+        """
+        if not self.docker_image:
+            return None
+        # If the image already has no registry prefix, it IS the local name
+        if "/" not in self.docker_image:
+            return None
+        # Extract the image name (last segment) from the full path
+        return self.docker_image.split("/")[-1]
+
+    def _check_docker_image_exists(self, image: str) -> bool:
+        """Check if a Docker image exists locally."""
+        try:
+            result = subprocess.run(
+                ["docker", "image", "inspect", image],
+                capture_output=True, text=True, timeout=10
+            )
+            return result.returncode == 0
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return False
+
+    def _resolve_docker_image(self) -> str | None:
+        """Resolve which Docker image to use, preferring local over registry.
+
+        Returns the image name to use, or None if no image is available.
+        """
+        # Try local image first (e.g. bindcraft_mcp:latest)
+        local_image = self._get_local_docker_image()
+        if local_image and self._check_docker_image_exists(local_image):
+            return local_image
+        # Fall back to the full registry image (e.g. ghcr.io/macromnex/bindcraft_mcp:latest)
+        if self.docker_image and self._check_docker_image_exists(self.docker_image):
+            return self.docker_image
+        return None
+
     def _pull_docker_image(self, capture_output: bool = False) -> bool:
         """Pull Docker image for Docker-based MCP.
+
+        Prefers local images (e.g. bindcraft_mcp:latest) over registry images.
+        Only pulls from the registry if no local image is found.
 
         Args:
             capture_output: If True, capture output instead of streaming (for parallel execution).
@@ -445,6 +484,20 @@ class MCP:
             print(f"❌ No docker_image specified for '{self.name}'")
             return False
 
+        # Check for local image first (e.g. bindcraft_mcp:latest)
+        local_image = self._get_local_docker_image()
+        if local_image and self._check_docker_image_exists(local_image):
+            print(f"✅ Found local Docker image: {local_image}")
+            self.invalidate_status_cache()
+            return True
+
+        # Check if the full registry image already exists locally
+        if self._check_docker_image_exists(self.docker_image):
+            print(f"✅ Docker image already available: {self.docker_image}")
+            self.invalidate_status_cache()
+            return True
+
+        # Pull from registry
         print(f"🐳 Pulling Docker image: {self.docker_image}")
         try:
             result = subprocess.run(
@@ -730,12 +783,19 @@ class MCP:
         return self._run_register_command(cmd, cli, clean_name)
 
     def _register_docker(self, cli: str, clean_name: str) -> bool:
-        """Register Docker-based MCP"""
+        """Register Docker-based MCP.
+
+        Prefers local image (e.g. bindcraft_mcp:latest) over registry image
+        for faster container startup.
+        """
         import os
 
         if not self.docker_image:
             print(f"❌ No docker_image specified for '{clean_name}'")
             return False
+
+        # Resolve which image to use (local preferred)
+        image = self._resolve_docker_image() or self.docker_image
 
         cmd = [cli, "mcp", "add", clean_name]
 
@@ -756,7 +816,7 @@ class MCP:
         for vol in self.docker_volumes:
             cmd.extend(["-v", vol])
 
-        cmd.append(self.docker_image)
+        cmd.append(image)
 
         return self._run_register_command(cmd, cli, clean_name)
 
