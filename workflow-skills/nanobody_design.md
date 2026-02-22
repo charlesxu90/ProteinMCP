@@ -50,10 +50,16 @@ CUDA_DEVICE: 0                                   # GPU device to use (optional)
 RESULTS_DIR/                     # All outputs go here
 ├── config.yaml                  # Generated BoltzGen configuration
 ├── designs/                     # Designed nanobody structures
-│   ├── design_001.pdb          # Nanobody-target complex
-│   ├── design_002.pdb
-│   └── ...
-└── logs/                        # Execution logs
+│   ├── config.cif              # Initial config structure
+│   ├── intermediate_designs/    # Backbone designs (CIF)
+│   │   ├── config_0.cif
+│   │   └── ...
+│   ├── intermediate_designs_inverse_folded/  # Sequence-designed structures
+│   │   ├── config_0.cif
+│   │   └── ...
+│   ├── boltzgen_run.log        # Execution log
+│   └── job_info.json           # Job metadata
+└── logs/                        # Additional execution logs
 ```
 
 ---
@@ -170,18 +176,20 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Check the status of the submitted nanobody design job.
 
 **Prompt:**
-> Can you check the status of my BoltzGen nanobody design job with ID {job_id}? Also show me the recent log output.
+> Can you check the status of my BoltzGen nanobody design job? Check by job_id {job_id} and also by output directory {RESULTS_DIR}/designs/. Show me the job status and any recent log output.
 
 **Implementation Notes:**
 - Use `mcp__boltzgen_mcp__boltzgen_job_status` to check by job_id
   - Parameters: `job_id` (from submission)
-- Or use `mcp__boltzgen_mcp__boltzgen_check_status` to check by output directory
+  - Note: job_id is only available while the job is queued or running; completed jobs are removed from the queue
+- Use `mcp__boltzgen_mcp__boltzgen_check_status` to check by output directory (works even after job completes)
   - Parameters: `output_dir` ({RESULTS_DIR}/designs)
 - Use `mcp__boltzgen_mcp__boltzgen_queue_status` to see overall queue state
+- Fallback: read the log file at `{RESULTS_DIR}/designs/boltzgen_run.log` directly
 
 **Expected Output:**
 - Job status (running, completed, failed, unknown)
-- Number of generated designs (PDB files)
+- Number of generated designs (CIF files)
 - Result summary when finished
 
 ---
@@ -191,16 +199,19 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Retrieve the results of the completed nanobody design job.
 
 **Prompt:**
-> Can you get the results of my completed BoltzGen nanobody design job? Check the output at {RESULTS_DIR}/designs/ and list all generated PDB files and metrics.
+> Can you get the results of my completed BoltzGen nanobody design job? Check the output at {RESULTS_DIR}/designs/ and list all generated CIF/PDB files and metrics.
 
 **Implementation Notes:**
 - Use `mcp__boltzgen_mcp__boltzgen_check_status` tool
 - Parameters:
   - `output_dir`: {RESULTS_DIR}/designs
 - Returns detailed summary when job is complete
+- BoltzGen outputs CIF files (not PDB) in subdirectories:
+  - `intermediate_designs/` — backbone structures
+  - `intermediate_designs_inverse_folded/` — sequence-designed structures
 
 **Expected Output:**
-- List of generated PDB files
+- List of generated CIF files
 - Design metrics and scores
 - Job configuration and parameters
 
@@ -211,16 +222,17 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Analyze the designed nanobody structures and summarize results.
 
 **Prompt:**
-> Can you analyze the nanobody designs in {RESULTS_DIR}/designs/? List all generated PDB files and summarize the results.
+> Can you analyze the nanobody designs in {RESULTS_DIR}/designs/? List all generated CIF files and summarize the results.
 
 **Implementation Notes:**
-- List PDB files in the output directory
+- List CIF files in the output directory and subdirectories
 - Each design is a nanobody-target complex
 - Nanobody CDR regions have been designed while maintaining framework
+- BoltzGen pipeline steps: generation → inverse folding → folding → filtering → ranking
 
 **Expected Output:**
-- List of PDB files with designed nanobodies
-- Summary of number of designs
+- List of CIF files with designed nanobodies
+- Summary of number of designs and pipeline steps completed
 - Recommendations for further validation
 
 ---
