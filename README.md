@@ -1,5 +1,10 @@
 # ProteinMCP: An Agentic AI Framework for Autonomous Protein Engineering
 
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://charlesxu90.github.io/ProteinMCP/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
+**[Documentation](https://charlesxu90.github.io/ProteinMCP/)** | **[Installation](https://charlesxu90.github.io/ProteinMCP/installation)** | **[Quick Start](https://charlesxu90.github.io/ProteinMCP/quickstart)** | **[MCP Catalog](https://charlesxu90.github.io/ProteinMCP/mcps/)** | **[Workflows](https://charlesxu90.github.io/ProteinMCP/workflows/)**
+
 ![ProteinMCP overview](./figures/ProteinMCP.png)
 
 ## Prerequisites
