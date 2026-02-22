@@ -3,7 +3,7 @@ description: An agentic AI framework for autonomous protein engineering
 url: "https://charlesxu90.github.io"
 baseurl: "/ProteinMCP"
 
-remote_theme: just-the-docs/just-the-docs@v0.10.0
+theme: just-the-docs
 
 color_scheme: light
 search_enabled: true

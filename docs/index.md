@@ -14,7 +14,10 @@ nav_order: 1
 
 ---
 
-![ProteinMCP overview]({{ site.baseurl }}/assets/images/ProteinMCP.png)
+<picture>
+  <source srcset="{{ site.baseurl }}/assets/images/ProteinMCP.webp" type="image/webp">
+  <img src="{{ site.baseurl }}/assets/images/ProteinMCP.png" alt="ProteinMCP overview" loading="eager" width="1400" height="814">
+</picture>
 
 ## What is ProteinMCP?
 
