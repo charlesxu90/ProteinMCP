@@ -47,17 +47,27 @@ CONFIG_FILE: null                                  # Custom config file (optiona
 
 **Directory Structure:**
 ```
-RESULTS_DIR/                     # All outputs go here
-├── config/                      # Generated configuration directory
-│   ├── target_settings.json     # BindCraft target settings
-│   ├── default_filters.json     # Default design filters
-│   └── default_4stage_multimer.json  # Default advanced settings
-├── designs/                     # Designed binder structures
-│   ├── design_001.pdb          # Binder-target complex
-│   ├── design_002.pdb
-│   └── ...
-├── metrics.csv                  # Design quality metrics
-└── logs/                        # Execution logs
+RESULTS_DIR/                              # All outputs go here
+├── config/                               # Generated configuration directory
+│   ├── target_settings.json              # BindCraft target settings
+│   ├── default_filters.json              # Default design filters
+│   ├── default_4stage_multimer.json      # Default advanced settings
+│   └── job_output/                       # BindCraft output (design_path)
+│       ├── Accepted/                     # Accepted designs
+│       │   └── Ranked/                   # Ranked PDB files (final output)
+│       │       ├── 1_Binder_*.pdb        # Best design
+│       │       ├── 2_Binder_*.pdb
+│       │       └── ...
+│       ├── Rejected/                     # Rejected designs
+│       ├── MPNN/                         # MPNN sequence designs
+│       ├── Trajectory/                   # Trajectory data
+│       ├── final_design_stats.csv        # Final accepted design metrics
+│       ├── mpnn_design_stats.csv         # All MPNN design metrics
+│       ├── trajectory_stats.csv          # Trajectory-level statistics
+│       ├── failure_csv.csv               # Failed design records
+│       └── bindcraft_run.log             # Execution log
+├── designs/                              # (reserved for user copies)
+└── logs/                                 # Execution logs
 ```
 
 ---
@@ -160,7 +170,7 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Check the progress of running design jobs.
 
 **Prompt:**
-> Can you check the status of my BindCraft design job? The output directory is {RESULTS_DIR}/designs/. Also show me the recent log output.
+> Can you check the status of my BindCraft design job? The output directory is {RESULTS_DIR}/config/job_output/. Also show me the recent log output from bindcraft_run.log.
 
 **Implementation Notes:**
 - Use `mcp__bindcraft_mcp__bindcraft_check_status` to check job status
@@ -180,7 +190,7 @@ mkdir -p {RESULTS_DIR}/logs
 **Description**: Retrieve the results of a completed design job.
 
 **Prompt:**
-> Can you check the results of my completed BindCraft job in {RESULTS_DIR}/designs/? List all output files and print any available design quality metrics.
+> Can you check the results of my completed BindCraft job in {RESULTS_DIR}/config/job_output/? List all output files and print any available design quality metrics from final_design_stats.csv.
 
 **Implementation Notes:**
 - Use `mcp__bindcraft_mcp__bindcraft_check_status` tool
@@ -196,7 +206,7 @@ mkdir -p {RESULTS_DIR}/logs
 
 ---
 
-## Step 8: Visualize Results
+## Step 7: Visualize Results
 
 **Description**: Generate publication-ready figures showcasing design quality metrics.
 
@@ -205,42 +215,43 @@ mkdir -p {RESULTS_DIR}/logs
 
 **Implementation Notes:**
 
-Use the binder design visualization script:
+Use the binder design visualization script. Point it at the BindCraft output directory (where `final_design_stats.csv` lives):
 
 ```bash
-# Run the visualization script (using ev_onehot_mcp environment which has matplotlib)
-python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR}
+# The BindCraft output directory is the design_path from target_settings.json
+# Typically: {RESULTS_DIR}/config/job_output/
+
+# Run the visualization script
+python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR}/config/job_output
 
 # Or with custom output prefix:
-python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR} --output {RESULTS_DIR}/custom_prefix
+python @workflow-skills/scripts/binder_design_viz.py {RESULTS_DIR}/config/job_output --output {RESULTS_DIR}/binder_design
 ```
 
 **Note:** The `@` paths should be resolved to absolute paths:
 - `@tool-mcps/` → `<project_root>/tool-mcps/`
 - `@workflow-skills/` → `<project_root>/workflow-skills/`
 
-**Generated Figures (8 individual + 1 merged):**
+**Generated Figures (6 individual + 1 merged):**
 
-1. `binder_design_composite_score.png` - Composite quality score distribution histogram
-2. `binder_design_quality_assessment.png` - pLDDT vs Interface scatter plot (colored by quality)
-3. `binder_design_normalized_heatmap.png` - Heatmap of normalized metrics per design
-4. `binder_design_statistics_table.png` - Table with Mean, Std, Min, Max, Pass Rate
-5. `binder_design_quality_boxplot.png` - Boxplots with threshold lines
-6. `binder_design_sasa_binding_energy.png` - SASA vs Binding Energy scatter plot
-7. `binder_design_top5_designs.png` - Top 5 designs ranked by composite score
-8. `binder_design_correlation.png` - Correlation heatmap of metrics
-9. `binder_design_summary.png` - **Merged 8-panel summary figure** (publication-ready)
+1. `binder_design_plddt_comparison.png` - Bar chart comparing pLDDT scores across designs
+2. `binder_design_interface_pae.png` - Bar chart of interface pAE scores
+3. `binder_design_metrics_table.png` - Table showing all metrics for each design
+4. `binder_design_quality_scatter.png` - Scatter plot of pLDDT vs pAE with quality zones
+5. `binder_design_design_ranking.png` - Horizontal bar chart ranking designs by composite score
+6. `binder_design_execution_timeline.png` - Gantt chart showing step execution times
+7. `binder_design_summary.png` - **Merged 2x3 panel summary figure** (publication-ready, via `--merged`)
 
 **Composite Quality Score Formula:**
 ```
-Composite Score = 0.3×pLDDT(norm) + 0.3×pAE(inv,norm) + 0.2×Interface(inv,norm) + 0.2×pTM
+Composite Score = 0.3×pLDDT(norm) + 0.2×pAE(inv,norm) + 0.3×i_pAE(inv,norm) + 0.2×i_pTM
 ```
 
 **Quality Thresholds:**
 - pLDDT: ≥80 (higher is better)
-- pAE: ≤4Å (lower is better)
-- Interface Score: ≤-13 REU (more negative is better)
-- pTM: ≥0.8 (higher is better)
+- pAE: ≤5 (lower is better)
+- i_pAE (interface pAE): ≤10 (lower is better)
+- i_pTM (interface pTM): ≥0.6 (higher is better)
 
 **Display Results Interactively (Python):**
 ```python
@@ -249,47 +260,43 @@ sys.path.append("@workflow-skills/scripts")
 from binder_design_viz import display_results
 
 # Display all figures in a GUI window
-display_results("{RESULTS_DIR}")
+display_results("{RESULTS_DIR}/config/job_output")
 
 # Or display only the merged summary
-display_results("{RESULTS_DIR}", show_all=False)
+display_results("{RESULTS_DIR}/config/job_output", show_all=False)
 ```
 
 **Expected Output:**
 
-*Individual Figures (8 files):*
-- `{RESULTS_DIR}/binder_design_composite_score.png/.pdf` - Composite score histogram
-- `{RESULTS_DIR}/binder_design_quality_assessment.png/.pdf` - Quality scatter plot
-- `{RESULTS_DIR}/binder_design_normalized_heatmap.png/.pdf` - Metrics heatmap
-- `{RESULTS_DIR}/binder_design_statistics_table.png/.pdf` - Statistics table
-- `{RESULTS_DIR}/binder_design_quality_boxplot.png/.pdf` - Boxplots with thresholds
-- `{RESULTS_DIR}/binder_design_sasa_binding_energy.png/.pdf` - SASA vs binding energy
-- `{RESULTS_DIR}/binder_design_top5_designs.png/.pdf` - Top 5 designs table
-- `{RESULTS_DIR}/binder_design_correlation.png/.pdf` - Correlation heatmap
+*Individual Figures (6 files):*
+- `{output_prefix}_plddt_comparison.png/.pdf` - pLDDT bar chart
+- `{output_prefix}_interface_pae.png/.pdf` - Interface pAE bar chart
+- `{output_prefix}_metrics_table.png/.pdf` - Metrics summary table
+- `{output_prefix}_quality_scatter.png/.pdf` - pLDDT vs pAE scatter
+- `{output_prefix}_design_ranking.png/.pdf` - Composite score ranking
+- `{output_prefix}_execution_timeline.png/.pdf` - Execution timeline
 
-*Merged Summary Figure (2x4 panels):*
-- `{RESULTS_DIR}/binder_design_summary.png/.pdf` - **Publication-ready 8-panel figure**
+*Merged Summary Figure (2x3 panels):*
+- `{output_prefix}.png/.pdf` - **Publication-ready 6-panel figure**
 
 **Figure Descriptions:**
 
-*Merged Summary Figure (2x4 panels):*
-- Panel A: Composite score distribution with mean and threshold lines
-- Panel B: Quality assessment scatter (pLDDT vs Interface, colored by quality score)
-- Panel C: Normalized metrics heatmap per design
-- Panel D: Metrics statistics table (Mean, Std, Min, Max, Pass Rate)
-- Panel E: Quality boxplots for each metric
-- Panel F: SASA vs Binding Energy scatter colored by pLDDT
-- Panel G: Top 5 designs ranked by composite score with status
-- Panel H: Correlation heatmap between quality metrics
+*Merged Summary Figure (2x3 panels):*
+- Panel 1: Design pLDDT scores with quality threshold lines
+- Panel 2: Interface pAE scores (lower is better)
+- Panel 3: Quality distribution scatter (pLDDT vs pAE, colored by composite score)
+- Panel 4: Design ranking by composite score
+- Panel 5: Design metrics summary table
+- Panel 6: Execution timeline (Gantt chart)
 
 ---
 
-## Step 9: Analyze Results
+## Step 8: Analyze Results
 
 **Description**: Analyze the designed binders and compare metrics.
 
 **Prompt:**
-> Can you analyze the binder designs in {RESULTS_DIR}/designs/? Summarize the key metrics and identify the best candidates.
+> Can you analyze the binder designs in {RESULTS_DIR}/config/job_output/? Summarize the key metrics and identify the best candidates.
 
 **Implementation Notes:**
 - Metrics to examine:
