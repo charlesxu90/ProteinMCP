@@ -1,0 +1,28 @@
+title: ProteinMCP
+description: An agentic AI framework for autonomous protein engineering
+url: "https://charlesxu90.github.io"
+baseurl: "/ProteinMCP"
+
+remote_theme: just-the-docs/just-the-docs@v0.10.0
+
+color_scheme: light
+search_enabled: true
+
+aux_links:
+  "GitHub": "https://github.com/charlesxu90/ProteinMCP"
+aux_links_new_tab: true
+
+nav_enabled: true
+
+footer_content: "Copyright &copy; 2025 Charles XU. Distributed under the <a href=\"https://github.com/charlesxu90/ProteinMCP/blob/main/LICENSE\">MIT License</a>."
+
+callouts:
+  note:
+    title: Note
+    color: blue
+  warning:
+    title: Warning
+    color: red
+  tip:
+    title: Tip
+    color: green
